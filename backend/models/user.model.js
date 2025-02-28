@@ -13,7 +13,7 @@ const userSchema = new mongoose.Schema({
         type: Number,
         required: true,
     },
-    adress: {
+    adresse: {
         type: String,
         required: true,
     },
@@ -35,10 +35,7 @@ const userSchema = new mongoose.Schema({
         required: true,
         minlength: 6,
     },
-    cinphoto: {
-        type: String,
-        required: true,
-    },
+
    
 }, {
     timestamps: true,

@@ -10,9 +10,9 @@ export const signup = async (req, res) => {
     try {
         console.log("Received request body:", req.body);
 
-        const { nom, prenom, age, adress, telephone, email, password, cinphoto } = req.body;
+        const { nom, prenom, age, adresse, telephone, email, password,  } = req.body;
 
-        if (!nom || !prenom || !age || !adress || !telephone || !email || !password || !cinphoto) {
+        if (!nom || !prenom || !age || !adresse || !telephone || !email || !password ) {
             return res.status(400).json({ message: "All fields are required" });
         }
 
@@ -32,11 +32,11 @@ export const signup = async (req, res) => {
             nom,
             prenom,
             age,
-            adress,
+            adresse,
             telephone,
             email,
             password: hashedPassword,
-            cinphoto,
+            
         });
         if (newUser) {
             generateToken(newUser._id, res);
@@ -46,10 +46,10 @@ export const signup = async (req, res) => {
                 nom: newUser.nom,
                 prenom: newUser.prenom,
                 age: newUser.age,
-                adress: newUser.adress,
+                adresse: newUser.adresse,
                 telephone: newUser.telephone,
                 email: newUser.email,
-                cinphoto: newUser.cinphoto,
+                
             });
         } else {
             res.status(400).json({ message: "Invalid user data" });
@@ -78,10 +78,9 @@ export const login = async (req, res) => {
             nom: user.nom,
             prenom: user.prenom,
             age: user.age,
-            adress: user.adress,
+            adresse: user.adresse,
             telephone: user.telephone,
             email: user.email,
-            cinphoto: user.cinphoto
         });
     }
     catch (error) {
