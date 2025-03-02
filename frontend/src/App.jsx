@@ -9,6 +9,8 @@ import Contact from "./pages/Contact.jsx"
 import NotFound from "./pages/NotFound"
 import SignUp from "./pages/SignUp"
 import Login from "./pages/Login"
+import Dashboard from "./pages/admin/Dashboard"
+import Home  from "./pages/user/Home"
 
 const queryClient = new QueryClient()
 
@@ -19,11 +21,14 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/causes" element={<Causes />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<SignUp />} />
+          <Route path="/user/Home" element={<Home />} />
+
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

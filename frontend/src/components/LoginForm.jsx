@@ -1,23 +1,60 @@
 "use client"
 
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 import { Eye, EyeOff, Github, Mail } from "lucide-react"
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
 import { Label } from "./ui/label"
 import { Separator } from "./ui/separator"
 import { Checkbox } from "./ui/checkbox"
+import axios from "axios"
 
 const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false)
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  })
+  const [error, setError] = useState("")
+  const navigate = useNavigate()
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.id]: e.target.value })
+  }
+
+  const handleLogin = async (e) => {
+    e.preventDefault()
+    setError("")
+
+    try {
+      const response = await axios.post("http://localhost:5001/api/auth/login", formData, {
+        withCredentials: true,
+      })
+
+      // If login successful, redirect to home page
+      navigate("/user/Home")
+    } catch (error) {
+      console.error("Login error:", error.response?.data || error.message)
+      setError(error.response?.data?.message || "Login failed. Please try again.")
+    }
+  }
 
   return (
     <div className="grid gap-6">
-      <form>
+      <form onSubmit={handleLogin}>
+        {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">{error}</div>}
         <div className="grid gap-4">
           <div className="grid gap-2">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" placeholder="name@example.com" type="email" required />
+            <Input
+              id="email"
+              placeholder="name@example.com"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+            />
           </div>
           <div className="grid gap-2">
             <div className="flex items-center justify-between">
@@ -27,7 +64,13 @@ const LoginForm = () => {
               </a>
             </div>
             <div className="relative">
-              <Input id="password" type={showPassword ? "text" : "password"} required />
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                value={formData.password}
+                onChange={handleChange}
+                required
+              />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
@@ -46,7 +89,9 @@ const LoginForm = () => {
               Remember me
             </label>
           </div>
-          <Button className="w-full">Sign In</Button>
+          <Button type="submit" className="w-full">
+            Sign In
+          </Button>
         </div>
       </form>
       <div className="relative">
