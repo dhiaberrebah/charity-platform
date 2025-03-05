@@ -1,6 +1,5 @@
 "use client"
-import NavigationBar from "@/components/Navbar"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import {
   LayoutDashboard,
@@ -25,17 +24,30 @@ import MyCauses from "@/components/MyCauses"
 const Dashboard = () => {
   const [activeSection, setActiveSection] = useState("dashboard")
   const navigate = useNavigate()
-  const [userInfo, setUserInfo] = useState({
-    email: "user@example.com",
-    firstName: "John",
-    lastName: "Doe",
-    address: "123 Main St",
-    phone: "555-0123",
-    bankHolder: "",
-    bankName: "",
-    branchName: "",
-    rib: "",
-  })
+  const [userInfo, setUserInfo] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      try {
+        const response = await fetch("http://localhost:5001/api/auth/check", {
+          credentials: "include",
+        })
+        if (!response.ok) {
+          throw new Error("Failed to fetch user data")
+        }
+        const data = await response.json()
+        setUserInfo(data.user)
+      } catch (err) {
+        setError(err.message)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchUserInfo()
+  }, [])
 
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -48,11 +60,27 @@ const Dashboard = () => {
     { id: "password", label: "Password", icon: LockKeyhole },
   ]
 
-  const handleInputChange = (e) => {
-    setUserInfo({ ...userInfo, [e.target.name]: e.target.value })
+  const handleInputChange = (e, updatedUser = null) => {
+    if (updatedUser) {
+      setUserInfo(updatedUser)
+    } else {
+      const { name, value } = e.target
+      setUserInfo((prevInfo) => ({
+        ...prevInfo,
+        [name]: name === "age" ? Number.parseInt(value, 10) : value,
+      }))
+    }
   }
 
   const renderContent = () => {
+    if (loading) {
+      return <div>Loading...</div>
+    }
+
+    if (error) {
+      return <div>Error: {error}</div>
+    }
+
     switch (activeSection) {
       case "my-info":
         return <UserInformation userInfo={userInfo} onChange={handleInputChange} />
@@ -108,64 +136,115 @@ const Dashboard = () => {
   )
 }
 
-const UserInformation = ({ userInfo, onChange }) => (
-  <div className="bg-white p-6 rounded-lg shadow">
-    <h2 className="text-2xl font-bold mb-6">My Information</h2>
-    <div className="space-y-6">
-      <div className="flex items-center justify-center">
-        <div className="relative">
-          <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center">
-            <UserCircle className="w-12 h-12 text-gray-400" />
+const UserInformation = ({ userInfo, onChange }) => {
+  const [isSaving, setIsSaving] = useState(false)
+  const [saveError, setSaveError] = useState(null)
+  const [saveSuccess, setSaveSuccess] = useState(false)
+
+  const handleSaveChanges = async (e) => {
+    e.preventDefault()
+    setIsSaving(true)
+    setSaveError(null)
+    setSaveSuccess(false)
+
+    try {
+      const response = await fetch("http://localhost:5001/api/auth/profile", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(userInfo),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to save changes")
+      }
+
+      const updatedUser = await response.json()
+      onChange(null, updatedUser.user)
+      setSaveSuccess(true)
+    } catch (error) {
+      setSaveError(error.message)
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  return (
+    <div className="bg-white p-6 rounded-lg shadow">
+      <h2 className="text-2xl font-bold mb-6">My Information</h2>
+      <form onSubmit={handleSaveChanges} className="space-y-6">
+        <div className="flex items-center justify-center">
+          <div className="relative">
+            <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center">
+              <UserCircle className="w-12 h-12 text-gray-400" />
+            </div>
+            <button className="absolute bottom-0 right-0 p-2 bg-primary text-white rounded-full">
+              <Camera size={16} />
+            </button>
           </div>
-          <button className="absolute bottom-0 right-0 p-2 bg-primary text-white rounded-full">
-            <Camera size={16} />
-          </button>
         </div>
-      </div>
-      <div className="grid gap-4">
-        <div className="grid gap-2">
-          <Label htmlFor="email">Email</Label>
-          <Input id="email" name="email" value={userInfo.email} onChange={onChange} autoComplete="email" />
+        <div className="grid gap-4">
+          <div className="grid gap-2">
+            <Label htmlFor="email">Email</Label>
+            <Input id="email" name="email" value={userInfo?.email || ""} onChange={onChange} autoComplete="email" />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="nom">Nom</Label>
+            <Input id="nom" name="nom" value={userInfo?.nom || ""} onChange={onChange} autoComplete="family-name" />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="prenom">Prénom</Label>
+            <Input
+              id="prenom"
+              name="prenom"
+              value={userInfo?.prenom || ""}
+              onChange={onChange}
+              autoComplete="given-name"
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="age">Age</Label>
+            <Input
+              id="age"
+              name="age"
+              type="number"
+              value={userInfo?.age || ""}
+              onChange={onChange}
+              autoComplete="age"
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="adresse">Adresse</Label>
+            <Input
+              id="adresse"
+              name="adresse"
+              value={userInfo?.adresse || ""}
+              onChange={onChange}
+              autoComplete="street-address"
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="telephone">Téléphone</Label>
+            <Input
+              id="telephone"
+              name="telephone"
+              value={userInfo?.telephone || ""}
+              onChange={onChange}
+              autoComplete="tel"
+            />
+          </div>
+          <Button type="submit" className="w-full" disabled={isSaving}>
+            {isSaving ? "Saving..." : "Save Changes"}
+          </Button>
+          {saveError && <p className="text-red-500">{saveError}</p>}
+          {saveSuccess && <p className="text-green-500">Changes saved successfully!</p>}
         </div>
-        <div className="grid gap-2">
-          <Label htmlFor="firstName">First Name</Label>
-          <Input
-            id="firstName"
-            name="firstName"
-            value={userInfo.firstName}
-            onChange={onChange}
-            autoComplete="given-name"
-          />
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor="lastName">Last Name</Label>
-          <Input
-            id="lastName"
-            name="lastName"
-            value={userInfo.lastName}
-            onChange={onChange}
-            autoComplete="family-name"
-          />
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor="address">Address</Label>
-          <Input
-            id="address"
-            name="address"
-            value={userInfo.address}
-            onChange={onChange}
-            autoComplete="street-address"
-          />
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor="phone">Phone</Label>
-          <Input id="phone" name="phone" value={userInfo.phone} onChange={onChange} autoComplete="tel" />
-        </div>
-        <Button className="w-full">Save Changes</Button>
-      </div>
+      </form>
     </div>
-  </div>
-)
+  )
+}
 
 const DocumentUpload = () => (
   <div className="bg-white p-6 rounded-lg shadow">
@@ -199,25 +278,37 @@ const BankDetails = ({ userInfo, onChange }) => (
     <div className="space-y-4">
       <div className="grid gap-2">
         <Label htmlFor="bankHolder">Account Holder Name</Label>
-        <Input id="bankHolder" name="bankHolder" value={userInfo.bankHolder} onChange={onChange} autoComplete="name" />
+        <Input
+          id="bankHolder"
+          name="bankHolder"
+          value={userInfo?.bankHolder || ""}
+          onChange={onChange}
+          autoComplete="name"
+        />
       </div>
       <div className="grid gap-2">
         <Label htmlFor="bankName">Bank Name</Label>
         <Input
           id="bankName"
           name="bankName"
-          value={userInfo.bankName}
+          value={userInfo?.bankName || ""}
           onChange={onChange}
           autoComplete="organization"
         />
       </div>
       <div className="grid gap-2">
         <Label htmlFor="branchName">Branch Name</Label>
-        <Input id="branchName" name="branchName" value={userInfo.branchName} onChange={onChange} autoComplete="off" />
+        <Input
+          id="branchName"
+          name="branchName"
+          value={userInfo?.branchName || ""}
+          onChange={onChange}
+          autoComplete="off"
+        />
       </div>
       <div className="grid gap-2">
         <Label htmlFor="rib">RIB</Label>
-        <Input id="rib" name="rib" value={userInfo.rib} onChange={onChange} autoComplete="off" />
+        <Input id="rib" name="rib" value={userInfo?.rib || ""} onChange={onChange} autoComplete="off" />
       </div>
       <div className="flex items-center space-x-2">
         <Checkbox id="terms" />
@@ -320,16 +411,16 @@ const DashboardOverview = ({ userInfo }) => {
           <h2 className="text-2xl font-bold mb-6">Mes Coordonnées</h2>
           <div className="space-y-2">
             <p>
-              <span className="font-semibold">Nom:</span> {userInfo.lastName}
+              <span className="font-semibold">Nom:</span> {userInfo?.lastName || ""}
             </p>
             <p>
-              <span className="font-semibold">Prénom:</span> {userInfo.firstName}
+              <span className="font-semibold">Prénom:</span> {userInfo?.firstName || ""}
             </p>
             <p>
-              <span className="font-semibold">Adresse:</span> {userInfo.address}
+              <span className="font-semibold">Adresse:</span> {userInfo?.address || ""}
             </p>
             <p>
-              <span className="font-semibold">Téléphone:</span> {userInfo.phone}
+              <span className="font-semibold">Téléphone:</span> {userInfo?.phone || ""}
             </p>
             <Button variant="outline" className="w-full mt-4 text-yellow-600 border-yellow-500 hover:bg-yellow-50">
               Modifier
@@ -341,7 +432,7 @@ const DashboardOverview = ({ userInfo }) => {
           <h2 className="text-2xl font-bold mb-6">Mes Infos de Connexion</h2>
           <div className="space-y-2">
             <p>
-              <span className="font-semibold">Email:</span> {userInfo.email}
+              <span className="font-semibold">Email:</span> {userInfo?.email || ""}
             </p>
             <p>
               <span className="font-semibold">Mot de passe:</span> ••••••••

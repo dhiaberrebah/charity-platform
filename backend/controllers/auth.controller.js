@@ -5,7 +5,7 @@ import util from "util"
 
 export const getUsers = async (req, res) => {
   try {
-    const users = await User.find().select("-password")
+    const users = await User.find()
     res.json(users)
   } catch (error) {
     res.status(500).json({ message: error.message })
@@ -69,7 +69,7 @@ export const login = async (req, res) => {
   try {
     const user = await User.findOne({ email })
     if (!user) {
-      return res.status(400).json({ message: "Invalid credentials" })
+      return res.status(400).json({ message: "Invalid incredentials" })
     }
     const isPasswordCorrect = await bcrypt.compare(password, user.password)
     if (!isPasswordCorrect) {
@@ -84,14 +84,12 @@ export const login = async (req, res) => {
       adresse: user.adresse,
       telephone: user.telephone,
       email: user.email,
-      isAdmin: user.isAdmin,
     })
   } catch (error) {
     console.log("Error in login controller", error.message)
     res.status(500).json({ message: "Internal Server Error" })
   }
 }
-
 export const logout = (req, res) => {
   try {
     res.cookie("jwt", "", { maxAge: 0 })
@@ -104,10 +102,14 @@ export const logout = (req, res) => {
 
 export const checkAuth = async (req, res) => {
   try {
+    // Extract only serializable data from req
     const safeReq = {
-      user: req.user || null,
+      user: req.user || null, // Include user if it exists
     }
+
+    // Debugging: Log request safely
     console.log("Safe Request Data:", util.inspect(safeReq, { depth: null }))
+
     res.status(200).json(safeReq)
   } catch (error) {
     console.error("Error in checkAuth controller:", error.message)
