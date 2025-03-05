@@ -1,5 +1,5 @@
 "use client"
-
+import NavigationBar from "@/components/Navbar"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import {
