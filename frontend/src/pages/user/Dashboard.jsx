@@ -38,6 +38,7 @@ const Dashboard = () => {
           throw new Error("Failed to fetch user data")
         }
         const data = await response.json()
+        console.log("Fetched user data:", data)
         setUserInfo(data.user)
       } catch (err) {
         setError(err.message)
@@ -98,7 +99,7 @@ const Dashboard = () => {
         return <MyCauses />
       case "dashboard":
       default:
-        return <DashboardOverview userInfo={userInfo} />
+        return <DashboardOverview userInfo={userInfo} setActiveSection={setActiveSection} />
     }
   }
 
@@ -382,7 +383,7 @@ const PasswordChange = () => (
   </div>
 )
 
-const DashboardOverview = ({ userInfo }) => {
+const DashboardOverview = ({ userInfo, setActiveSection }) => {
   const navigate = useNavigate()
 
   return (
@@ -400,7 +401,11 @@ const DashboardOverview = ({ userInfo }) => {
           </div>
         </div>
         <div className="mt-4">
-          <Button variant="outline" className="text-yellow-600 border-yellow-500 hover:bg-yellow-50">
+          <Button
+            onClick={() => setActiveSection("documents")}
+            variant="outline"
+            className="text-yellow-600 border-yellow-500 hover:bg-yellow-50"
+          >
             Modifier
           </Button>
         </div>
@@ -411,18 +416,22 @@ const DashboardOverview = ({ userInfo }) => {
           <h2 className="text-2xl font-bold mb-6">Mes Coordonnées</h2>
           <div className="space-y-2">
             <p>
-              <span className="font-semibold">Nom:</span> {userInfo?.lastName || ""}
+              <span className="font-semibold">Nom:</span> {userInfo?.nom || "Non renseigné"}
             </p>
             <p>
-              <span className="font-semibold">Prénom:</span> {userInfo?.firstName || ""}
+              <span className="font-semibold">Prénom:</span> {userInfo?.prenom || "Non renseigné"}
             </p>
             <p>
-              <span className="font-semibold">Adresse:</span> {userInfo?.address || ""}
+              <span className="font-semibold">Adresse:</span> {userInfo?.adresse || "Non renseignée"}
             </p>
             <p>
-              <span className="font-semibold">Téléphone:</span> {userInfo?.phone || ""}
+              <span className="font-semibold">Téléphone:</span> {userInfo?.telephone || "Non renseigné"}
             </p>
-            <Button variant="outline" className="w-full mt-4 text-yellow-600 border-yellow-500 hover:bg-yellow-50">
+            <Button
+              onClick={() => setActiveSection("my-info")}
+              variant="outline"
+              className="w-full mt-4 text-yellow-600 border-yellow-500 hover:bg-yellow-50"
+            >
               Modifier
             </Button>
           </div>
@@ -432,7 +441,7 @@ const DashboardOverview = ({ userInfo }) => {
           <h2 className="text-2xl font-bold mb-6">Mes Infos de Connexion</h2>
           <div className="space-y-2">
             <p>
-              <span className="font-semibold">Email:</span> {userInfo?.email || ""}
+              <span className="font-semibold">Email:</span> {userInfo?.email || "Non renseigné"}
             </p>
             <p>
               <span className="font-semibold">Mot de passe:</span> ••••••••
@@ -451,7 +460,11 @@ const DashboardOverview = ({ userInfo }) => {
                 <span className="sr-only">Twitter</span>t
               </Button>
             </div>
-            <Button variant="outline" className="w-full mt-4 text-yellow-600 border-yellow-500 hover:bg-yellow-50">
+            <Button
+              onClick={() => setActiveSection("my-info")}
+              variant="outline"
+              className="w-full mt-4 text-yellow-600 border-yellow-500 hover:bg-yellow-50"
+            >
               Modifier
             </Button>
           </div>
