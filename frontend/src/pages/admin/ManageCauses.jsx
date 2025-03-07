@@ -3,18 +3,32 @@
 import { useState, useEffect } from "react"
 import { ArrowLeft, Edit, Trash2, PlusCircle } from "lucide-react"
 import { Link } from "react-router-dom"
+import { toast } from "sonner"
+import CauseDetails from "@/components/CauseDetails"
 
 const ManageCauses = () => {
   const [causes, setCauses] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [selectedCause, setSelectedCause] = useState(null)
 
   useEffect(() => {
     const fetchCauses = async () => {
+      setIsLoading(true)
       try {
-        const response = await fetch("/api/causes")
+        const response = await fetch("http://localhost:5001/api/causes", {
+          credentials: "include",
+        })
+        if (!response.ok) {
+          throw new Error("Failed to fetch causes")
+        }
         const data = await response.json()
+        console.log("Fetched causes:", data)
         setCauses(data)
       } catch (error) {
         console.error("Error fetching causes:", error)
+        toast.error("Failed to load causes")
+      } finally {
+        setIsLoading(false)
       }
     }
 
@@ -24,12 +38,79 @@ const ManageCauses = () => {
   const handleDeleteCause = async (causeId) => {
     if (window.confirm("Are you sure you want to delete this cause?")) {
       try {
-        await fetch(`/api/causes/${causeId}`, { method: "DELETE" })
-        setCauses(causes.filter((cause) => cause.id !== causeId))
+        const response = await fetch(`http://localhost:5001/api/causes/${causeId}`, {
+          method: "DELETE",
+          credentials: "include",
+        })
+        if (!response.ok) {
+          throw new Error("Failed to delete cause")
+        }
+        setCauses((prevCauses) => prevCauses.filter((cause) => cause._id !== causeId))
+        toast.success("Cause deleted successfully")
       } catch (error) {
         console.error("Error deleting cause:", error)
+        toast.error("Failed to delete cause")
       }
     }
+  }
+
+  const handleUpdateStatus = async (causeId, newStatus) => {
+    try {
+      const response = await fetch(`http://localhost:5001/api/causes/${causeId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status: newStatus }),
+        credentials: "include",
+      })
+      if (!response.ok) {
+        throw new Error("Failed to update cause status")
+      }
+      const updatedCause = await response.json()
+      setCauses((prevCauses) => prevCauses.map((cause) => (cause._id === causeId ? updatedCause : cause)))
+      toast.success(`Cause status updated to ${newStatus}`)
+    } catch (error) {
+      console.error("Error updating cause status:", error)
+      toast.error("Failed to update cause status")
+    }
+  }
+
+  const handleViewDetails = (cause) => {
+    setSelectedCause(cause)
+  }
+
+  const handleCloseDetails = () => {
+    setSelectedCause(null)
+  }
+
+  const handleEditCause = async (editedCause) => {
+    try {
+      const response = await fetch(`http://localhost:5001/api/causes/${editedCause._id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(editedCause),
+        credentials: "include",
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to update cause")
+      }
+
+      const updatedCause = await response.json()
+      setCauses((prevCauses) => prevCauses.map((cause) => (cause._id === updatedCause._id ? updatedCause : cause)))
+      toast.success("Cause updated successfully")
+      setSelectedCause(null)
+    } catch (error) {
+      console.error("Error updating cause:", error)
+      toast.error("Failed to update cause: " + error.message)
+    }
+  }
+
+  if (isLoading) {
+    return <div>Loading...</div>
   }
 
   return (
@@ -56,23 +137,38 @@ const ManageCauses = () => {
                 <tr className="bg-gray-100">
                   <th className="p-3">Title</th>
                   <th className="p-3">Description</th>
-                  <th className="p-3">Goal</th>
-                  <th className="p-3">Raised</th>
+                  <th className="p-3">Target Amount</th>
+                  <th className="p-3">Current Amount</th>
+                  <th className="p-3">Status</th>
                   <th className="p-3">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {causes.map((cause) => (
-                  <tr key={cause.id} className="border-b border-gray-200 hover:bg-gray-50">
+                  <tr key={cause._id} className="border-b border-gray-200 hover:bg-gray-50">
                     <td className="p-3">{cause.title}</td>
                     <td className="p-3">{cause.description.substring(0, 50)}...</td>
-                    <td className="p-3">${cause.goal.toLocaleString()}</td>
-                    <td className="p-3">${cause.raised.toLocaleString()}</td>
+                    <td className="p-3">${cause.targetAmount.toLocaleString()}</td>
+                    <td className="p-3">${cause.currentAmount.toLocaleString()}</td>
                     <td className="p-3">
-                      <button className="text-blue-500 hover:text-blue-700 mr-3">
+                      <select
+                        value={cause.status}
+                        onChange={(e) => handleUpdateStatus(cause._id, e.target.value)}
+                        className="border rounded p-1"
+                      >
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                      </select>
+                    </td>
+                    <td className="p-3">
+                      <button
+                        className="text-blue-500 hover:text-blue-700 mr-3"
+                        onClick={() => handleViewDetails(cause)}
+                      >
                         <Edit size={18} />
                       </button>
-                      <button className="text-red-500 hover:text-red-700" onClick={() => handleDeleteCause(cause.id)}>
+                      <button className="text-red-500 hover:text-red-700" onClick={() => handleDeleteCause(cause._id)}>
                         <Trash2 size={18} />
                       </button>
                     </td>
@@ -83,6 +179,9 @@ const ManageCauses = () => {
           </div>
         </div>
       </div>
+      {selectedCause && (
+        <CauseDetails cause={selectedCause} onClose={handleCloseDetails} isAdmin={true} onEdit={handleEditCause} />
+      )}
     </div>
   )
 }

@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
+import MyCauses from "@/components/MyCauses"
 
 const Dashboard = () => {
   const [activeSection, setActiveSection] = useState("dashboard")
@@ -404,35 +405,6 @@ const DashboardOverview = ({ userInfo }) => {
             </Button>
           </div>
         </div>
-      </div>
-    </div>
-  )
-}
-
-const MyCauses = () => {
-  const navigate = useNavigate()
-
-  const handleCreateCause = () => {
-    navigate("/causes/create")
-  }
-
-  return (
-    <div className="bg-white p-6 rounded-lg shadow">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">My Causes</h2>
-        <Button onClick={handleCreateCause} className="bg-yellow-500 hover:bg-yellow-600 text-black">
-          Create New Cause
-        </Button>
-      </div>
-
-      {/* Empty state */}
-      <div className="text-center py-12 border-2 border-dashed border-gray-200 rounded-lg">
-        <Heart className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-        <p className="text-gray-600 mb-2">You haven't created any causes yet</p>
-        <p className="text-sm text-gray-500 mb-4">Create your first cause to start collecting donations</p>
-        <Button onClick={handleCreateCause} className="bg-yellow-500 hover:bg-yellow-600 text-black">
-          Lancez-vous ! Créez votre Cha9a9a
-        </Button>
       </div>
     </div>
   )
