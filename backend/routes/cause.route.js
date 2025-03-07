@@ -12,11 +12,11 @@ import { protectRoute, adminRoute } from "../middleware/auth.middleware.js"
 const router = express.Router()
 
 router.post("/", protectRoute, createCause)
-router.get("/", protectRoute, adminRoute, getCauses)
+router.get("/", protectRoute, getCauses)
 router.get("/user", protectRoute, getUserCauses)
 router.get("/:id", protectRoute, getCause)
 router.put("/:id", protectRoute, updateCause)
-router.delete("/:id", protectRoute, adminRoute, deleteCause)
+router.delete("/:id", protectRoute, deleteCause)
 
 export default router
 
