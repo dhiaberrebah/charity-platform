@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ArrowLeft, Edit, Trash2, PlusCircle } from "lucide-react"
+import { ArrowLeft, Edit, Trash2, PlusCircle } from 'lucide-react'
 import { Link } from "react-router-dom"
 import { toast } from "sonner"
 import CauseDetails from "@/components/CauseDetails"
@@ -56,6 +56,9 @@ const ManageCauses = () => {
 
   const handleUpdateStatus = async (causeId, newStatus) => {
     try {
+      console.log("Updating cause:", causeId)
+      console.log("New status:", newStatus)
+
       const response = await fetch(`http://localhost:5001/api/causes/${causeId}`, {
         method: "PUT",
         headers: {
@@ -64,15 +67,28 @@ const ManageCauses = () => {
         body: JSON.stringify({ status: newStatus }),
         credentials: "include",
       })
-      if (!response.ok) {
-        throw new Error("Failed to update cause status")
-      }
+
+      console.log("Response status:", response.status)
       const updatedCause = await response.json()
-      setCauses((prevCauses) => prevCauses.map((cause) => (cause._id === causeId ? updatedCause : cause)))
+      console.log("Received updated cause:", updatedCause)
+
+      if (!response.ok) {
+        throw new Error(updatedCause.message || "Failed to update cause status")
+      }
+
+      if (updatedCause.status !== newStatus) {
+        throw new Error("Status was not updated on the server")
+      }
+
+      setCauses((prevCauses) => {
+        const newCauses = prevCauses.map((cause) => (cause._id === causeId ? updatedCause : cause))
+        console.log("New causes state:", newCauses)
+        return [...newCauses] // Create a new array to force re-render
+      })
       toast.success(`Cause status updated to ${newStatus}`)
     } catch (error) {
       console.error("Error updating cause status:", error)
-      toast.error("Failed to update cause status")
+      toast.error(`Failed to update cause status: ${error.message}`)
     }
   }
 
@@ -187,4 +203,3 @@ const ManageCauses = () => {
 }
 
 export default ManageCauses
-

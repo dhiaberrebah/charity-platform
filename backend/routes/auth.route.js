@@ -4,7 +4,7 @@ import {
   logout,
   signup,
   checkAuth,
-  updateProfile,
+  updateUser,
   getUsers,
   deleteUser,
 } from "../controllers/auth.controller.js"
@@ -16,8 +16,7 @@ router.post("/login", login)
 router.get("/get", protectRoute, getUsers)
 router.post("/logout", logout)
 router.get("/check", protectRoute, checkAuth)
-router.put("/profile", protectRoute, updateProfile)
+router.put("/users/:id", protectRoute, updateUser)
 router.delete("/users/:id", protectRoute, deleteUser)
 
 export default router
-

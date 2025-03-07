@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ArrowLeft, Edit, Trash2, UserPlus, X } from "lucide-react"
+import { ArrowLeft, Edit, Trash2, UserPlus, X } from 'lucide-react'
 import { Link } from "react-router-dom"
 
 const ManageUsers = () => {
@@ -78,7 +78,7 @@ const ManageUsers = () => {
   const handleEditSubmit = async (e) => {
     e.preventDefault()
     try {
-      const response = await fetch(`http://localhost:5001/api/auth/profile`, {
+      const response = await fetch(`http://localhost:5001/api/auth/users/${editingUser._id}`, {
         method: "PUT",
         credentials: "include",
         headers: {
@@ -90,7 +90,7 @@ const ManageUsers = () => {
       if (response.ok) {
         const updatedUser = await response.json()
         setUsers((prevUsers) =>
-          prevUsers.map((user) => (user._id === updatedUser.user._id ? { ...user, ...updatedUser.user } : user)),
+          prevUsers.map((user) => (user._id === updatedUser._id ? updatedUser : user))
         )
         setIsEditModalOpen(false)
         setEditingUser(null)
@@ -425,4 +425,3 @@ const ManageUsers = () => {
 }
 
 export default ManageUsers
-

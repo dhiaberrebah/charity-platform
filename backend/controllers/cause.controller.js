@@ -123,32 +123,26 @@ export const updateCause = async (req, res) => {
     const { title, description, category, targetAmount, status } = req.body
     const causeId = req.params.id
 
-    let cause
-    if (req.user.isAdmin) {
-      // Admins can update any cause
-      cause = await Cause.findById(causeId)
-    } else {
-      // Regular users can only update their own causes
-      cause = await Cause.findOne({ _id: causeId, createdBy: req.user._id })
-    }
+    console.log("Updating cause:", causeId)
+    console.log("Request body:", req.body)
+
+    const cause = await Cause.findById(causeId)
 
     if (!cause) {
-      return res.status(404).json({ message: "Cause not found or you don't have permission to edit this cause" })
+      return res.status(404).json({ message: "Cause not found" })
     }
 
-    cause.title = title
-    cause.description = description
-    cause.category = category
-    cause.targetAmount = targetAmount
-
-    // Only admins can update the status
-    if (req.user.isAdmin && status) {
-      cause.status = status
-    }
+    if (title) cause.title = title
+    if (description) cause.description = description
+    if (category) cause.category = category
+    if (targetAmount) cause.targetAmount = targetAmount
+    if (status) cause.status = status
 
     const updatedCause = await cause.save()
+    console.log("Updated cause:", updatedCause)
     res.json(updatedCause)
   } catch (error) {
+    console.error("Error in updateCause:", error)
     res.status(400).json({ message: error.message })
   }
 }
@@ -164,4 +158,3 @@ export const deleteCause = async (req, res) => {
     res.status(500).json({ message: error.message })
   }
 }
-

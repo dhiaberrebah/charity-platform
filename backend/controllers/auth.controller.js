@@ -69,7 +69,7 @@ export const login = async (req, res) => {
   try {
     const user = await User.findOne({ email })
     if (!user) {
-      return res.status(400).json({ message: "Invalid incredentials" })
+      return res.status(400).json({ message: "Invalid credentials" })
     }
     const isPasswordCorrect = await bcrypt.compare(password, user.password)
     if (!isPasswordCorrect) {
@@ -90,6 +90,7 @@ export const login = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" })
   }
 }
+
 export const logout = (req, res) => {
   try {
     res.cookie("jwt", "", { maxAge: 0 })
@@ -117,10 +118,10 @@ export const checkAuth = async (req, res) => {
   }
 }
 
-export const updateProfile = async (req, res) => {
+export const updateUser = async (req, res) => {
   try {
-    const userId = req.user._id
     const { nom, prenom, age, adresse, telephone, email } = req.body
+    const userId = req.params.id
 
     const user = await User.findById(userId)
     if (!user) {
@@ -143,22 +144,19 @@ export const updateProfile = async (req, res) => {
       user.email = email
     }
 
-    await user.save()
+    const updatedUser = await user.save()
 
     res.status(200).json({
-      message: "Profile updated successfully",
-      user: {
-        _id: user._id,
-        nom: user.nom,
-        prenom: user.prenom,
-        age: user.age,
-        adresse: user.adresse,
-        telephone: user.telephone,
-        email: user.email,
-      },
+      _id: updatedUser._id,
+      nom: updatedUser.nom,
+      prenom: updatedUser.prenom,
+      age: updatedUser.age,
+      adresse: updatedUser.adresse,
+      telephone: updatedUser.telephone,
+      email: updatedUser.email,
     })
   } catch (error) {
-    console.error("Error in updateProfile controller:", error)
+    console.error("Error in updateUser controller:", error)
     res.status(500).json({ message: "Internal Server Error" })
   }
 }
@@ -182,4 +180,3 @@ export const deleteUser = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" })
   }
 }
-
