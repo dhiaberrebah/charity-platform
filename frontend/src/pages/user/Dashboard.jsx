@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import {
   LayoutDashboard,
@@ -28,27 +28,29 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  useEffect(() => {
-    const fetchUserInfo = async () => {
-      try {
-        const response = await fetch("http://localhost:5001/api/auth/check", {
-          credentials: "include",
-        })
-        if (!response.ok) {
-          throw new Error("Failed to fetch user data")
-        }
-        const data = await response.json()
-        console.log("Fetched user data:", data)
-        setUserInfo(data.user)
-      } catch (err) {
-        setError(err.message)
-      } finally {
-        setLoading(false)
+  // Create a function to refresh user info
+  const refreshUserInfo = useCallback(async () => {
+    try {
+      setLoading(true)
+      const response = await fetch("http://localhost:5001/api/auth/check", {
+        credentials: "include",
+      })
+      if (!response.ok) {
+        throw new Error("Failed to fetch user data")
       }
+      const data = await response.json()
+      console.log("Refreshed user data:", data)
+      setUserInfo(data.user)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
     }
-
-    fetchUserInfo()
   }, [])
+
+  useEffect(() => {
+    refreshUserInfo()
+  }, [refreshUserInfo])
 
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -247,31 +249,212 @@ const UserInformation = ({ userInfo, onChange }) => {
   )
 }
 
-const DocumentUpload = () => (
-  <div className="bg-white p-6 rounded-lg shadow">
-    <h2 className="text-2xl font-bold mb-6">My Documents</h2>
-    <div className="bg-yellow-50 p-4 rounded-lg mb-6">
-      <h3 className="font-semibold mb-2">Identity Documents</h3>
-      <div className="flex gap-4">
-        <div className="flex-1 border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-          <div className="mb-4">
-            <Camera className="w-8 h-8 mx-auto text-gray-400" />
+const DocumentUpload = () => {
+  const [frontDocument, setFrontDocument] = useState(null)
+  const [backDocument, setBackDocument] = useState(null)
+  const [frontPreview, setFrontPreview] = useState(null)
+  const [backPreview, setBackPreview] = useState(null)
+  const [uploading, setUploading] = useState(false)
+  const [uploadStatus, setUploadStatus] = useState({ success: false, message: "" })
+  const frontInputRef = useRef(null)
+  const backInputRef = useRef(null)
+
+  const handleFileChange = (e, type) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    // Check file type
+    const validTypes = ["image/jpeg", "image/png", "application/pdf"]
+    if (!validTypes.includes(file.type)) {
+      alert("Please upload a JPG, PNG or PDF file")
+      return
+    }
+
+    // Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert("File size should be less than 5MB")
+      return
+    }
+
+    // Create preview for images
+    if (file.type.startsWith("image/")) {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        if (type === "front") {
+          setFrontPreview(e.target.result)
+          setFrontDocument(file)
+        } else {
+          setBackPreview(e.target.result)
+          setBackDocument(file)
+        }
+      }
+      reader.readAsDataURL(file)
+    } else {
+      // For PDFs, just store the file without preview
+      if (type === "front") {
+        setFrontDocument(file)
+        setFrontPreview("/placeholder.svg?height=100&width=150")
+      } else {
+        setBackDocument(file)
+        setBackPreview("/placeholder.svg?height=100&width=150")
+      }
+    }
+  }
+
+  const handleUpload = async () => {
+    if (!frontDocument && !backDocument) {
+      alert("Please upload at least one document")
+      return
+    }
+
+    setUploading(true)
+    setUploadStatus({ success: false, message: "" })
+
+    try {
+      const formData = new FormData()
+
+      if (frontDocument) {
+        formData.append("frontDocument", frontDocument)
+      }
+
+      if (backDocument) {
+        formData.append("backDocument", backDocument)
+      }
+
+      const response = await fetch("http://localhost:5001/api/documents/upload", {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to upload documents")
+      }
+
+      const data = await response.json()
+
+      setUploadStatus({
+        success: true,
+        message: "Documents uploaded successfully and pending approval",
+      })
+
+      // Clear the form
+      setFrontDocument(null)
+      setBackDocument(null)
+      setFrontPreview(null)
+      setBackPreview(null)
+    } catch (error) {
+      console.error("Upload error:", error)
+      setUploadStatus({
+        success: false,
+        message: error.message || "Error uploading documents",
+      })
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  return (
+    <div className="bg-white p-6 rounded-lg shadow">
+      <h2 className="text-2xl font-bold mb-6">My Documents</h2>
+
+      <div className="bg-yellow-50 p-4 rounded-lg mb-6">
+        <h3 className="font-semibold mb-2">Identity Documents</h3>
+
+        <div className="flex gap-4 flex-col md:flex-row">
+          {/* Front Document */}
+          <div className="flex-1">
+            <p className="text-sm font-medium mb-2">Front side of ID</p>
+            <div
+              className={`border-2 border-dashed ${frontPreview ? "border-primary" : "border-gray-300"} rounded-lg p-4 text-center relative overflow-hidden cursor-pointer`}
+              onClick={() => frontInputRef.current.click()}
+            >
+              {frontPreview ? (
+                <>
+                  <img
+                    src={frontPreview || "/placeholder.svg"}
+                    alt="ID Front Preview"
+                    className="mx-auto max-h-32 object-contain mb-2"
+                  />
+                  <p className="text-sm text-gray-600">{frontDocument.name}</p>
+                </>
+              ) : (
+                <>
+                  <div className="mb-4">
+                    <Camera className="w-8 h-8 mx-auto text-gray-400" />
+                  </div>
+                  <p className="text-sm text-gray-600 mb-2">Upload front side</p>
+                  <p className="text-xs text-gray-500">JPG, PNG or PDF accepted</p>
+                </>
+              )}
+              <input
+                type="file"
+                ref={frontInputRef}
+                className="hidden"
+                accept=".jpg,.jpeg,.png,.pdf"
+                onChange={(e) => handleFileChange(e, "front")}
+              />
+            </div>
           </div>
-          <p className="text-sm text-gray-600 mb-2">Upload front side</p>
-          <p className="text-xs text-gray-500">JPG, PNG or PDF accepted</p>
-        </div>
-        <div className="flex-1 border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-          <div className="mb-4">
-            <Camera className="w-8 h-8 mx-auto text-gray-400" />
+
+          {/* Back Document */}
+          <div className="flex-1">
+            <p className="text-sm font-medium mb-2">Back side of ID</p>
+            <div
+              className={`border-2 border-dashed ${backPreview ? "border-primary" : "border-gray-300"} rounded-lg p-4 text-center relative overflow-hidden cursor-pointer`}
+              onClick={() => backInputRef.current.click()}
+            >
+              {backPreview ? (
+                <>
+                  <img
+                    src={backPreview || "/placeholder.svg"}
+                    alt="ID Back Preview"
+                    className="mx-auto max-h-32 object-contain mb-2"
+                  />
+                  <p className="text-sm text-gray-600">{backDocument.name}</p>
+                </>
+              ) : (
+                <>
+                  <div className="mb-4">
+                    <Camera className="w-8 h-8 mx-auto text-gray-400" />
+                  </div>
+                  <p className="text-sm text-gray-600 mb-2">Upload back side</p>
+                  <p className="text-xs text-gray-500">JPG, PNG or PDF accepted</p>
+                </>
+              )}
+              <input
+                type="file"
+                ref={backInputRef}
+                className="hidden"
+                accept=".jpg,.jpeg,.png,.pdf"
+                onChange={(e) => handleFileChange(e, "back")}
+              />
+            </div>
           </div>
-          <p className="text-sm text-gray-600 mb-2">Upload back side</p>
-          <p className="text-xs text-gray-500">JPG, PNG or PDF accepted</p>
         </div>
       </div>
+
+      {/* Upload button and status message */}
+      <div>
+        <Button
+          className="w-full flex items-center justify-center gap-2"
+          onClick={handleUpload}
+          disabled={uploading || (!frontDocument && !backDocument)}
+        >
+          {uploading ? "Uploading..." : "Submit Documents"}
+        </Button>
+
+        {uploadStatus.message && (
+          <div
+            className={`mt-4 p-3 rounded-md ${uploadStatus.success ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}`}
+          >
+            {uploadStatus.message}
+          </div>
+        )}
+      </div>
     </div>
-    <Button className="w-full">Submit Documents</Button>
-  </div>
-)
+  )
+}
 
 const BankDetails = ({ userInfo, onChange }) => (
   <div className="bg-white p-6 rounded-lg shadow">
