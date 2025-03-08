@@ -1,53 +1,105 @@
+"use client"
+
+import { useState, useEffect } from "react"
 import CauseCard from "./CauseCard"
 
 const CausesSection = () => {
-  const featuredCauses = [
-    {
-      id: 1,
-      title: "Clean Water Initiative",
-      description:
-        "Providing clean water to communities in need. Our projects have helped thousands of children access safe drinking water in schools and communities.",
-      image:
-        "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/african-schoolboy-at-school-smiles-drinking-water-2023-11-27-05-03-49-utc%20(1).jpg-Go6b2uSFCA284ZZvYpAg0digbPXuxu.jpeg",
-      raised: 85000,
-      goal: 100000,
-    },
-    {
-      id: 2,
-      title: "Education for All",
-      description:
-        "Supporting education in underprivileged areas through infrastructure development, teacher training, and student resources.",
-      image: "src/assets/img/diverse-muslim-children-studying-in-classroom-2025-02-10-10-57-31-utc.jpg",
-      raised: 45000,
-      goal: 75000,
-    },
-    {
-      id: 3,
-      title: "Wildlife Conservation",
-      description:
-        "Protecting endangered species and their habitats through conservation efforts, anti-poaching initiatives, and community education.",
-      image:
-        "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/elephant-at-sunrise-in-thailand-2023-11-27-05-21-27-utc%20(1).jpg-Yro7XKZaIp3AHdxjmoEjeeDMESKI8j.jpeg",
-      raised: 120000,
-      goal: 150000,
-    },
-  ]
+  const [causes, setCauses] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    const fetchCauses = async () => {
+      try {
+        setLoading(true)
+        const response = await fetch("http://localhost:5001/api/causes", {
+          credentials: "include",
+        })
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch causes")
+        }
+
+        const data = await response.json()
+        console.log("Fetched causes:", data)
+
+        // Filter to only show approved causes
+        const approvedCauses = data.filter((cause) => cause.status === "approved")
+        setCauses(approvedCauses)
+        setError(null)
+      } catch (error) {
+        console.error("Error fetching causes:", error)
+        setError("Failed to load causes. Please try again later.")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchCauses()
+  }, [])
+
+  // Function to get the image URL
+  const getImageUrl = (cause) => {
+    // If the image is a full URL (like from Cloudinary), use it directly
+    if (cause.image && (cause.image.startsWith("http://") || cause.image.startsWith("https://"))) {
+      return cause.image
+    }
+
+    // If it's a relative path (like from local uploads), prepend the server URL
+    if (cause.image) {
+      return `http://localhost:5001/${cause.image}`
+    }
+
+    // Fallback image - use a reliable placeholder service
+    return "https://placehold.co/600x400/png?text=No+Image"
+  }
 
   return (
     <div className="container mx-auto py-12">
       <h2 className="text-3xl font-bold mb-6 text-center">Featured Causes</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {featuredCauses.map((cause) => (
-          <CauseCard
-            key={cause.id}
-            title={cause.title}
-            description={cause.description}
-            image={cause.image}
-            raised={cause.raised}
-            goal={cause.goal}
-          />
-        ))}
-      </div>
+
+      {loading && (
+        <div className="text-center py-10">
+          <div
+            className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"
+            role="status"
+          >
+            <span className="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">
+              Loading...
+            </span>
+          </div>
+          <p className="mt-2 text-gray-600">Loading causes...</p>
+        </div>
+      )}
+
+      {error && (
+        <div className="text-center py-10">
+          <p className="text-red-500">{error}</p>
+        </div>
+      )}
+
+      {!loading && !error && causes.length === 0 && (
+        <div className="text-center py-10">
+          <p className="text-gray-600">No causes found. Check back later!</p>
+        </div>
+      )}
+
+      {!loading && !error && causes.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {causes.map((cause) => (
+            <CauseCard
+              key={cause._id}
+              id={cause._id}
+              title={cause.title}
+              description={cause.description}
+              image={getImageUrl(cause)}
+              raised={cause.currentAmount || 0}
+              goal={cause.targetAmount}
+              category={cause.category}
+            />
+          ))}
+        </div>
+      )}
     </div>
   )
 }

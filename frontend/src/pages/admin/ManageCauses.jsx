@@ -349,48 +349,10 @@ const ManageCauses = () => {
     setIsAddModalOpen(false)
   }
 
-  const handleAddCause = async (formDataObj) => {
+  const handleAddCause = async (createdCause) => {
     try {
-      console.log("Sending form data to server")
-
-      const response = await fetch("http://localhost:5001/api/causes", {
-        method: "POST",
-        body: formDataObj, // Send as FormData, not JSON
-        credentials: "include", // This sends the cookies/session info
-      })
-
-      // Get the response text first to see what's coming back
-      const responseText = await response.text()
-      console.log("Server response:", responseText)
-
-      // Try to parse it as JSON if possible
-      let responseData
-      try {
-        responseData = JSON.parse(responseText)
-      } catch (e) {
-        // If it's not valid JSON, use the text as is
-        responseData = { message: responseText }
-      }
-
-      if (!response.ok) {
-        // Special handling for the "already processed" error
-        if (responseData.message === "This submission has already been processed") {
-          toast.info("Your cause has already been submitted")
-          setIsAddModalOpen(false) // Close the modal anyway
-          return
-        }
-
-        // Special handling for duplicate title error
-        if (responseData.message === "A cause with this title already exists") {
-          toast.error("A cause with this title already exists. Please use a different title.")
-          return
-        }
-
-        throw new Error(responseData.message || "Failed to create cause")
-      }
-
-      // If we got here, the request was successful
-      const createdCause = responseData
+      // The cause has already been created by the modal
+      // Just update the state
       setCauses((prevCauses) => [...prevCauses, createdCause])
       toast.success("Cause created successfully")
       setIsAddModalOpen(false)
@@ -404,8 +366,7 @@ const ManageCauses = () => {
         setCauses(refreshedData)
       }
     } catch (error) {
-      console.error("Error creating cause:", error)
-      toast.error("Failed to create cause: " + error.message)
+      console.error("Error updating causes list:", error)
     }
   }
 

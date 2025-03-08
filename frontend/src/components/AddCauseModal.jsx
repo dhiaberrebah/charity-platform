@@ -1,24 +1,22 @@
 "use client"
 
 import { useState } from "react"
-import { X } from "lucide-react"
+import { X, Upload } from "lucide-react"
 
 const AddCauseModal = ({ onClose, onAdd }) => {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    targetAmount: 1000, // Start with a reasonable default
-    currentAmount: 0, // Explicitly include this
+    targetAmount: 1000,
+    currentAmount: 0,
     category: "education",
-    imageUrl: "",
     status: "pending",
-    // Add any other required fields your API expects
-    createdBy: "", // If your API requires a user ID, you might need to pass this in
-    deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0], // 30 days from now
   })
-
+  const [imageFile, setImageFile] = useState(null)
+  const [imagePreview, setImagePreview] = useState(null)
   const [errors, setErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -33,6 +31,20 @@ const AddCauseModal = ({ onClose, onAdd }) => {
       ...formData,
       [name]: processedValue,
     })
+  }
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      setImageFile(file)
+
+      // Create a preview URL
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setImagePreview(reader.result)
+      }
+      reader.readAsDataURL(file)
+    }
   }
 
   const validateForm = () => {
@@ -62,15 +74,87 @@ const AddCauseModal = ({ onClose, onAdd }) => {
     }
 
     setIsSubmitting(true)
+    setUploadProgress(0)
 
     try {
-      await onAdd({
-        ...formData,
-        currentAmount: 0, // New causes start with 0 current amount
-      })
+      // Generate a unique submission ID
+      const submissionId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+
+      // Create FormData object for multer
+      const formDataObj = new FormData()
+      formDataObj.append("title", formData.title)
+      formDataObj.append("description", formData.description)
+      formDataObj.append("category", formData.category)
+      formDataObj.append("targetAmount", formData.targetAmount)
+      formDataObj.append("submissionId", submissionId)
+
+      // If there's an image file, add it
+      if (imageFile) {
+        formDataObj.append("image", imageFile)
+      }
+
+      console.log("Submitting cause with ID:", submissionId)
+
+      // Create a custom fetch with upload progress
+      const xhr = new XMLHttpRequest()
+      xhr.open("POST", "http://localhost:5001/api/causes", true)
+      xhr.withCredentials = true // For cookies
+
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const progress = Math.round((e.loaded / e.total) * 100)
+          setUploadProgress(progress)
+        }
+      }
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          // Success
+          let response
+          try {
+            response = JSON.parse(xhr.responseText)
+          } catch (e) {
+            response = { message: xhr.responseText }
+          }
+
+          // Reset form after successful submission
+          setFormData({
+            title: "",
+            description: "",
+            targetAmount: 1000,
+            currentAmount: 0,
+            category: "education",
+            status: "pending",
+          })
+          setImageFile(null)
+          setImagePreview(null)
+          setUploadProgress(0)
+
+          onAdd(response)
+        } else {
+          // Error
+          let errorMessage
+          try {
+            const response = JSON.parse(xhr.responseText)
+            errorMessage = response.message || "Failed to create cause"
+          } catch (e) {
+            errorMessage = "Failed to create cause"
+          }
+
+          throw new Error(errorMessage)
+        }
+
+        setIsSubmitting(false)
+      }
+
+      xhr.onerror = () => {
+        setIsSubmitting(false)
+        throw new Error("Network error occurred")
+      }
+
+      xhr.send(formDataObj)
     } catch (error) {
       console.error("Error in form submission:", error)
-    } finally {
       setIsSubmitting(false)
     }
   }
@@ -119,7 +203,7 @@ const AddCauseModal = ({ onClose, onAdd }) => {
               name="targetAmount"
               value={formData.targetAmount}
               onChange={handleChange}
-              min="0"
+              min="1"
               step="0.01"
               className={`w-full p-2 border rounded-lg ${errors.targetAmount ? "border-red-500" : "border-gray-300"}`}
               placeholder="Enter target amount"
@@ -146,15 +230,23 @@ const AddCauseModal = ({ onClose, onAdd }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
-            <input
-              type="text"
-              name="imageUrl"
-              value={formData.imageUrl}
-              onChange={handleChange}
-              className="w-full p-2 border border-gray-300 rounded-lg"
-              placeholder="Enter image URL (optional)"
-            />
+            <label className="block text-sm font-medium text-gray-700 mb-1">Image</label>
+            <div className="mt-1 flex items-center">
+              <label className="flex flex-col items-center px-4 py-2 bg-white text-blue-500 rounded-lg border border-blue-500 cursor-pointer hover:bg-blue-50">
+                <Upload size={20} />
+                <span className="mt-2 text-sm">Select Image</span>
+                <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
+              </label>
+              {imagePreview && (
+                <div className="ml-4">
+                  <img
+                    src={imagePreview || "/placeholder.svg"}
+                    alt="Preview"
+                    className="h-20 w-20 object-cover rounded-lg"
+                  />
+                </div>
+              )}
+            </div>
           </div>
 
           <div>
@@ -170,6 +262,13 @@ const AddCauseModal = ({ onClose, onAdd }) => {
               <option value="rejected">Rejected</option>
             </select>
           </div>
+
+          {isSubmitting && uploadProgress > 0 && (
+            <div className="w-full bg-gray-200 rounded-full h-2.5">
+              <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${uploadProgress}%` }}></div>
+              <p className="text-sm text-gray-600 mt-1">Uploading: {uploadProgress}%</p>
+            </div>
+          )}
 
           <div className="flex justify-end space-x-3 pt-4 border-t">
             <button
