@@ -12,7 +12,7 @@ import { protectRoute, adminRoute } from "../middleware/auth.middleware.js"
 const router = express.Router()
 
 router.post("/", protectRoute, createCause)
-router.get("/", protectRoute, getCauses)
+router.get("/", getCauses)
 router.get("/user", protectRoute, getUserCauses)
 router.get("/:id", protectRoute, getCause)
 router.put("/:id", protectRoute, updateCause)
