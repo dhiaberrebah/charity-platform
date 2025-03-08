@@ -15,7 +15,7 @@ import ManageCauses from "./pages/admin/ManageCauses"
 import ViewDonations from "./pages/admin/ViewDonations"
 import UserDashboard from "./pages/user/Dashboard"
 import UserHome from "./pages/user/Home"
-
+import AdminHome from "./pages/admin/adminhome"
 const queryClient = new QueryClient()
 
 const App = () => (
@@ -37,7 +37,7 @@ const App = () => (
           <Route path="/admin/users" element={<ManageUsers />} />
           <Route path="/admin/causes" element={<ManageCauses />} />
           <Route path="/admin/donations" element={<ViewDonations />} />
-
+          <Route path="/admin/home" element={<AdminHome />} />
           {/* User routes */}
           <Route path="/user/dashboard" element={<UserDashboard />} />
           <Route path="/user/home" element={<UserHome />} />
