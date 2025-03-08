@@ -14,12 +14,14 @@ import {
   Phone,
   Mail,
   HelpCircle,
+  RotateCcw,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import MyCauses from "@/components/MyCauses"
+import NavigationBar from "@/components/UserNavigationBar"
 
 const Dashboard = () => {
   const [activeSection, setActiveSection] = useState("dashboard")
@@ -86,7 +88,14 @@ const Dashboard = () => {
 
     switch (activeSection) {
       case "my-info":
-        return <UserInformation userInfo={userInfo} onChange={handleInputChange} />
+        return (
+          <UserInformation
+            userInfo={userInfo}
+            onChange={handleInputChange}
+            refreshUserInfo={refreshUserInfo}
+            setActiveSection={setActiveSection}
+          />
+        )
       case "documents":
         return <DocumentUpload />
       case "bank-details":
@@ -107,14 +116,12 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Left Sidebar */}
-      <aside className="fixed left-0 top-0 h-screen w-64 bg-white border-r border-gray-200 overflow-y-auto">
-        <div className="p-6">
-          <button onClick={() => navigate("/")} className="flex items-center space-x-2">
-            <Heart className="w-6 h-6 text-primary" />
-            <span className="text-xl font-semibold text-gray-900">CharityHub</span>
-          </button>
-        </div>
+      {/* Navigation Bar */}
+      <NavigationBar />
+
+      {/* Left Sidebar - adjusted to account for navbar */}
+      <aside className="fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 bg-white border-r border-gray-200 overflow-y-auto">
+        
         <nav className="px-4 py-2">
           {menuItems.map((item) => (
             <button
@@ -131,27 +138,78 @@ const Dashboard = () => {
         </nav>
       </aside>
 
-      {/* Main Content */}
-      <main className="ml-64 p-8">
+      {/* Main Content - adjusted to account for navbar */}
+      <main className="ml-64 pt-16 p-8">
         <div className="max-w-4xl mx-auto">{renderContent()}</div>
       </main>
     </div>
   )
 }
 
-const UserInformation = ({ userInfo, onChange }) => {
+const UserInformation = ({ userInfo, onChange, refreshUserInfo, setActiveSection }) => {
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState(null)
   const [saveSuccess, setSaveSuccess] = useState(false)
+  const [originalUserInfo, setOriginalUserInfo] = useState(null)
+  const [hasChanges, setHasChanges] = useState(false)
+
+  // Store the original user info when the component mounts or when userInfo changes
+  useEffect(() => {
+    if (userInfo) {
+      setOriginalUserInfo({ ...userInfo })
+    }
+  }, [])
+
+  // Check if the current userInfo is different from the original
+  useEffect(() => {
+    if (originalUserInfo && userInfo) {
+      const fieldsToCompare = ["nom", "prenom", "age", "adresse", "telephone", "email"]
+
+      const changed = fieldsToCompare.some((field) => {
+        // Handle special case for age (could be string or number)
+        if (field === "age") {
+          return Number(originalUserInfo[field]) !== Number(userInfo[field])
+        }
+        return originalUserInfo[field] !== userInfo[field]
+      })
+
+      setHasChanges(changed)
+    }
+  }, [userInfo, originalUserInfo])
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target
+    onChange({
+      target: {
+        name,
+        value: name === "age" ? (value === "" ? "" : Number.parseInt(value, 10)) : value,
+      },
+    })
+  }
+
+  const resetForm = () => {
+    if (originalUserInfo) {
+      onChange(null, { ...originalUserInfo })
+      setSaveSuccess(false)
+      setSaveError(null)
+    }
+  }
 
   const handleSaveChanges = async (e) => {
     e.preventDefault()
+
+    if (!userInfo || !userInfo._id) {
+      setSaveError("User information is missing. Please refresh the page and try again.")
+      return
+    }
+
     setIsSaving(true)
     setSaveError(null)
     setSaveSuccess(false)
 
     try {
-      const response = await fetch("http://localhost:5001/api/auth/profile", {
+      // Use the correct endpoint with the user ID
+      const response = await fetch(`http://localhost:5001/api/auth/users/${userInfo._id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -161,14 +219,26 @@ const UserInformation = ({ userInfo, onChange }) => {
       })
 
       if (!response.ok) {
-        throw new Error("Failed to save changes")
+        throw new Error(`Failed to save changes: ${response.statusText}`)
       }
 
-      const updatedUser = await response.json()
-      onChange(null, updatedUser.user)
+      const data = await response.json()
+
+      // Refresh user info to get the latest data
+      await refreshUserInfo()
+
+      // Update the original user info to the new values
+      setOriginalUserInfo({ ...userInfo })
+      setHasChanges(false)
       setSaveSuccess(true)
+
+      // Navigate back to dashboard after successful save
+      setTimeout(() => {
+        setActiveSection("dashboard")
+      }, 1500) // Short delay to show success message before redirecting
     } catch (error) {
-      setSaveError(error.message)
+      console.error("Profile update error:", error)
+      setSaveError(error.message || "An unexpected error occurred")
     } finally {
       setIsSaving(false)
     }
@@ -191,11 +261,23 @@ const UserInformation = ({ userInfo, onChange }) => {
         <div className="grid gap-4">
           <div className="grid gap-2">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" name="email" value={userInfo?.email || ""} onChange={onChange} autoComplete="email" />
+            <Input
+              id="email"
+              name="email"
+              value={userInfo?.email || ""}
+              onChange={handleInputChange}
+              autoComplete="email"
+            />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="nom">Nom</Label>
-            <Input id="nom" name="nom" value={userInfo?.nom || ""} onChange={onChange} autoComplete="family-name" />
+            <Input
+              id="nom"
+              name="nom"
+              value={userInfo?.nom || ""}
+              onChange={handleInputChange}
+              autoComplete="family-name"
+            />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="prenom">Prénom</Label>
@@ -203,7 +285,7 @@ const UserInformation = ({ userInfo, onChange }) => {
               id="prenom"
               name="prenom"
               value={userInfo?.prenom || ""}
-              onChange={onChange}
+              onChange={handleInputChange}
               autoComplete="given-name"
             />
           </div>
@@ -214,7 +296,7 @@ const UserInformation = ({ userInfo, onChange }) => {
               name="age"
               type="number"
               value={userInfo?.age || ""}
-              onChange={onChange}
+              onChange={handleInputChange}
               autoComplete="age"
             />
           </div>
@@ -224,7 +306,7 @@ const UserInformation = ({ userInfo, onChange }) => {
               id="adresse"
               name="adresse"
               value={userInfo?.adresse || ""}
-              onChange={onChange}
+              onChange={handleInputChange}
               autoComplete="street-address"
             />
           </div>
@@ -234,15 +316,35 @@ const UserInformation = ({ userInfo, onChange }) => {
               id="telephone"
               name="telephone"
               value={userInfo?.telephone || ""}
-              onChange={onChange}
+              onChange={handleInputChange}
               autoComplete="tel"
             />
           </div>
-          <Button type="submit" className="w-full" disabled={isSaving}>
-            {isSaving ? "Saving..." : "Save Changes"}
-          </Button>
-          {saveError && <p className="text-red-500">{saveError}</p>}
-          {saveSuccess && <p className="text-green-500">Changes saved successfully!</p>}
+          <div className="flex gap-3">
+            <Button type="submit" className="flex-1" disabled={isSaving || !hasChanges}>
+              {isSaving ? "Saving..." : "Save Changes"}
+            </Button>
+            <Button type="button" variant="outline" className="w-auto" onClick={resetForm} disabled={!hasChanges}>
+              <RotateCcw className="w-4 h-4 mr-2" />
+              Reset
+            </Button>
+          </div>
+          {!hasChanges && !saveSuccess && !saveError && (
+            <p className="text-sm text-gray-500 text-center">Make changes to enable saving</p>
+          )}
+          {saveError && (
+            <div className="p-3 mt-3 bg-red-50 border border-red-200 rounded-md text-red-600">
+              <p className="font-medium">Error:</p>
+              <p>{saveError}</p>
+              <p className="text-sm mt-2">If this problem persists, please contact support or try again later.</p>
+            </div>
+          )}
+          {saveSuccess && (
+            <div className="p-3 mt-3 bg-green-50 border border-green-200 rounded-md text-green-600">
+              <p className="font-medium">Success!</p>
+              <p>Your information has been updated successfully.</p>
+            </div>
+          )}
         </div>
       </form>
     </div>

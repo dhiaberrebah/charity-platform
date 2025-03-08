@@ -1,4 +1,4 @@
-import Navbar from "../../components/NavBar"
+import Navbar from "../../components/UserNavigationBar"
 import Hero from "../../components/Hero"
 import CausesSection from "../../components/CausesSection"
 import ImpactMetrics from "../../components/ImpactMetrics"

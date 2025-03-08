@@ -146,7 +146,7 @@ const MyCauses = () => {
           <p className="text-gray-600 mb-2">You haven't created any causes yet</p>
           <p className="text-sm text-gray-500 mb-4">Create your first cause to start collecting donations</p>
           <Button onClick={handleCreateCause} className="bg-[#65A89D] hover:bg-[#558b82] text-white rounded-full px-8">
-            Lancez-vous ! Créez votre Cha9a9a
+            Create New Cause
           </Button>
         </div>
       )}
