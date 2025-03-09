@@ -31,9 +31,19 @@ const LoginForm = () => {
     setError("")
 
     try {
-      const response = await axios.post("http://localhost:5001/api/auth/login", formData)
-      localStorage.setItem("token", response.data.token)
-      navigate("/user/home")
+      const response = await axios.post("http://localhost:5001/api/auth/login", formData, {
+        withCredentials: true, // Important for cookies to be sent
+      })
+
+      // Store user data in localStorage for persistence
+      localStorage.setItem("userData", JSON.stringify(response.data))
+
+      // Check user role and redirect accordingly
+      if (response.data.isAdmin || response.data.role === "admin") {
+        navigate("/admin/home")
+      } else {
+        navigate("/user/home")
+      }
     } catch (error) {
       console.error("Login error:", error.response?.data || error.message)
       setError(error.response?.data?.message || "Login failed. Please check your credentials.")

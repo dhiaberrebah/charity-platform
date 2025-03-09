@@ -5,9 +5,13 @@ import util from "util"
 
 export const getUsers = async (req, res) => {
   try {
+    // Log the user making the request to debug
+    console.log("User requesting getUsers:", req.user)
+
     const users = await User.find()
     res.json(users)
   } catch (error) {
+    console.error("Error in getUsers:", error)
     res.status(500).json({ message: error.message })
   }
 }
@@ -16,7 +20,8 @@ export const signup = async (req, res) => {
   try {
     console.log("Received request body:", req.body)
 
-    const { nom, prenom, age, adresse, telephone, email, password } = req.body
+    const { nom, prenom, age, adresse, telephone, email, password, role } = req.body
+    const isAdmin = req.body.isAdmin || role === "admin" || false
 
     if (!nom || !prenom || !age || !adresse || !telephone || !email || !password) {
       return res.status(400).json({ message: "All fields are required" })
@@ -34,6 +39,10 @@ export const signup = async (req, res) => {
     }
     const salt = await bcrypt.genSalt(10)
     const hashedPassword = await bcrypt.hash(password, salt)
+
+    // Determine role based on isAdmin or role field
+    const userRole = role || (isAdmin ? "admin" : "user")
+
     const newUser = new User({
       nom,
       prenom,
@@ -42,7 +51,10 @@ export const signup = async (req, res) => {
       telephone,
       email,
       password: hashedPassword,
+      isAdmin,
+      role: userRole,
     })
+
     if (newUser) {
       generateToken(newUser._id, res)
       await newUser.save()
@@ -54,6 +66,8 @@ export const signup = async (req, res) => {
         adresse: newUser.adresse,
         telephone: newUser.telephone,
         email: newUser.email,
+        isAdmin: newUser.isAdmin,
+        role: newUser.role,
       })
     } else {
       res.status(400).json({ message: "Invalid user data" })
@@ -84,6 +98,8 @@ export const login = async (req, res) => {
       adresse: user.adresse,
       telephone: user.telephone,
       email: user.email,
+      isAdmin: user.isAdmin,
+      role: user.role,
     })
   } catch (error) {
     console.log("Error in login controller", error.message)
@@ -120,8 +136,11 @@ export const checkAuth = async (req, res) => {
 
 export const updateUser = async (req, res) => {
   try {
-    const { nom, prenom, age, adresse, telephone, email } = req.body
+    const { nom, prenom, age, adresse, telephone, email, role } = req.body
     const userId = req.params.id
+
+    // Log the user making the request to debug
+    console.log("User updating:", req.user)
 
     const user = await User.findById(userId)
     if (!user) {
@@ -134,6 +153,15 @@ export const updateUser = async (req, res) => {
     if (age) user.age = age
     if (adresse) user.adresse = adresse
     if (telephone) user.telephone = telephone
+
+    // Handle role update
+    if (role) {
+      user.role = role
+      // isAdmin will be synced in the pre-save hook
+    } else if (req.body.isAdmin !== undefined) {
+      user.isAdmin = req.body.isAdmin
+      // role will be synced in the pre-save hook
+    }
 
     // Handle email update separately
     if (email && email !== user.email) {
@@ -154,6 +182,8 @@ export const updateUser = async (req, res) => {
       adresse: updatedUser.adresse,
       telephone: updatedUser.telephone,
       email: updatedUser.email,
+      isAdmin: updatedUser.isAdmin,
+      role: updatedUser.role,
     })
   } catch (error) {
     console.error("Error in updateUser controller:", error)
@@ -164,6 +194,9 @@ export const updateUser = async (req, res) => {
 export const deleteUser = async (req, res) => {
   try {
     const userId = req.params.id
+
+    // Log the user making the request to debug
+    console.log("User deleting:", req.user)
 
     // Check if user exists
     const user = await User.findById(userId)
@@ -180,3 +213,4 @@ export const deleteUser = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" })
   }
 }
+

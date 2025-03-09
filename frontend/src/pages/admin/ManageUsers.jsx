@@ -18,28 +18,34 @@ const ManageUsers = () => {
     telephone: "",
     email: "",
     password: "", // Include password for new user
+    role: "user",
   })
   const [showSuccessPopup, setShowSuccessPopup] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         setUsers([]) // Clear existing users first
         setIsLoading(true) // Add loading state
+        setError(null) // Clear any previous errors
+
         const response = await fetch("http://localhost:5001/api/auth/get", {
           credentials: "include",
         })
+
         if (response.ok) {
           const data = await response.json()
           // Limit initial render to first 20 users if there are many
           setUsers(data.slice(0, 20))
         } else {
-          throw new Error("Failed to fetch users")
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(errorData.message || `Failed to fetch users: ${response.status} ${response.statusText}`)
         }
       } catch (error) {
         console.error("Error fetching users:", error)
-        alert("Failed to load users. Please try refreshing the page.")
+        setError(error.message || "Failed to load users. Please try refreshing the page.")
       } finally {
         setIsLoading(false)
       }
@@ -58,12 +64,15 @@ const ManageUsers = () => {
 
         if (response.ok) {
           setUsers(users.filter((user) => user._id !== userId))
+          setShowSuccessPopup(true)
+          setTimeout(() => setShowSuccessPopup(false), 3000)
         } else {
-          throw new Error("Failed to delete user")
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(errorData.message || "Failed to delete user")
         }
       } catch (error) {
         console.error("Error deleting user:", error)
-        alert("Failed to delete user. Please try again.")
+        alert(error.message || "Failed to delete user. Please try again.")
       }
     }
   }
@@ -102,11 +111,12 @@ const ManageUsers = () => {
         setShowSuccessPopup(true)
         setTimeout(() => setShowSuccessPopup(false), 3000)
       } else {
-        throw new Error("Failed to update user")
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.message || "Failed to update user")
       }
     } catch (error) {
       console.error("Error updating user:", error)
-      alert("Failed to update user. Please try again.")
+      alert(error.message || "Failed to update user. Please try again.")
     }
   }
 
@@ -134,15 +144,17 @@ const ManageUsers = () => {
           telephone: "",
           email: "",
           password: "",
+          role: "user",
         })
         setShowSuccessPopup(true)
         setTimeout(() => setShowSuccessPopup(false), 3000)
       } else {
-        throw new Error("Failed to add user")
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.message || "Failed to add user")
       }
     } catch (error) {
       console.error("Error adding user:", error)
-      alert("Failed to add user. Please try again.")
+      alert(error.message || "Failed to add user. Please try again.")
     }
   }
 
@@ -184,6 +196,15 @@ const ManageUsers = () => {
               Add New User
             </motion.button>
           </div>
+
+          {error && (
+            <div className="bg-red-500/20 border border-red-500 text-white p-4 rounded-lg mb-4">
+              <p className="font-bold">Error:</p>
+              <p>{error}</p>
+              <p className="mt-2 text-sm">Make sure you are logged in as an admin user to access this page.</p>
+            </div>
+          )}
+
           <div className="overflow-x-auto rounded-lg">
             <table className="w-full text-left">
               <thead>
@@ -194,11 +215,12 @@ const ManageUsers = () => {
                   <th className="p-3 text-blue-100">Adresse</th>
                   <th className="p-3 text-blue-100">Télephone</th>
                   <th className="p-3 text-blue-100">Email</th>
+                  <th className="p-3 text-blue-100">Role</th>
                   <th className="p-3 text-blue-100">Actions</th>
                 </tr>
                 {isLoading && (
                   <tr>
-                    <td colSpan="7" className="text-center py-8">
+                    <td colSpan="8" className="text-center py-8">
                       <div className="flex justify-center items-center">
                         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-300"></div>
                         <span className="ml-3 text-blue-200">Loading users...</span>
@@ -222,6 +244,7 @@ const ManageUsers = () => {
                     <td className="p-3">{user.adresse}</td>
                     <td className="p-3">{user.telephone}</td>
                     <td className="p-3">{user.email}</td>
+                    <td className="p-3 capitalize">{user.role || (user.isAdmin ? "admin" : "user")}</td>
                     <td className="p-3 flex">
                       <motion.button
                         className="text-blue-300 hover:text-blue-100 mr-3"
@@ -353,6 +376,19 @@ const ManageUsers = () => {
                     onChange={handleInputChange}
                   />
                 </div>
+                <div className="mb-4">
+                  <label className="block text-blue-100 text-sm font-bold mb-2">Role</label>
+                  <select
+                    id="role"
+                    name="role"
+                    value={editingUser.role || (editingUser.isAdmin ? "admin" : "user")}
+                    onChange={handleInputChange}
+                    className="bg-white/10 border border-blue-500/30 rounded w-full py-2 px-3 text-white leading-tight focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                  >
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </div>
                 <div className="flex items-center justify-between">
                   <motion.button
                     className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none"
@@ -411,7 +447,7 @@ const ManageUsers = () => {
                 </div>
                 <div>
                   <label className="block text-blue-100 text-sm font-bold mb-2" htmlFor="new-prenom">
-                    Prénom
+                    Prénom{" "}
                   </label>
                   <input
                     className="bg-white/10 border border-blue-500/30 rounded w-full py-2 px-3 text-white leading-tight focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
@@ -486,6 +522,19 @@ const ManageUsers = () => {
                     value={newUser.password}
                     onChange={(e) => handleInputChange(e, true)}
                   />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-blue-100 text-sm font-bold mb-2">Role</label>
+                  <select
+                    id="new-role"
+                    name="role"
+                    value={newUser.role}
+                    onChange={(e) => handleInputChange(e, true)}
+                    className="bg-white/10 border border-blue-500/30 rounded w-full py-2 px-3 text-white leading-tight focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                  >
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                  </select>
                 </div>
                 <div className="flex items-center justify-between">
                   <motion.button

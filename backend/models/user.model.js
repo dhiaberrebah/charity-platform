@@ -1,6 +1,6 @@
 import mongoose from "mongoose"
 
-const userSchema = new mongoose.Schema(
+const userSchema = mongoose.Schema(
   {
     nom: {
       type: String,
@@ -19,11 +19,8 @@ const userSchema = new mongoose.Schema(
       required: true,
     },
     telephone: {
-      type: Number,
+      type: String,
       required: true,
-      unique: true,
-      minlength: 8,
-      maxlength: 8,
     },
     email: {
       type: String,
@@ -33,11 +30,17 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: true,
-      minlength: 6,
     },
     isAdmin: {
       type: Boolean,
+      required: true,
       default: false,
+    },
+    role: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user",
+      required: true,
     },
   },
   {
@@ -45,6 +48,26 @@ const userSchema = new mongoose.Schema(
   },
 )
 
+// Add a pre-save hook to sync isAdmin with role
+userSchema.pre("save", function (next) {
+  // Sync isAdmin boolean with role field
+  if (this.role === "admin" && !this.isAdmin) {
+    this.isAdmin = true
+  } else if (this.role === "user" && this.isAdmin) {
+    this.isAdmin = false
+  }
+
+  // If isAdmin is changed, sync role field
+  if (this.isAdmin && this.role !== "admin") {
+    this.role = "admin"
+  } else if (!this.isAdmin && this.role !== "user") {
+    this.role = "user"
+  }
+
+  next()
+})
+
 const User = mongoose.model("User", userSchema)
+
 export default User
 

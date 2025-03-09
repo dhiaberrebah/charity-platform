@@ -6,33 +6,28 @@ export const protectRoute = async (req, res, next) => {
     const token = req.cookies.jwt
 
     if (!token) {
-      return res.status(401).json({ message: "Unauthorized - No Token Provided" })
+      return res.status(401).json({ message: "Not authorized, no token" })
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET)
-
-    if (!decoded) {
-      return res.status(401).json({ message: "Unauthorized - Invalid Token" })
-    }
-
     const user = await User.findById(decoded.userId).select("-password")
+
     if (!user) {
-      return res.status(404).json({ message: "User not found" })
+      return res.status(401).json({ message: "Not authorized, user not found" })
     }
 
     req.user = user
     next()
   } catch (error) {
-    console.log("Error in protectRoute middleware", error.message)
-    res.status(401).json({ message: "Unauthorized - Invalid Token" })
+    console.error("Error in protectRoute middleware:", error)
+    res.status(401).json({ message: "Not authorized, invalid token" })
   }
 }
 
-export const adminRoute = (req, res, next) => {
-  if (req.user && req.user.isAdmin) {
+export const adminRoute = async (req, res, next) => {
+  if (req.user && (req.user.isAdmin || req.user.role === 'admin')) {
     next()
   } else {
-    res.status(403).json({ message: "Access denied. Admin rights required." })
+    res.status(403).json({ message: "Not authorized as an admin" })
   }
 }
-
