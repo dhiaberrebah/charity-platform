@@ -1,17 +1,64 @@
 "use client"
 
-import { lazy, Suspense } from "react"
+import { lazy, Suspense, useState, useCallback, memo } from "react"
 import { Link } from "react-router-dom"
-import { HandHeart, Users, Globe, Sparkles, Heart, CheckCircle } from "lucide-react"
+import { HandHeart, Users, Globe, Sparkles, Heart, CheckCircle } from 'lucide-react'
 import NavigationBar from "../components/NavigationBar"
 import { motion } from "framer-motion"
 
+// Memoize the LoginForm component to prevent unnecessary re-renders
 const LoginForm = lazy(() => import("../components/LoginForm.jsx"))
 
+// Memoized floating heart component for better performance
+const FloatingHeart = memo(({ heart }) => (
+  <motion.div
+    key={heart.id}
+    className="absolute text-blue-300"
+    style={{
+      fontSize: heart.size,
+      left: `${heart.x}%`,
+      top: `${heart.y}%`,
+      opacity: 0,
+    }}
+    animate={{
+      y: [0, -100],
+      opacity: [0, heart.opacity, 0],
+      scale: [0.5, 1, 0.8],
+    }}
+    transition={{
+      duration: heart.duration,
+      repeat: Number.POSITIVE_INFINITY,
+      delay: heart.delay,
+      ease: "easeInOut",
+    }}
+  >
+    ❤️
+  </motion.div>
+))
+
+FloatingHeart.displayName = "FloatingHeart"
+
+// Memoized feature card for better performance
+const FeatureCard = memo(({ icon: Icon, title, description }) => (
+  <motion.div
+    className="bg-blue-800/30 backdrop-blur-sm p-4 rounded-lg flex items-start"
+    whileHover={{ scale: 1.03 }}
+    transition={{ type: "spring", stiffness: 400, damping: 10 }}
+  >
+    <Icon className="h-6 w-6 mr-3 text-blue-300 mt-1 flex-shrink-0" />
+    <div>
+      <h3 className="font-semibold text-blue-100 mb-1">{title}</h3>
+      <p className="text-sm text-blue-200">{description}</p>
+    </div>
+  </motion.div>
+))
+
+FeatureCard.displayName = "FeatureCard"
+
 const Login = () => {
-  // Animated floating hearts
-  const renderFloatingHearts = () => {
-    const hearts = Array(15)
+  // Pre-compute hearts array to avoid recalculation on each render
+  const [hearts] = useState(() => 
+    Array(15)
       .fill(0)
       .map((_, i) => ({
         id: i,
@@ -22,33 +69,36 @@ const Login = () => {
         delay: Math.random() * 10,
         opacity: Math.random() * 0.3 + 0.1,
       }))
+  )
 
-    return hearts.map((heart) => (
-      <motion.div
-        key={heart.id}
-        className="absolute text-blue-300"
-        style={{
-          fontSize: heart.size,
-          left: `${heart.x}%`,
-          top: `${heart.y}%`,
-          opacity: 0,
-        }}
-        animate={{
-          y: [0, -100],
-          opacity: [0, heart.opacity, 0],
-          scale: [0.5, 1, 0.8],
-        }}
-        transition={{
-          duration: heart.duration,
-          repeat: Number.POSITIVE_INFINITY,
-          delay: heart.delay,
-          ease: "easeInOut",
-        }}
-      >
-        ❤️
-      </motion.div>
-    ))
-  }
+  // Memoize the renderFloatingHearts function to prevent unnecessary recalculations
+  const renderFloatingHearts = useCallback(() => {
+    return hearts.map((heart) => <FloatingHeart key={heart.id} heart={heart} />)
+  }, [hearts])
+
+  // Feature data
+  const features = [
+    {
+      icon: Users,
+      title: "Join a community",
+      description: "Connect with passionate volunteers making real change"
+    },
+    {
+      icon: Globe,
+      title: "Global impact",
+      description: "Support initiatives that matter across the world"
+    },
+    {
+      icon: Sparkles,
+      title: "Track your impact",
+      description: "See how your contributions make a difference"
+    },
+    {
+      icon: Heart,
+      title: "Spread kindness",
+      description: "Every act of giving creates ripples of change"
+    }
+  ]
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 text-white">
@@ -74,7 +124,7 @@ const Login = () => {
               ></div>
             </div>
 
-            {/* Animated impact visualization */}
+            {/* Animated impact visualization - optimized with memoization */}
             <div className="absolute inset-0 overflow-hidden">{renderFloatingHearts()}</div>
 
             {/* Content */}
@@ -107,53 +157,14 @@ const Login = () => {
                 </p>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-                  <motion.div
-                    className="bg-blue-800/30 backdrop-blur-sm p-4 rounded-lg flex items-start"
-                    whileHover={{ scale: 1.03 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                  >
-                    <Users className="h-6 w-6 mr-3 text-blue-300 mt-1 flex-shrink-0" />
-                    <div>
-                      <h3 className="font-semibold text-blue-100 mb-1">Join a community</h3>
-                      <p className="text-sm text-blue-200">Connect with passionate volunteers making real change</p>
-                    </div>
-                  </motion.div>
-
-                  <motion.div
-                    className="bg-blue-800/30 backdrop-blur-sm p-4 rounded-lg flex items-start"
-                    whileHover={{ scale: 1.03 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                  >
-                    <Globe className="h-6 w-6 mr-3 text-blue-300 mt-1 flex-shrink-0" />
-                    <div>
-                      <h3 className="font-semibold text-blue-100 mb-1">Global impact</h3>
-                      <p className="text-sm text-blue-200">Support initiatives that matter across the world</p>
-                    </div>
-                  </motion.div>
-
-                  <motion.div
-                    className="bg-blue-800/30 backdrop-blur-sm p-4 rounded-lg flex items-start"
-                    whileHover={{ scale: 1.03 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                  >
-                    <Sparkles className="h-6 w-6 mr-3 text-blue-300 mt-1 flex-shrink-0" />
-                    <div>
-                      <h3 className="font-semibold text-blue-100 mb-1">Track your impact</h3>
-                      <p className="text-sm text-blue-200">See how your contributions make a difference</p>
-                    </div>
-                  </motion.div>
-
-                  <motion.div
-                    className="bg-blue-800/30 backdrop-blur-sm p-4 rounded-lg flex items-start"
-                    whileHover={{ scale: 1.03 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                  >
-                    <Heart className="h-6 w-6 mr-3 text-blue-300 mt-1 flex-shrink-0" />
-                    <div>
-                      <h3 className="font-semibold text-blue-100 mb-1">Spread kindness</h3>
-                      <p className="text-sm text-blue-200">Every act of giving creates ripples of change</p>
-                    </div>
-                  </motion.div>
+                  {features.map((feature, index) => (
+                    <FeatureCard 
+                      key={index}
+                      icon={feature.icon}
+                      title={feature.title}
+                      description={feature.description}
+                    />
+                  ))}
                 </div>
               </motion.div>
 
@@ -175,7 +186,7 @@ const Login = () => {
             {/* Background with subtle pattern */}
             <div className="absolute inset-0 bg-gradient-to-br from-blue-900/80 to-purple-800/80 backdrop-blur-sm"></div>
 
-            {/* Animated circles */}
+            {/* Animated circles - reduced animation complexity */}
             <motion.div
               className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full"
               style={{ filter: "blur(60px)", transform: "translate(30%, -30%)" }}
@@ -221,18 +232,16 @@ const Login = () => {
               </motion.div>
 
               <div className="mt-4 space-y-2">
-                <div className="flex items-start space-x-2">
-                  <CheckCircle className="h-5 w-5 text-blue-400 flex-shrink-0 mt-0.5" />
-                  <p className="text-sm text-blue-100">Join a community of passionate volunteers making real change</p>
-                </div>
-                <div className="flex items-start space-x-2">
-                  <CheckCircle className="h-5 w-5 text-blue-400 flex-shrink-0 mt-0.5" />
-                  <p className="text-sm text-blue-100">Connect with local and global charity initiatives</p>
-                </div>
-                <div className="flex items-start space-x-2">
-                  <CheckCircle className="h-5 w-5 text-blue-400 flex-shrink-0 mt-0.5" />
-                  <p className="text-sm text-blue-100">Track your impact and contributions over time</p>
-                </div>
+                {[
+                  "Join a community of passionate volunteers making real change",
+                  "Connect with local and global charity initiatives",
+                  "Track your impact and contributions over time"
+                ].map((text, index) => (
+                  <div key={index} className="flex items-start space-x-2">
+                    <CheckCircle className="h-5 w-5 text-blue-400 flex-shrink-0 mt-0.5" />
+                    <p className="text-sm text-blue-100">{text}</p>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -243,4 +252,3 @@ const Login = () => {
 }
 
 export default Login
-

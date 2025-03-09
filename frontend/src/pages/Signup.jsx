@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback, memo, useMemo } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { Eye, EyeOff, Github, Mail, Heart, CheckCircle, Sparkles, HandHeart, Users, Globe } from "lucide-react"
 import NavigationBar from "../components/NavigationBar"
@@ -10,6 +10,83 @@ import { Label } from "../components/ui/label"
 import { Separator } from "../components/ui/separator"
 import axios from "axios"
 import { motion, AnimatePresence } from "framer-motion"
+
+// Memoized floating heart component for better performance
+const FloatingHeart = memo(({ heart }) => (
+  <motion.div
+    key={heart.id}
+    className="absolute text-blue-300"
+    style={{
+      fontSize: heart.size,
+      left: `${heart.x}%`,
+      top: `${heart.y}%`,
+      opacity: 0,
+    }}
+    animate={{
+      y: [0, -100],
+      opacity: [0, heart.opacity, 0],
+      scale: [0.5, 1, 0.8],
+    }}
+    transition={{
+      duration: heart.duration,
+      repeat: Number.POSITIVE_INFINITY,
+      delay: heart.delay,
+      ease: "easeInOut",
+    }}
+  >
+    ❤️
+  </motion.div>
+))
+
+FloatingHeart.displayName = "FloatingHeart"
+
+// Memoized feature card for better performance
+const FeatureCard = memo(({ icon: Icon, title, description }) => (
+  <motion.div
+    className="bg-blue-800/30 backdrop-blur-sm p-4 rounded-lg flex items-start"
+    whileHover={{ scale: 1.03 }}
+    transition={{ type: "spring", stiffness: 400, damping: 10 }}
+  >
+    <Icon className="h-6 w-6 mr-3 text-blue-300 mt-1 flex-shrink-0" />
+    <div>
+      <h3 className="font-semibold text-blue-100 mb-1">{title}</h3>
+      <p className="text-sm text-blue-200">{description}</p>
+    </div>
+  </motion.div>
+))
+
+FeatureCard.displayName = "FeatureCard"
+
+// Memoized form field component
+const FormField = memo(({ label, id, type, placeholder, value, onChange, required, showPassword, togglePassword }) => (
+  <div className="grid gap-2">
+    <Label htmlFor={id} className="text-blue-100">
+      {label}
+    </Label>
+    <div className={type === "password" ? "relative" : undefined}>
+      <Input
+        id={id}
+        type={type === "password" ? (showPassword ? "text" : "password") : type}
+        placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+        required={required}
+        className="bg-white/10 border-blue-600/30 text-white placeholder:text-blue-200/50 focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+      />
+      {type === "password" && (
+        <button
+          type="button"
+          onClick={togglePassword}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-200 hover:text-white"
+        >
+          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+        </button>
+      )}
+    </div>
+  </div>
+))
+
+FormField.displayName = "FormField"
 
 const SignUp = () => {
   const [showPassword, setShowPassword] = useState(false)
@@ -24,111 +101,128 @@ const SignUp = () => {
   })
   const [currentStep, setCurrentStep] = useState(1)
   const [error, setError] = useState("")
-
+  const [direction, setDirection] = useState(1)
   const navigate = useNavigate()
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.id]: e.target.value })
-  }
+  // Pre-compute hearts array to avoid recalculation on each render
+  const hearts = useMemo(
+    () =>
+      Array(15)
+        .fill(0)
+        .map((_, i) => ({
+          id: i,
+          size: Math.random() * 20 + 10,
+          x: Math.random() * 100,
+          y: Math.random() * 100,
+          duration: Math.random() * 20 + 15,
+          delay: Math.random() * 10,
+          opacity: Math.random() * 0.3 + 0.1,
+        })),
+    [],
+  )
 
-  const handleNextStep = () => {
-    setCurrentStep(2)
-  }
+  // Memoize the renderFloatingHearts function to prevent unnecessary recalculations
+  const renderFloatingHearts = useCallback(() => {
+    return hearts.map((heart) => <FloatingHeart key={heart.id} heart={heart} />)
+  }, [hearts])
 
-  const handlePrevStep = () => {
-    setCurrentStep(1)
-  }
+  const handleChange = useCallback((e) => {
+    const { id, value } = e.target
+    setFormData((prev) => ({ ...prev, [id]: value }))
+  }, [])
 
-  const handleSignUp = async (e) => {
-    e.preventDefault()
-    try {
-      await axios.post("http://localhost:5001/api/auth/signup", formData)
-      navigate("/login")
-    } catch (error) {
-      console.error("Signup error:", error.response?.data || error.message)
-      setError(error.response?.data?.message || "Signup failed. Please try again.")
-    }
-  }
-
-  // Animation variants for form steps
-  const formVariants = {
-    hidden: (direction) => ({
-      x: direction > 0 ? 200 : -200,
-      opacity: 0,
-    }),
-    visible: {
-      x: 0,
-      opacity: 1,
-      transition: {
-        duration: 0.5,
-        type: "spring",
-        stiffness: 80,
-        damping: 15,
-      },
-    },
-    exit: (direction) => ({
-      x: direction > 0 ? -200 : 200,
-      opacity: 0,
-      transition: {
-        duration: 0.3,
-      },
-    }),
-  }
-
-  // Track the direction of form navigation
-  const [direction, setDirection] = useState(1)
-
-  // Updated handlers with direction tracking
-  const handleNextStepWithAnimation = () => {
+  const handleNextStepWithAnimation = useCallback(() => {
     setDirection(1)
     setCurrentStep(2)
-  }
+  }, [])
 
-  const handlePrevStepWithAnimation = () => {
+  const handlePrevStepWithAnimation = useCallback(() => {
     setDirection(-1)
     setCurrentStep(1)
-  }
+  }, [])
 
-  // Animated floating hearts
-  const renderFloatingHearts = () => {
-    const hearts = Array(15)
-      .fill(0)
-      .map((_, i) => ({
-        id: i,
-        size: Math.random() * 20 + 10,
-        x: Math.random() * 100,
-        y: Math.random() * 100,
-        duration: Math.random() * 20 + 15,
-        delay: Math.random() * 10,
-        opacity: Math.random() * 0.3 + 0.1,
-      }))
+  const handleSignUp = useCallback(
+    async (e) => {
+      e.preventDefault()
+      try {
+        await axios.post("http://localhost:5001/api/auth/signup", formData)
+        navigate("/login")
+      } catch (error) {
+        console.error("Signup error:", error.response?.data || error.message)
+        setError(error.response?.data?.message || "Signup failed. Please try again.")
+      }
+    },
+    [formData, navigate],
+  )
 
-    return hearts.map((heart) => (
-      <motion.div
-        key={heart.id}
-        className="absolute text-blue-300"
-        style={{
-          fontSize: heart.size,
-          left: `${heart.x}%`,
-          top: `${heart.y}%`,
-          opacity: 0,
-        }}
-        animate={{
-          y: [0, -100],
-          opacity: [0, heart.opacity, 0],
-          scale: [0.5, 1, 0.8],
-        }}
-        transition={{
-          duration: heart.duration,
-          repeat: Number.POSITIVE_INFINITY,
-          delay: heart.delay,
-          ease: "easeInOut",
-        }}
-      >
-        ❤️
-      </motion.div>
-    ))
-  }
+  const togglePassword = useCallback(() => {
+    setShowPassword((prev) => !prev)
+  }, [])
+
+  // Animation variants for form steps - memoized to prevent recreation
+  const formVariants = useMemo(
+    () => ({
+      hidden: (direction) => ({
+        x: direction > 0 ? 200 : -200,
+        opacity: 0,
+      }),
+      visible: {
+        x: 0,
+        opacity: 1,
+        transition: {
+          duration: 0.5,
+          type: "spring",
+          stiffness: 80,
+          damping: 15,
+        },
+      },
+      exit: (direction) => ({
+        x: direction > 0 ? -200 : 200,
+        opacity: 0,
+        transition: {
+          duration: 0.3,
+        },
+      }),
+    }),
+    [],
+  )
+
+  // Feature data
+  const features = useMemo(
+    () => [
+      {
+        icon: Users,
+        title: "Join a community",
+        description: "Connect with passionate volunteers making real change",
+      },
+      {
+        icon: Globe,
+        title: "Global impact",
+        description: "Support initiatives that matter across the world",
+      },
+      {
+        icon: Sparkles,
+        title: "Track your impact",
+        description: "See how your contributions make a difference",
+      },
+      {
+        icon: Heart,
+        title: "Spread kindness",
+        description: "Every act of giving creates ripples of change",
+      },
+    ],
+    [],
+  )
+
+  // Benefits list
+  const benefits = useMemo(
+    () => [
+      "Join a community of passionate volunteers making real change",
+      "Connect with local and global charity initiatives",
+      "Track your impact and contributions over time",
+    ],
+    [],
+  )
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 text-white">
@@ -154,7 +248,7 @@ const SignUp = () => {
               ></div>
             </div>
 
-            {/* Animated impact visualization */}
+            {/* Animated impact visualization - optimized with memoization */}
             <div className="absolute inset-0 overflow-hidden">{renderFloatingHearts()}</div>
 
             {/* Content */}
@@ -187,53 +281,14 @@ const SignUp = () => {
                 </p>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-                  <motion.div
-                    className="bg-blue-800/30 backdrop-blur-sm p-4 rounded-lg flex items-start"
-                    whileHover={{ scale: 1.03 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                  >
-                    <Users className="h-6 w-6 mr-3 text-blue-300 mt-1 flex-shrink-0" />
-                    <div>
-                      <h3 className="font-semibold text-blue-100 mb-1">Join a community</h3>
-                      <p className="text-sm text-blue-200">Connect with passionate volunteers making real change</p>
-                    </div>
-                  </motion.div>
-
-                  <motion.div
-                    className="bg-blue-800/30 backdrop-blur-sm p-4 rounded-lg flex items-start"
-                    whileHover={{ scale: 1.03 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                  >
-                    <Globe className="h-6 w-6 mr-3 text-blue-300 mt-1 flex-shrink-0" />
-                    <div>
-                      <h3 className="font-semibold text-blue-100 mb-1">Global impact</h3>
-                      <p className="text-sm text-blue-200">Support initiatives that matter across the world</p>
-                    </div>
-                  </motion.div>
-
-                  <motion.div
-                    className="bg-blue-800/30 backdrop-blur-sm p-4 rounded-lg flex items-start"
-                    whileHover={{ scale: 1.03 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                  >
-                    <Sparkles className="h-6 w-6 mr-3 text-blue-300 mt-1 flex-shrink-0" />
-                    <div>
-                      <h3 className="font-semibold text-blue-100 mb-1">Track your impact</h3>
-                      <p className="text-sm text-blue-200">See how your contributions make a difference</p>
-                    </div>
-                  </motion.div>
-
-                  <motion.div
-                    className="bg-blue-800/30 backdrop-blur-sm p-4 rounded-lg flex items-start"
-                    whileHover={{ scale: 1.03 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                  >
-                    <Heart className="h-6 w-6 mr-3 text-blue-300 mt-1 flex-shrink-0" />
-                    <div>
-                      <h3 className="font-semibold text-blue-100 mb-1">Spread kindness</h3>
-                      <p className="text-sm text-blue-200">Every act of giving creates ripples of change</p>
-                    </div>
-                  </motion.div>
+                  {features.map((feature, index) => (
+                    <FeatureCard
+                      key={index}
+                      icon={feature.icon}
+                      title={feature.title}
+                      description={feature.description}
+                    />
+                  ))}
                 </div>
               </motion.div>
 
@@ -255,7 +310,7 @@ const SignUp = () => {
             {/* Background with subtle pattern */}
             <div className="absolute inset-0 bg-gradient-to-br from-blue-900/80 to-purple-800/80 backdrop-blur-sm"></div>
 
-            {/* Animated circles */}
+            {/* Animated circles - reduced animation complexity */}
             <motion.div
               className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full"
               style={{ filter: "blur(60px)", transform: "translate(30%, -30%)" }}
@@ -344,62 +399,42 @@ const SignUp = () => {
                           exit="exit"
                           className="grid gap-4"
                         >
-                          <div className="grid gap-2">
-                            <Label htmlFor="nom" className="text-blue-100">
-                              Nom
-                            </Label>
-                            <Input
-                              id="nom"
-                              type="text"
-                              placeholder="Dupont"
-                              value={formData.nom}
-                              onChange={handleChange}
-                              required
-                              className="bg-white/10 border-blue-600/30 text-white placeholder:text-blue-200/50 focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
-                            />
-                          </div>
-                          <div className="grid gap-2">
-                            <Label htmlFor="prenom" className="text-blue-100">
-                              Prénom
-                            </Label>
-                            <Input
-                              id="prenom"
-                              type="text"
-                              placeholder="Jean"
-                              value={formData.prenom}
-                              onChange={handleChange}
-                              required
-                              className="bg-white/10 border-blue-600/30 text-white placeholder:text-blue-200/50 focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
-                            />
-                          </div>
-                          <div className="grid gap-2">
-                            <Label htmlFor="age" className="text-blue-100">
-                              Age
-                            </Label>
-                            <Input
-                              id="age"
-                              type="number"
-                              placeholder="30"
-                              value={formData.age}
-                              onChange={handleChange}
-                              required
-                              className="bg-white/10 border-blue-600/30 text-white placeholder:text-blue-200/50 focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
-                            />
-                          </div>
-                          <div className="grid gap-2">
-                            <Label htmlFor="adresse" className="text-blue-100">
-                              Adresse
-                            </Label>
-                            <Input
-                              id="adresse"
-                              type="text"
-                              placeholder="123 Rue de la Paix, 75000 Paris"
-                              value={formData.adresse}
-                              onChange={handleChange}
-                              required
-                              className="bg-white/10 border-blue-600/30 text-white placeholder:text-blue-200/50 focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
-                            />
-                          </div>
+                          <FormField
+                            label="Nom"
+                            id="nom"
+                            type="text"
+                            placeholder="Dupont"
+                            value={formData.nom}
+                            onChange={handleChange}
+                            required
+                          />
+                          <FormField
+                            label="Prénom"
+                            id="prenom"
+                            type="text"
+                            placeholder="Jean"
+                            value={formData.prenom}
+                            onChange={handleChange}
+                            required
+                          />
+                          <FormField
+                            label="Age"
+                            id="age"
+                            type="number"
+                            placeholder="30"
+                            value={formData.age}
+                            onChange={handleChange}
+                            required
+                          />
+                          <FormField
+                            label="Adresse"
+                            id="adresse"
+                            type="text"
+                            placeholder="123 Rue de la Paix, 75000 Paris"
+                            value={formData.adresse}
+                            onChange={handleChange}
+                            required
+                          />
 
                           <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="mt-2">
                             <Button
@@ -421,56 +456,34 @@ const SignUp = () => {
                           exit="exit"
                           className="grid gap-4"
                         >
-                          <div className="grid gap-2">
-                            <Label htmlFor="telephone" className="text-blue-100">
-                              Numéro de téléphone
-                            </Label>
-                            <Input
-                              id="telephone"
-                              type="tel"
-                              placeholder="+33 1 23 45 67 89"
-                              value={formData.telephone}
-                              onChange={handleChange}
-                              required
-                              className="bg-white/10 border-blue-600/30 text-white placeholder:text-blue-200/50 focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
-                            />
-                          </div>
-                          <div className="grid gap-2">
-                            <Label htmlFor="email" className="text-blue-100">
-                              Email
-                            </Label>
-                            <Input
-                              id="email"
-                              type="email"
-                              placeholder="name@example.com"
-                              value={formData.email}
-                              onChange={handleChange}
-                              required
-                              className="bg-white/10 border-blue-600/30 text-white placeholder:text-blue-200/50 focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
-                            />
-                          </div>
-                          <div className="grid gap-2">
-                            <Label htmlFor="password" className="text-blue-100">
-                              Mot de passe
-                            </Label>
-                            <div className="relative">
-                              <Input
-                                id="password"
-                                type={showPassword ? "text" : "password"}
-                                value={formData.password}
-                                onChange={handleChange}
-                                required
-                                className="bg-white/10 border-blue-600/30 text-white placeholder:text-blue-200/50 focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-200 hover:text-white"
-                              >
-                                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                              </button>
-                            </div>
-                          </div>
+                          <FormField
+                            label="Numéro de téléphone"
+                            id="telephone"
+                            type="tel"
+                            placeholder="+33 1 23 45 67 89"
+                            value={formData.telephone}
+                            onChange={handleChange}
+                            required
+                          />
+                          <FormField
+                            label="Email"
+                            id="email"
+                            type="email"
+                            placeholder="name@example.com"
+                            value={formData.email}
+                            onChange={handleChange}
+                            required
+                          />
+                          <FormField
+                            label="Mot de passe"
+                            id="password"
+                            type="password"
+                            value={formData.password}
+                            onChange={handleChange}
+                            required
+                            showPassword={showPassword}
+                            togglePassword={togglePassword}
+                          />
 
                           <div className="flex space-x-3 mt-2">
                             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="flex-1">
@@ -521,24 +534,16 @@ const SignUp = () => {
                   </div>
 
                   <div className="mt-4 space-y-2">
-                    <div className="flex items-start space-x-2">
-                      <CheckCircle className="h-5 w-5 text-blue-400 flex-shrink-0 mt-0.5" />
-                      <p className="text-sm text-blue-100">
-                        Join a community of passionate volunteers making real change
-                      </p>
-                    </div>
-                    <div className="flex items-start space-x-2">
-                      <CheckCircle className="h-5 w-5 text-blue-400 flex-shrink-0 mt-0.5" />
-                      <p className="text-sm text-blue-100">Connect with local and global charity initiatives</p>
-                    </div>
-                    <div className="flex items-start space-x-2">
-                      <CheckCircle className="h-5 w-5 text-blue-400 flex-shrink-0 mt-0.5" />
-                      <p className="text-sm text-blue-100">Track your impact and contributions over time</p>
-                    </div>
+                    {benefits.map((text, index) => (
+                      <div key={index} className="flex items-start space-x-2">
+                        <CheckCircle className="h-5 w-5 text-blue-400 flex-shrink-0 mt-0.5" />
+                        <p className="text-sm text-blue-100">{text}</p>
+                      </div>
+                    ))}
                   </div>
 
                   <p className="text-center text-sm text-blue-200">
-                    Vous avez déjà un compte ?{" "}
+                    Vous avez déjà un compte?{" "}
                     <Link to="/login" className="text-blue-400 hover:text-blue-300 underline underline-offset-4">
                       Se connecter
                     </Link>
