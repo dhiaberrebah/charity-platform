@@ -1,13 +1,13 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { ArrowLeft, Edit, Trash2, PlusCircle, X } from "lucide-react"
-import { Link } from "react-router-dom"
+import { useState, useEffect, useRef } from "react"
+import { ArrowLeft, Edit, Trash2, PlusCircle, X, Upload, ImageIcon } from "lucide-react"
 import { toast } from "sonner"
-import CauseDetails from "@/components/CauseDetails"
 import { motion, AnimatePresence } from "framer-motion"
+import { Link } from "react-router-dom"
+import CauseDetails from "@/components/CauseDetails"
 
-// Inline AddCauseModal component to avoid import issues
+// Inline AddCauseModal component with file upload functionality
 const AddCauseModal = ({ onClose, onAdd }) => {
   const [formData, setFormData] = useState({
     title: "",
@@ -15,12 +15,24 @@ const AddCauseModal = ({ onClose, onAdd }) => {
     targetAmount: 1000,
     currentAmount: 0,
     category: "education",
-    image: "", // Changed from imageUrl to image to match the backend model
+    image: "", // URL for remote images
     status: "pending",
   })
 
+  const [selectedFile, setSelectedFile] = useState(null)
+  const [previewUrl, setPreviewUrl] = useState("")
+  const fileInputRef = useRef(null)
   const [errors, setErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Clean up preview URL when component unmounts
+  useEffect(() => {
+    return () => {
+      if (previewUrl && previewUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(previewUrl)
+      }
+    }
+  }, [previewUrl])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -35,6 +47,55 @@ const AddCauseModal = ({ onClose, onAdd }) => {
       ...formData,
       [name]: processedValue,
     })
+  }
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    // Check file type
+    const validTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"]
+    if (!validTypes.includes(file.type)) {
+      toast.error("Please select a valid image file (JPEG, PNG, GIF, WEBP)")
+      return
+    }
+
+    // Check file size (limit to 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File size should be less than 5MB")
+      return
+    }
+
+    setSelectedFile(file)
+
+    // Create preview URL
+    const fileUrl = URL.createObjectURL(file)
+    setPreviewUrl(fileUrl)
+
+    // Clear the image URL field since we're using a file upload
+    setFormData((prev) => ({
+      ...prev,
+      image: "",
+    }))
+  }
+
+  const handleRemoveFile = () => {
+    setSelectedFile(null)
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl)
+      setPreviewUrl("")
+    }
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
+    }
+  }
+
+  const handleImageUrlChange = (e) => {
+    // If user enters a URL, clear any selected file
+    if (e.target.value) {
+      handleRemoveFile()
+    }
+    handleChange(e)
   }
 
   const validateForm = () => {
@@ -75,11 +136,17 @@ const AddCauseModal = ({ onClose, onAdd }) => {
       formDataObj.append("description", formData.description)
       formDataObj.append("category", formData.category)
       formDataObj.append("targetAmount", formData.targetAmount)
-      formDataObj.append("submissionId", submissionId) // Important: Add the submission ID
+      formDataObj.append("submissionId", submissionId)
+      formDataObj.append("status", formData.status)
 
       // If there's an image URL, add it
       if (formData.image) {
         formDataObj.append("imageUrl", formData.image)
+      }
+
+      // If there's a file selected, add it
+      if (selectedFile) {
+        formDataObj.append("image", selectedFile)
       }
 
       console.log("Submitting cause with ID:", submissionId)
@@ -96,6 +163,7 @@ const AddCauseModal = ({ onClose, onAdd }) => {
         image: "",
         status: "pending",
       })
+      handleRemoveFile()
     } catch (error) {
       console.error("Error in form submission:", error)
     } finally {
@@ -189,16 +257,81 @@ const AddCauseModal = ({ onClose, onAdd }) => {
             </select>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-blue-100 mb-1">Image URL</label>
-            <input
-              type="text"
-              name="image"
-              value={formData.image}
-              onChange={handleChange}
-              className="w-full p-2 bg-white/10 border border-blue-500/30 rounded-lg text-white focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
-              placeholder="Enter image URL (optional)"
-            />
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-blue-100 mb-1">Image</label>
+
+              {/* Image upload section */}
+              <div
+                className={`border ${errors.image ? "border-red-500" : "border-blue-500/30"} rounded-lg p-4 bg-white/5`}
+              >
+                <div className="flex flex-col space-y-4">
+                  {/* File upload button */}
+                  <div className="flex items-center justify-center w-full">
+                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-blue-500/30 border-dashed rounded-lg cursor-pointer bg-white/5 hover:bg-white/10 transition-colors">
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <Upload className="w-8 h-8 mb-2 text-blue-300" />
+                        <p className="mb-2 text-sm text-blue-300">
+                          <span className="font-semibold">Click to upload</span> or drag and drop
+                        </p>
+                        <p className="text-xs text-blue-400">PNG, JPG, GIF or WEBP (MAX. 5MB)</p>
+                      </div>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        className="hidden"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                      />
+                    </label>
+                  </div>
+
+                  {/* Preview section */}
+                  {previewUrl && (
+                    <div className="relative mt-2 w-full h-40 bg-white/5 rounded-lg overflow-hidden">
+                      <img
+                        src={previewUrl || "/placeholder.svg"}
+                        alt="Preview"
+                        className="object-contain w-full h-full"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleRemoveFile}
+                        className="absolute top-2 right-2 bg-red-500/80 text-white p-1 rounded-full hover:bg-red-600/80"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Divider */}
+                  <div className="relative flex items-center py-2">
+                    <div className="flex-grow border-t border-blue-500/30"></div>
+                    <span className="flex-shrink mx-4 text-blue-300 text-sm">OR</span>
+                    <div className="flex-grow border-t border-blue-500/30"></div>
+                  </div>
+
+                  {/* Image URL input */}
+                  <div>
+                    <label className="block text-sm font-medium text-blue-100 mb-1">Image URL</label>
+                    <div className="flex">
+                      <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-blue-500/30 bg-white/10 text-blue-300">
+                        <ImageIcon size={18} />
+                      </span>
+                      <input
+                        type="text"
+                        name="image"
+                        value={formData.image}
+                        onChange={handleImageUrlChange}
+                        className="w-full p-2 bg-white/10 border border-blue-500/30 rounded-r-lg text-white focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                        placeholder="https://example.com/image.jpg"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {errors.image && <p className="text-red-300 text-sm mt-1">{errors.image}</p>}
+            </div>
           </div>
 
           <div>
@@ -370,10 +503,19 @@ const ManageCauses = () => {
     setIsAddModalOpen(false)
   }
 
-  const handleAddCause = async (createdCause) => {
+  const handleAddCause = async (formData) => {
     try {
-      // The cause has already been created by the modal
-      // Just update the state
+      const response = await fetch("http://localhost:5001/api/causes", {
+        method: "POST",
+        body: formData, // FormData with file will be sent directly
+        credentials: "include",
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to create cause")
+      }
+
+      const createdCause = await response.json()
       setCauses((prevCauses) => [...prevCauses, createdCause])
       toast.success("Cause created successfully")
       setIsAddModalOpen(false)
@@ -387,7 +529,8 @@ const ManageCauses = () => {
         setCauses(refreshedData)
       }
     } catch (error) {
-      console.error("Error updating causes list:", error)
+      console.error("Error creating cause:", error)
+      toast.error("Failed to create cause: " + error.message)
     }
   }
 
