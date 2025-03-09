@@ -2,129 +2,154 @@
 
 import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
-import { Heart, Menu, X, LayoutDashboard } from "lucide-react"
-import { Button } from "./ui/button"
+import { Menu, X, HandHeart } from "lucide-react"
+import { motion } from "framer-motion"
 
 const AdminNavbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const navigate = useNavigate()
 
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen)
-  }
-
-  const handleLogout = async (e) => {
-    e.preventDefault()
-    try {
-      // Make a POST request to your logout endpoint
-      const response = await fetch("http://localhost:5001/api/auth/logout", {
-        method: "POST",
-        credentials: "include", // Important for including cookies in the request
-      })
-
-      if (response.ok) {
-        // Redirect to home page or login page after successful logout
-        navigate("/")
-      } else {
-        console.error("Logout failed")
-      }
-    } catch (error) {
-      console.error("Error during logout:", error)
-    }
+  const handleLogout = () => {
+    localStorage.removeItem("token")
+    navigate("/login")
   }
 
   return (
-    <nav className="fixed top-0 w-full bg-white/80 backdrop-blur-md z-50 border-b border-gray-100">
+    <nav className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white shadow-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <Link to="/admin/home" className="flex items-center space-x-2">
-            <Heart className="w-6 h-6 text-primary" />
-            <span className="text-xl font-semibold text-gray-900">
-              CharityHub{" "}
-              <span className="text-xs font-medium text-primary ml-1 px-2 py-0.5 bg-primary/10 rounded-full">
-                Admin
-              </span>
-            </span>
-          </Link>
-
-          <div className="hidden md:flex items-center space-x-4">
-            <Link to="/admin/home" className="text-gray-600 hover:text-primary transition-colors">
-              Home
-            </Link>
-            <Link to="/causes" className="text-gray-600 hover:text-primary transition-colors">
-              Causes
-            </Link>
-            <Link to="/about" className="text-gray-600 hover:text-primary transition-colors">
-              About
-            </Link>
-            <Link to="/contact" className="text-gray-600 hover:text-primary transition-colors">
-              Contact
-            </Link>
-            <Link
-              to="/admin/dashboard"
-              className="flex items-center text-primary font-medium hover:text-primary/80 transition-colors"
+          <div className="flex items-center">
+            <motion.div
+              className="flex-shrink-0 flex items-center"
+              whileHover={{ scale: 1.05 }}
+              transition={{ type: "spring", stiffness: 400, damping: 10 }}
             >
-              <LayoutDashboard className="w-4 h-4 mr-1" />
-              Dashboard
-            </Link>
-
-            <form onSubmit={handleLogout}>
-              <Button type="submit">Logout</Button>
-            </form>
+              <motion.div
+                initial={{ rotate: 0 }}
+                whileHover={{ rotate: [0, 15, 0, -15, 0] }}
+                transition={{ duration: 1 }}
+              >
+                <HandHeart className="h-8 w-8 text-blue-300 mr-2" />
+              </motion.div>
+              <span className="font-bold text-xl text-blue-100">CharityHub Admin</span>
+            </motion.div>
+            <div className="hidden md:block">
+              <div className="ml-10 flex items-baseline space-x-4">
+                <motion.div whileHover={{ y: -2 }} transition={{ type: "spring", stiffness: 400, damping: 10 }}>
+                  <Link
+                    to="/"
+                    className="px-3 py-2 rounded-md text-sm font-medium text-blue-100 hover:bg-blue-800 hover:text-white transition-colors"
+                  >
+                    Home
+                  </Link>
+                </motion.div>
+                <motion.div whileHover={{ y: -2 }} transition={{ type: "spring", stiffness: 400, damping: 10 }}>
+                  <Link
+                    to="/admin/dashboard"
+                    className="px-3 py-2 rounded-md text-sm font-medium text-white bg-blue-800 hover:bg-blue-700 transition-colors"
+                  >
+                    Dashboard
+                  </Link>
+                </motion.div>
+                <motion.div whileHover={{ y: -2 }} transition={{ type: "spring", stiffness: 400, damping: 10 }}>
+                  <Link
+                    to="/admin/users"
+                    className="px-3 py-2 rounded-md text-sm font-medium text-blue-100 hover:bg-blue-800 hover:text-white transition-colors"
+                  >
+                    Manage Users
+                  </Link>
+                </motion.div>
+                <motion.div whileHover={{ y: -2 }} transition={{ type: "spring", stiffness: 400, damping: 10 }}>
+                  <Link
+                    to="/admin/causes"
+                    className="px-3 py-2 rounded-md text-sm font-medium text-blue-100 hover:bg-blue-800 hover:text-white transition-colors"
+                  >
+                    Manage Causes
+                  </Link>
+                </motion.div>
+                <motion.div whileHover={{ y: -2 }} transition={{ type: "spring", stiffness: 400, damping: 10 }}>
+                  <Link
+                    to="/admin/donations"
+                    className="px-3 py-2 rounded-md text-sm font-medium text-blue-100 hover:bg-blue-800 hover:text-white transition-colors"
+                  >
+                    View Donations
+                  </Link>
+                </motion.div>
+              </div>
+            </div>
           </div>
-
-          <div className="md:hidden">
-            <Button variant="ghost" onClick={toggleMenu}>
-              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </Button>
+          <div className="hidden md:block">
+            <div className="ml-4 flex items-center md:ml-6">
+              <motion.button
+                onClick={handleLogout}
+                className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                Sign Out
+              </motion.button>
+            </div>
+          </div>
+          <div className="-mr-2 flex md:hidden">
+            <motion.button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="inline-flex items-center justify-center p-2 rounded-md text-blue-200 hover:text-white hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-blue-800 focus:ring-white"
+              whileTap={{ scale: 0.95 }}
+            >
+              <span className="sr-only">Open main menu</span>
+              {isMenuOpen ? <X className="block h-6 w-6" /> : <Menu className="block h-6 w-6" />}
+            </motion.button>
           </div>
         </div>
       </div>
 
-      {/* Mobile menu */}
       {isMenuOpen && (
-        <div className="md:hidden">
+        <motion.div
+          className="md:hidden"
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: "auto" }}
+          exit={{ opacity: 0, height: 0 }}
+          transition={{ duration: 0.3 }}
+        >
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             <Link
-              to="/admin/home"
-              className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50"
+              to="/"
+              className="block px-3 py-2 rounded-md text-base font-medium text-blue-100 hover:bg-blue-800 hover:text-white"
             >
               Home
             </Link>
             <Link
-              to="/admin/causes"
-              className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50"
-            >
-              Causes
-            </Link>
-            <Link
-              to="/admin/about"
-              className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50"
-            >
-              About
-            </Link>
-            <Link
-              to="/admin/contact"
-              className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50"
-            >
-              Contact
-            </Link>
-            <Link
               to="/admin/dashboard"
-              className="flex items-center px-3 py-2 rounded-md text-base font-medium text-primary hover:text-primary hover:bg-gray-50"
+              className="block px-3 py-2 rounded-md text-base font-medium text-white bg-blue-800 hover:bg-blue-700"
             >
-              <LayoutDashboard className="w-4 h-4 mr-2" />
               Dashboard
             </Link>
-
-            <Button
-              onClick={handleLogout}
-              className="w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50"
+            <Link
+              to="/admin/users"
+              className="block px-3 py-2 rounded-md text-base font-medium text-blue-100 hover:bg-blue-800 hover:text-white"
             >
-              Logout
-            </Button>
+              Manage Users
+            </Link>
+            <Link
+              to="/admin/causes"
+              className="block px-3 py-2 rounded-md text-base font-medium text-blue-100 hover:bg-blue-800 hover:text-white"
+            >
+              Manage Causes
+            </Link>
+            <Link
+              to="/admin/donations"
+              className="block px-3 py-2 rounded-md text-base font-medium text-blue-100 hover:bg-blue-800 hover:text-white"
+            >
+              View Donations
+            </Link>
+            <button
+              onClick={handleLogout}
+              className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-blue-100 hover:bg-blue-800 hover:text-white"
+            >
+              Sign out
+            </button>
           </div>
-        </div>
+        </motion.div>
       )}
     </nav>
   )

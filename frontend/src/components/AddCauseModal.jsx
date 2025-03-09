@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { X, Upload } from "lucide-react"
+import { X, Upload } from 'lucide-react'
+import { motion } from "framer-motion"
 
 const AddCauseModal = ({ onClose, onAdd }) => {
   const [formData, setFormData] = useState({
@@ -160,44 +161,54 @@ const AddCauseModal = ({ onClose, onAdd }) => {
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center p-6 border-b">
-          <h2 className="text-2xl font-bold text-gray-800">Add New Cause</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+    <div className="fixed inset-0 bg-blue-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <motion.div 
+        className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-blue-200"
+        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <div className="flex justify-between items-center p-6 border-b border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50">
+          <h2 className="text-2xl font-bold text-blue-900">Add New Cause</h2>
+          <motion.button 
+            onClick={onClose} 
+            className="text-blue-500 hover:text-blue-700"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+          >
             <X size={24} />
-          </button>
+          </motion.button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+            <label className="block text-sm font-medium text-blue-800 mb-1">Title</label>
             <input
               type="text"
               name="title"
               value={formData.title}
               onChange={handleChange}
-              className={`w-full p-2 border rounded-lg ${errors.title ? "border-red-500" : "border-gray-300"}`}
+              className={`w-full p-2 border rounded-lg bg-blue-50/50 ${errors.title ? "border-red-500" : "border-blue-200 focus:border-blue-400 focus:ring-blue-400"}`}
               placeholder="Enter cause title"
             />
             {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <label className="block text-sm font-medium text-blue-800 mb-1">Description</label>
             <textarea
               name="description"
               value={formData.description}
               onChange={handleChange}
               rows="4"
-              className={`w-full p-2 border rounded-lg ${errors.description ? "border-red-500" : "border-gray-300"}`}
+              className={`w-full p-2 border rounded-lg bg-blue-50/50 ${errors.description ? "border-red-500" : "border-blue-200 focus:border-blue-400 focus:ring-blue-400"}`}
               placeholder="Enter cause description"
             ></textarea>
             {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description}</p>}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Target Amount ($)</label>
+            <label className="block text-sm font-medium text-blue-800 mb-1">Target Amount ($)</label>
             <input
               type="number"
               name="targetAmount"
@@ -205,19 +216,19 @@ const AddCauseModal = ({ onClose, onAdd }) => {
               onChange={handleChange}
               min="1"
               step="0.01"
-              className={`w-full p-2 border rounded-lg ${errors.targetAmount ? "border-red-500" : "border-gray-300"}`}
+              className={`w-full p-2 border rounded-lg bg-blue-50/50 ${errors.targetAmount ? "border-red-500" : "border-blue-200 focus:border-blue-400 focus:ring-blue-400"}`}
               placeholder="Enter target amount"
             />
             {errors.targetAmount && <p className="text-red-500 text-sm mt-1">{errors.targetAmount}</p>}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+            <label className="block text-sm font-medium text-blue-800 mb-1">Category</label>
             <select
               name="category"
               value={formData.category}
               onChange={handleChange}
-              className="w-full p-2 border border-gray-300 rounded-lg"
+              className="w-full p-2 border border-blue-200 rounded-lg bg-blue-50/50 focus:border-blue-400 focus:ring-blue-400"
             >
               <option value="education">Education</option>
               <option value="health">Health</option>
@@ -230,19 +241,23 @@ const AddCauseModal = ({ onClose, onAdd }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Image</label>
+            <label className="block text-sm font-medium text-blue-800 mb-1">Image</label>
             <div className="mt-1 flex items-center">
-              <label className="flex flex-col items-center px-4 py-2 bg-white text-blue-500 rounded-lg border border-blue-500 cursor-pointer hover:bg-blue-50">
+              <motion.label 
+                className="flex flex-col items-center px-4 py-2 bg-white text-blue-500 rounded-lg border border-blue-500 cursor-pointer hover:bg-blue-50"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
                 <Upload size={20} />
                 <span className="mt-2 text-sm">Select Image</span>
                 <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
-              </label>
+              </motion.label>
               {imagePreview && (
                 <div className="ml-4">
                   <img
                     src={imagePreview || "/placeholder.svg"}
                     alt="Preview"
-                    className="h-20 w-20 object-cover rounded-lg"
+                    className="h-20 w-20 object-cover rounded-lg border border-blue-200"
                   />
                 </div>
               )}
@@ -250,12 +265,12 @@ const AddCauseModal = ({ onClose, onAdd }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <label className="block text-sm font-medium text-blue-800 mb-1">Status</label>
             <select
               name="status"
               value={formData.status}
               onChange={handleChange}
-              className="w-full p-2 border border-gray-300 rounded-lg"
+              className="w-full p-2 border border-blue-200 rounded-lg bg-blue-50/50 focus:border-blue-400 focus:ring-blue-400"
             >
               <option value="pending">Pending</option>
               <option value="approved">Approved</option>
@@ -264,33 +279,36 @@ const AddCauseModal = ({ onClose, onAdd }) => {
           </div>
 
           {isSubmitting && uploadProgress > 0 && (
-            <div className="w-full bg-gray-200 rounded-full h-2.5">
-              <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${uploadProgress}%` }}></div>
-              <p className="text-sm text-gray-600 mt-1">Uploading: {uploadProgress}%</p>
+            <div className="w-full bg-blue-100 rounded-full h-2.5">
+              <div className="bg-blue-500 h-2.5 rounded-full" style={{ width: `${uploadProgress}%` }}></div>
+              <p className="text-sm text-blue-600 mt-1">Uploading: {uploadProgress}%</p>
             </div>
           )}
 
-          <div className="flex justify-end space-x-3 pt-4 border-t">
-            <button
+          <div className="flex justify-end space-x-3 pt-4 border-t border-blue-100">
+            <motion.button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+              className="px-4 py-2 border border-blue-300 rounded-lg text-blue-700 hover:bg-blue-50"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
               Cancel
-            </button>
-            <button
+            </motion.button>
+            <motion.button
               type="submit"
               disabled={isSubmitting}
-              className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50"
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
               {isSubmitting ? "Creating..." : "Create Cause"}
-            </button>
+            </motion.button>
           </div>
         </form>
-      </div>
+      </motion.div>
     </div>
   )
 }
 
 export default AddCauseModal
-

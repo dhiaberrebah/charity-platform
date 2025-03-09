@@ -1,8 +1,9 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ArrowLeft, Edit, Trash2, UserPlus, X } from 'lucide-react'
+import { ArrowLeft, Edit, Trash2, UserPlus, X } from "lucide-react"
 import { Link } from "react-router-dom"
+import { motion, AnimatePresence } from "framer-motion"
 
 const ManageUsers = () => {
   const [users, setUsers] = useState([])
@@ -19,27 +20,33 @@ const ManageUsers = () => {
     password: "", // Include password for new user
   })
   const [showSuccessPopup, setShowSuccessPopup] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        setUsers([]) // Clear existing users first
+        setIsLoading(true) // Add loading state
+        const response = await fetch("http://localhost:5001/api/auth/get", {
+          credentials: "include",
+        })
+        if (response.ok) {
+          const data = await response.json()
+          // Limit initial render to first 20 users if there are many
+          setUsers(data.slice(0, 20))
+        } else {
+          throw new Error("Failed to fetch users")
+        }
+      } catch (error) {
+        console.error("Error fetching users:", error)
+        alert("Failed to load users. Please try refreshing the page.")
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
     fetchUsers()
   }, [])
-
-  const fetchUsers = async () => {
-    try {
-      const response = await fetch("http://localhost:5001/api/auth/get", {
-        credentials: "include",
-      })
-      if (response.ok) {
-        const data = await response.json()
-        setUsers(data)
-      } else {
-        throw new Error("Failed to fetch users")
-      }
-    } catch (error) {
-      console.error("Error fetching users:", error)
-      alert("Failed to load users. Please try refreshing the page.")
-    }
-  }
 
   const handleDeleteUser = async (userId) => {
     if (window.confirm("Are you sure you want to delete this user?")) {
@@ -89,9 +96,7 @@ const ManageUsers = () => {
 
       if (response.ok) {
         const updatedUser = await response.json()
-        setUsers((prevUsers) =>
-          prevUsers.map((user) => (user._id === updatedUser._id ? updatedUser : user))
-        )
+        setUsers((prevUsers) => prevUsers.map((user) => (user._id === updatedUser._id ? updatedUser : user)))
         setIsEditModalOpen(false)
         setEditingUser(null)
         setShowSuccessPopup(true)
@@ -142,286 +147,378 @@ const ManageUsers = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 p-8">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 p-8">
+      <motion.div
+        className="max-w-6xl mx-auto"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-800">Manage Users</h1>
-          <Link to="/admin/dashboard" className="flex items-center text-blue-600 hover:text-blue-800">
-            <ArrowLeft size={20} className="mr-2" />
-            Back to Dashboard
-          </Link>
+          <h1 className="text-3xl font-bold text-white">Manage Users</h1>
+          <motion.div whileHover={{ x: -5 }} whileTap={{ scale: 0.95 }}>
+            <Link
+              to="/admin/dashboard"
+              className="flex items-center text-blue-300 hover:text-blue-100 transition-colors"
+            >
+              <ArrowLeft size={20} className="mr-2" />
+              Back to Dashboard
+            </Link>
+          </motion.div>
         </div>
-        <div className="bg-white rounded-xl shadow-lg p-6">
+        <motion.div
+          className="bg-white/10 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-blue-500/20"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+        >
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold text-gray-700">User List</h2>
-            <button
+            <h2 className="text-xl font-semibold text-white">User List</h2>
+            <motion.button
               onClick={() => setIsAddModalOpen(true)}
-              className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition duration-300 flex items-center"
+              className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-300 flex items-center"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
               <UserPlus size={20} className="mr-2" />
               Add New User
-            </button>
+            </motion.button>
           </div>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto rounded-lg">
             <table className="w-full text-left">
               <thead>
-                <tr className="bg-gray-100">
-                  <th className="p-3">Nom</th>
-                  <th className="p-3">Prénom</th>
-                  <th className="p-3">Age</th>
-                  <th className="p-3">Adresse</th>
-                  <th className="p-3">Télephone</th>
-                  <th className="p-3">Email</th>
-                  <th className="p-3">Actions</th>
+                <tr className="bg-blue-800/50">
+                  <th className="p-3 text-blue-100">Nom</th>
+                  <th className="p-3 text-blue-100">Prénom</th>
+                  <th className="p-3 text-blue-100">Age</th>
+                  <th className="p-3 text-blue-100">Adresse</th>
+                  <th className="p-3 text-blue-100">Télephone</th>
+                  <th className="p-3 text-blue-100">Email</th>
+                  <th className="p-3 text-blue-100">Actions</th>
                 </tr>
+                {isLoading && (
+                  <tr>
+                    <td colSpan="7" className="text-center py-8">
+                      <div className="flex justify-center items-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-300"></div>
+                        <span className="ml-3 text-blue-200">Loading users...</span>
+                      </div>
+                    </td>
+                  </tr>
+                )}
               </thead>
               <tbody>
-                {users.map((user) => (
-                  <tr key={user._id} className="border-b border-gray-200 hover:bg-gray-50">
+                {users.map((user, index) => (
+                  <motion.tr
+                    key={user._id}
+                    className="border-b border-blue-700/30 hover:bg-blue-800/30 text-white"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.2, delay: index < 5 ? 0.05 * index : 0 }}
+                  >
                     <td className="p-3">{user.nom}</td>
                     <td className="p-3">{user.prenom}</td>
                     <td className="p-3">{user.age}</td>
                     <td className="p-3">{user.adresse}</td>
                     <td className="p-3">{user.telephone}</td>
                     <td className="p-3">{user.email}</td>
-                    <td className="p-3">
-                      <button className="text-blue-500 hover:text-blue-700 mr-3" onClick={() => handleEditUser(user)}>
+                    <td className="p-3 flex">
+                      <motion.button
+                        className="text-blue-300 hover:text-blue-100 mr-3"
+                        onClick={() => handleEditUser(user)}
+                        whileHover={{ scale: 1.2 }}
+                        whileTap={{ scale: 0.9 }}
+                      >
                         <Edit size={18} />
-                      </button>
-                      <button className="text-red-500 hover:text-red-700" onClick={() => handleDeleteUser(user._id)}>
+                      </motion.button>
+                      <motion.button
+                        className="text-red-400 hover:text-red-300"
+                        onClick={() => handleDeleteUser(user._id)}
+                        whileHover={{ scale: 1.2 }}
+                        whileTap={{ scale: 0.9 }}
+                      >
                         <Trash2 size={18} />
-                      </button>
+                      </motion.button>
                     </td>
-                  </tr>
+                  </motion.tr>
                 ))}
               </tbody>
             </table>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
-      {isEditModalOpen && editingUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-          <div className="bg-white p-6 rounded-lg w-96">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Edit User</h2>
-              <button onClick={() => setIsEditModalOpen(false)} className="text-gray-500 hover:text-gray-700">
-                <X size={24} />
-              </button>
-            </div>
-            <form onSubmit={handleEditSubmit}>
-              <div className="mb-4">
-                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="nom">
-                  Nom
-                </label>
-                <input
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  id="nom"
-                  name="nom"
-                  type="text"
-                  value={editingUser.nom}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="prenom">
-                  Prénom
-                </label>
-                <input
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  id="prenom"
-                  name="prenom"
-                  type="text"
-                  value={editingUser.prenom}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="age">
-                  Age
-                </label>
-                <input
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  id="age"
-                  name="age"
-                  type="number"
-                  value={editingUser.age}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="adresse">
-                  Adresse
-                </label>
-                <input
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  id="adresse"
-                  name="adresse"
-                  type="text"
-                  value={editingUser.adresse}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="telephone">
-                  Téléphone
-                </label>
-                <input
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  id="telephone"
-                  name="telephone"
-                  type="tel"
-                  value={editingUser.telephone}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
-                  Email
-                </label>
-                <input
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={editingUser.email}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <button
-                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                  type="submit"
+      <AnimatePresence>
+        {isEditModalOpen && editingUser && (
+          <motion.div
+            className="fixed inset-0 bg-blue-900/80 backdrop-blur-sm flex justify-center items-center z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="bg-white/10 backdrop-blur-md p-6 rounded-lg w-96 border border-blue-500/30 text-white"
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              transition={{ type: "spring", damping: 25 }}
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">Edit User</h2>
+                <motion.button
+                  onClick={() => setIsEditModalOpen(false)}
+                  className="text-blue-200 hover:text-white"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
                 >
-                  Update User
-                </button>
+                  <X size={24} />
+                </motion.button>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
+              <form onSubmit={handleEditSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-blue-100 text-sm font-bold mb-2" htmlFor="nom">
+                    Nom
+                  </label>
+                  <input
+                    className="bg-white/10 border border-blue-500/30 rounded w-full py-2 px-3 text-white leading-tight focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                    id="nom"
+                    name="nom"
+                    type="text"
+                    value={editingUser.nom}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div>
+                  <label className="block text-blue-100 text-sm font-bold mb-2" htmlFor="prenom">
+                    Prénom
+                  </label>
+                  <input
+                    className="bg-white/10 border border-blue-500/30 rounded w-full py-2 px-3 text-white leading-tight focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                    id="prenom"
+                    name="prenom"
+                    type="text"
+                    value={editingUser.prenom}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div>
+                  <label className="block text-blue-100 text-sm font-bold mb-2" htmlFor="age">
+                    Age
+                  </label>
+                  <input
+                    className="bg-white/10 border border-blue-500/30 rounded w-full py-2 px-3 text-white leading-tight focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                    id="age"
+                    name="age"
+                    type="number"
+                    value={editingUser.age}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div>
+                  <label className="block text-blue-100 text-sm font-bold mb-2" htmlFor="adresse">
+                    Adresse
+                  </label>
+                  <input
+                    className="bg-white/10 border border-blue-500/30 rounded w-full py-2 px-3 text-white leading-tight focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                    id="adresse"
+                    name="adresse"
+                    type="text"
+                    value={editingUser.adresse}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div>
+                  <label className="block text-blue-100 text-sm font-bold mb-2" htmlFor="telephone">
+                    Téléphone
+                  </label>
+                  <input
+                    className="bg-white/10 border border-blue-500/30 rounded w-full py-2 px-3 text-white leading-tight focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                    id="telephone"
+                    name="telephone"
+                    type="tel"
+                    value={editingUser.telephone}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div>
+                  <label className="block text-blue-100 text-sm font-bold mb-2" htmlFor="email">
+                    Email
+                  </label>
+                  <input
+                    className="bg-white/10 border border-blue-500/30 rounded w-full py-2 px-3 text-white leading-tight focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={editingUser.email}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <motion.button
+                    className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none"
+                    type="submit"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    Update User
+                  </motion.button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {isAddModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-          <div className="bg-white p-6 rounded-lg w-96">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Add New User</h2>
-              <button onClick={() => setIsAddModalOpen(false)} className="text-gray-500 hover:text-gray-700">
-                <X size={24} />
-              </button>
-            </div>
-            <form onSubmit={handleAddSubmit}>
-              <div className="mb-4">
-                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="new-nom">
-                  Nom
-                </label>
-                <input
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  id="new-nom"
-                  name="nom"
-                  type="text"
-                  value={newUser.nom}
-                  onChange={(e) => handleInputChange(e, true)}
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="new-prenom">
-                  Prénom
-                </label>
-                <input
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  id="new-prenom"
-                  name="prenom"
-                  type="text"
-                  value={newUser.prenom}
-                  onChange={(e) => handleInputChange(e, true)}
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="new-age">
-                  Age
-                </label>
-                <input
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  id="new-age"
-                  name="age"
-                  type="number"
-                  value={newUser.age}
-                  onChange={(e) => handleInputChange(e, true)}
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="new-adresse">
-                  Adresse
-                </label>
-                <input
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  id="new-adresse"
-                  name="adresse"
-                  type="text"
-                  value={newUser.adresse}
-                  onChange={(e) => handleInputChange(e, true)}
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="new-telephone">
-                  Téléphone
-                </label>
-                <input
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  id="new-telephone"
-                  name="telephone"
-                  type="tel"
-                  value={newUser.telephone}
-                  onChange={(e) => handleInputChange(e, true)}
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="new-email">
-                  Email
-                </label>
-                <input
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  id="new-email"
-                  name="email"
-                  type="email"
-                  value={newUser.email}
-                  onChange={(e) => handleInputChange(e, true)}
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="new-password">
-                  Password
-                </label>
-                <input
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  id="new-password"
-                  name="password"
-                  type="password"
-                  value={newUser.password}
-                  onChange={(e) => handleInputChange(e, true)}
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <button
-                  className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                  type="submit"
+      <AnimatePresence>
+        {isAddModalOpen && (
+          <motion.div
+            className="fixed inset-0 bg-blue-900/80 backdrop-blur-sm flex justify-center items-center z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="bg-white/10 backdrop-blur-md p-6 rounded-lg w-96 border border-blue-500/30 text-white"
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              transition={{ type: "spring", damping: 25 }}
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">Add New User</h2>
+                <motion.button
+                  onClick={() => setIsAddModalOpen(false)}
+                  className="text-blue-200 hover:text-white"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
                 >
-                  Add User
-                </button>
+                  <X size={24} />
+                </motion.button>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
+              <form onSubmit={handleAddSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-blue-100 text-sm font-bold mb-2" htmlFor="new-nom">
+                    Nom
+                  </label>
+                  <input
+                    className="bg-white/10 border border-blue-500/30 rounded w-full py-2 px-3 text-white leading-tight focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                    id="new-nom"
+                    name="nom"
+                    type="text"
+                    value={newUser.nom}
+                    onChange={(e) => handleInputChange(e, true)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-blue-100 text-sm font-bold mb-2" htmlFor="new-prenom">
+                    Prénom
+                  </label>
+                  <input
+                    className="bg-white/10 border border-blue-500/30 rounded w-full py-2 px-3 text-white leading-tight focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                    id="new-prenom"
+                    name="prenom"
+                    type="text"
+                    value={newUser.prenom}
+                    onChange={(e) => handleInputChange(e, true)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-blue-100 text-sm font-bold mb-2" htmlFor="new-age">
+                    Age
+                  </label>
+                  <input
+                    className="bg-white/10 border border-blue-500/30 rounded w-full py-2 px-3 text-white leading-tight focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                    id="new-age"
+                    name="age"
+                    type="number"
+                    value={newUser.age}
+                    onChange={(e) => handleInputChange(e, true)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-blue-100 text-sm font-bold mb-2" htmlFor="new-adresse">
+                    Adresse
+                  </label>
+                  <input
+                    className="bg-white/10 border border-blue-500/30 rounded w-full py-2 px-3 text-white leading-tight focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                    id="new-adresse"
+                    name="adresse"
+                    type="text"
+                    value={newUser.adresse}
+                    onChange={(e) => handleInputChange(e, true)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-blue-100 text-sm font-bold mb-2" htmlFor="new-telephone">
+                    Téléphone
+                  </label>
+                  <input
+                    className="bg-white/10 border border-blue-500/30 rounded w-full py-2 px-3 text-white leading-tight focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                    id="new-telephone"
+                    name="telephone"
+                    type="tel"
+                    value={newUser.telephone}
+                    onChange={(e) => handleInputChange(e, true)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-blue-100 text-sm font-bold mb-2" htmlFor="new-email">
+                    Email
+                  </label>
+                  <input
+                    className="bg-white/10 border border-blue-500/30 rounded w-full py-2 px-3 text-white leading-tight focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                    id="new-email"
+                    name="email"
+                    type="email"
+                    value={newUser.email}
+                    onChange={(e) => handleInputChange(e, true)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-blue-100 text-sm font-bold mb-2" htmlFor="new-password">
+                    Password
+                  </label>
+                  <input
+                    className="bg-white/10 border border-blue-500/30 rounded w-full py-2 px-3 text-white leading-tight focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                    id="new-password"
+                    name="password"
+                    type="password"
+                    value={newUser.password}
+                    onChange={(e) => handleInputChange(e, true)}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <motion.button
+                    className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none"
+                    type="submit"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    Add User
+                  </motion.button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {showSuccessPopup && (
-        <div className="fixed bottom-5 right-5 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg">
-          User action completed successfully!
-        </div>
-      )}
+      <AnimatePresence>
+        {showSuccessPopup && (
+          <motion.div
+            className="fixed bottom-5 right-5 bg-blue-500 text-white px-6 py-3 rounded-lg shadow-lg"
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            transition={{ type: "spring", damping: 20 }}
+          >
+            User action completed successfully!
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
 
 export default ManageUsers
+

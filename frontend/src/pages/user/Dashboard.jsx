@@ -22,6 +22,7 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import MyCauses from "@/components/MyCauses"
 import NavigationBar from "@/components/UserNavigationBar"
+import { motion, AnimatePresence } from "framer-motion"
 
 const Dashboard = () => {
   const [activeSection, setActiveSection] = useState("dashboard")
@@ -79,11 +80,20 @@ const Dashboard = () => {
 
   const renderContent = () => {
     if (loading) {
-      return <div>Loading...</div>
+      return (
+        <div className="flex justify-center items-center h-64 bg-blue-50/50 rounded-lg border border-blue-200">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      )
     }
 
     if (error) {
-      return <div>Error: {error}</div>
+      return (
+        <div className="bg-red-50 border border-red-200 p-6 rounded-lg text-red-600">
+          <p className="font-medium">Error:</p>
+          <p>{error}</p>
+        </div>
+      )
     }
 
     switch (activeSection) {
@@ -115,32 +125,45 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
       {/* Navigation Bar */}
       <NavigationBar />
 
       {/* Left Sidebar - adjusted to account for navbar */}
-      <aside className="fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 bg-white border-r border-gray-200 overflow-y-auto">
-        
+      <aside className="fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 bg-white/80 backdrop-blur-sm border-r border-blue-200 overflow-y-auto">
         <nav className="px-4 py-2">
           {menuItems.map((item) => (
-            <button
+            <motion.button
               key={item.id}
               onClick={() => setActiveSection(item.id)}
               className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-1 transition-colors ${
-                activeSection === item.id ? "bg-primary text-white" : "text-gray-600 hover:bg-gray-100"
+                activeSection === item.id ? "bg-blue-500 text-white" : "text-blue-700 hover:bg-blue-100"
               }`}
+              whileHover={{ x: activeSection === item.id ? 0 : 5 }}
+              whileTap={{ scale: 0.98 }}
             >
               <item.icon size={20} />
               <span>{item.label}</span>
-            </button>
+            </motion.button>
           ))}
         </nav>
       </aside>
 
       {/* Main Content - adjusted to account for navbar */}
       <main className="ml-64 pt-16 p-8">
-        <div className="max-w-4xl mx-auto">{renderContent()}</div>
+        <div className="max-w-4xl mx-auto">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeSection}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              {renderContent()}
+            </motion.div>
+          </AnimatePresence>
+        </div>
       </main>
     </div>
   )
@@ -245,52 +268,71 @@ const UserInformation = ({ userInfo, onChange, refreshUserInfo, setActiveSection
   }
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow">
-      <h2 className="text-2xl font-bold mb-6">My Information</h2>
+    <motion.div
+      className="bg-white p-6 rounded-lg shadow-md border border-blue-100"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <h2 className="text-2xl font-bold mb-6 text-blue-900">My Information</h2>
       <form onSubmit={handleSaveChanges} className="space-y-6">
-        <div className="flex items-center justify-center">
+        <motion.div
+          className="flex items-center justify-center"
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.2, duration: 0.4 }}
+        >
           <div className="relative">
-            <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center">
-              <UserCircle className="w-12 h-12 text-gray-400" />
+            <div className="w-24 h-24 rounded-full bg-blue-100 flex items-center justify-center">
+              <UserCircle className="w-12 h-12 text-blue-500" />
             </div>
-            <button className="absolute bottom-0 right-0 p-2 bg-primary text-white rounded-full">
-              <Camera size={16} />
-            </button>
+           
           </div>
-        </div>
+        </motion.div>
         <div className="grid gap-4">
           <div className="grid gap-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email" className="text-blue-800">
+              Email
+            </Label>
             <Input
               id="email"
               name="email"
               value={userInfo?.email || ""}
               onChange={handleInputChange}
               autoComplete="email"
+              className="border-blue-200 focus:border-blue-400 focus:ring-blue-400"
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="nom">Nom</Label>
+            <Label htmlFor="nom" className="text-blue-800">
+              Nom
+            </Label>
             <Input
               id="nom"
               name="nom"
               value={userInfo?.nom || ""}
               onChange={handleInputChange}
               autoComplete="family-name"
+              className="border-blue-200 focus:border-blue-400 focus:ring-blue-400"
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="prenom">Prénom</Label>
+            <Label htmlFor="prenom" className="text-blue-800">
+              Prénom
+            </Label>
             <Input
               id="prenom"
               name="prenom"
               value={userInfo?.prenom || ""}
               onChange={handleInputChange}
               autoComplete="given-name"
+              className="border-blue-200 focus:border-blue-400 focus:ring-blue-400"
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="age">Age</Label>
+            <Label htmlFor="age" className="text-blue-800">
+              Age
+            </Label>
             <Input
               id="age"
               name="age"
@@ -298,56 +340,87 @@ const UserInformation = ({ userInfo, onChange, refreshUserInfo, setActiveSection
               value={userInfo?.age || ""}
               onChange={handleInputChange}
               autoComplete="age"
+              className="border-blue-200 focus:border-blue-400 focus:ring-blue-400"
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="adresse">Adresse</Label>
+            <Label htmlFor="adresse" className="text-blue-800">
+              Adresse
+            </Label>
             <Input
               id="adresse"
               name="adresse"
               value={userInfo?.adresse || ""}
               onChange={handleInputChange}
               autoComplete="street-address"
+              className="border-blue-200 focus:border-blue-400 focus:ring-blue-400"
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="telephone">Téléphone</Label>
+            <Label htmlFor="telephone" className="text-blue-800">
+              Téléphone
+            </Label>
             <Input
               id="telephone"
               name="telephone"
               value={userInfo?.telephone || ""}
               onChange={handleInputChange}
               autoComplete="tel"
+              className="border-blue-200 focus:border-blue-400 focus:ring-blue-400"
             />
           </div>
           <div className="flex gap-3">
-            <Button type="submit" className="flex-1" disabled={isSaving || !hasChanges}>
-              {isSaving ? "Saving..." : "Save Changes"}
-            </Button>
-            <Button type="button" variant="outline" className="w-auto" onClick={resetForm} disabled={!hasChanges}>
-              <RotateCcw className="w-4 h-4 mr-2" />
-              Reset
-            </Button>
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="flex-1">
+              <Button
+                type="submit"
+                className="w-full bg-blue-500 hover:bg-blue-600 text-white"
+                disabled={isSaving || !hasChanges}
+              >
+                {isSaving ? "Saving..." : "Save Changes"}
+              </Button>
+            </motion.div>
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-auto border-blue-500 text-blue-500 hover:bg-blue-50"
+                onClick={resetForm}
+                disabled={!hasChanges}
+              >
+                <RotateCcw className="w-4 h-4 mr-2" />
+                Reset
+              </Button>
+            </motion.div>
           </div>
           {!hasChanges && !saveSuccess && !saveError && (
-            <p className="text-sm text-gray-500 text-center">Make changes to enable saving</p>
+            <p className="text-sm text-blue-500 text-center">Make changes to enable saving</p>
           )}
           {saveError && (
-            <div className="p-3 mt-3 bg-red-50 border border-red-200 rounded-md text-red-600">
+            <motion.div
+              className="p-3 mt-3 bg-red-50 border border-red-200 rounded-md text-red-600"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
               <p className="font-medium">Error:</p>
               <p>{saveError}</p>
               <p className="text-sm mt-2">If this problem persists, please contact support or try again later.</p>
-            </div>
+            </motion.div>
           )}
           {saveSuccess && (
-            <div className="p-3 mt-3 bg-green-50 border border-green-200 rounded-md text-green-600">
+            <motion.div
+              className="p-3 mt-3 bg-green-50 border border-green-200 rounded-md text-green-600"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
               <p className="font-medium">Success!</p>
               <p>Your information has been updated successfully.</p>
-            </div>
+            </motion.div>
           )}
         </div>
       </form>
-    </div>
+    </motion.div>
   )
 }
 
@@ -457,19 +530,26 @@ const DocumentUpload = () => {
   }
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow">
-      <h2 className="text-2xl font-bold mb-6">My Documents</h2>
+    <motion.div
+      className="bg-white p-6 rounded-lg shadow-md border border-blue-100"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <h2 className="text-2xl font-bold mb-6 text-blue-900">My Documents</h2>
 
-      <div className="bg-yellow-50 p-4 rounded-lg mb-6">
-        <h3 className="font-semibold mb-2">Identity Documents</h3>
+      <div className="bg-blue-50 p-4 rounded-lg mb-6">
+        <h3 className="font-semibold mb-2 text-blue-800">Identity Documents</h3>
 
         <div className="flex gap-4 flex-col md:flex-row">
           {/* Front Document */}
           <div className="flex-1">
-            <p className="text-sm font-medium mb-2">Front side of ID</p>
-            <div
-              className={`border-2 border-dashed ${frontPreview ? "border-primary" : "border-gray-300"} rounded-lg p-4 text-center relative overflow-hidden cursor-pointer`}
+            <p className="text-sm font-medium mb-2 text-blue-700">Front side of ID</p>
+            <motion.div
+              className={`border-2 border-dashed ${frontPreview ? "border-blue-500" : "border-blue-300"} rounded-lg p-4 text-center relative overflow-hidden cursor-pointer`}
               onClick={() => frontInputRef.current.click()}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
               {frontPreview ? (
                 <>
@@ -478,15 +558,20 @@ const DocumentUpload = () => {
                     alt="ID Front Preview"
                     className="mx-auto max-h-32 object-contain mb-2"
                   />
-                  <p className="text-sm text-gray-600">{frontDocument.name}</p>
+                  <p className="text-sm text-blue-600">{frontDocument.name}</p>
                 </>
               ) : (
                 <>
-                  <div className="mb-4">
-                    <Camera className="w-8 h-8 mx-auto text-gray-400" />
-                  </div>
-                  <p className="text-sm text-gray-600 mb-2">Upload front side</p>
-                  <p className="text-xs text-gray-500">JPG, PNG or PDF accepted</p>
+                  <motion.div
+                    className="mb-4"
+                    initial={{ scale: 0.8 }}
+                    animate={{ scale: 1 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <Camera className="w-8 h-8 mx-auto text-blue-400" />
+                  </motion.div>
+                  <p className="text-sm text-blue-600 mb-2">Upload front side</p>
+                  <p className="text-xs text-blue-500">JPG, PNG or PDF accepted</p>
                 </>
               )}
               <input
@@ -496,15 +581,17 @@ const DocumentUpload = () => {
                 accept=".jpg,.jpeg,.png,.pdf"
                 onChange={(e) => handleFileChange(e, "front")}
               />
-            </div>
+            </motion.div>
           </div>
 
           {/* Back Document */}
           <div className="flex-1">
-            <p className="text-sm font-medium mb-2">Back side of ID</p>
-            <div
-              className={`border-2 border-dashed ${backPreview ? "border-primary" : "border-gray-300"} rounded-lg p-4 text-center relative overflow-hidden cursor-pointer`}
+            <p className="text-sm font-medium mb-2 text-blue-700">Back side of ID</p>
+            <motion.div
+              className={`border-2 border-dashed ${backPreview ? "border-blue-500" : "border-blue-300"} rounded-lg p-4 text-center relative overflow-hidden cursor-pointer`}
               onClick={() => backInputRef.current.click()}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
               {backPreview ? (
                 <>
@@ -513,15 +600,20 @@ const DocumentUpload = () => {
                     alt="ID Back Preview"
                     className="mx-auto max-h-32 object-contain mb-2"
                   />
-                  <p className="text-sm text-gray-600">{backDocument.name}</p>
+                  <p className="text-sm text-blue-600">{backDocument.name}</p>
                 </>
               ) : (
                 <>
-                  <div className="mb-4">
-                    <Camera className="w-8 h-8 mx-auto text-gray-400" />
-                  </div>
-                  <p className="text-sm text-gray-600 mb-2">Upload back side</p>
-                  <p className="text-xs text-gray-500">JPG, PNG or PDF accepted</p>
+                  <motion.div
+                    className="mb-4"
+                    initial={{ scale: 0.8 }}
+                    animate={{ scale: 1 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <Camera className="w-8 h-8 mx-auto text-blue-400" />
+                  </motion.div>
+                  <p className="text-sm text-blue-600 mb-2">Upload back side</p>
+                  <p className="text-xs text-blue-500">JPG, PNG or PDF accepted</p>
                 </>
               )}
               <input
@@ -531,140 +623,232 @@ const DocumentUpload = () => {
                 accept=".jpg,.jpeg,.png,.pdf"
                 onChange={(e) => handleFileChange(e, "back")}
               />
-            </div>
+            </motion.div>
           </div>
         </div>
       </div>
 
       {/* Upload button and status message */}
       <div>
-        <Button
-          className="w-full flex items-center justify-center gap-2"
-          onClick={handleUpload}
-          disabled={uploading || (!frontDocument && !backDocument)}
-        >
-          {uploading ? "Uploading..." : "Submit Documents"}
-        </Button>
+        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+          <Button
+            className="w-full flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white"
+            onClick={handleUpload}
+            disabled={uploading || (!frontDocument && !backDocument)}
+          >
+            {uploading ? "Uploading..." : "Submit Documents"}
+          </Button>
+        </motion.div>
 
         {uploadStatus.message && (
-          <div
-            className={`mt-4 p-3 rounded-md ${uploadStatus.success ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}`}
+          <motion.div
+            className={`mt-4 p-3 rounded-md ${uploadStatus.success ? "bg-green-50 text-green-700 border border-green-200" : "bg-red-50 text-red-700 border border-red-200"}`}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
           >
             {uploadStatus.message}
-          </div>
+          </motion.div>
         )}
       </div>
-    </div>
+    </motion.div>
   )
 }
 
 const BankDetails = ({ userInfo, onChange }) => (
-  <div className="bg-white p-6 rounded-lg shadow">
-    <h2 className="text-2xl font-bold mb-6">Bank Details</h2>
+  <motion.div
+    className="bg-white p-6 rounded-lg shadow-md border border-blue-100"
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.5 }}
+  >
+    <h2 className="text-2xl font-bold mb-6 text-blue-900">Bank Details</h2>
     <div className="space-y-4">
       <div className="grid gap-2">
-        <Label htmlFor="bankHolder">Account Holder Name</Label>
+        <Label htmlFor="bankHolder" className="text-blue-800">
+          Account Holder Name
+        </Label>
         <Input
           id="bankHolder"
           name="bankHolder"
           value={userInfo?.bankHolder || ""}
           onChange={onChange}
           autoComplete="name"
+          className="border-blue-200 focus:border-blue-400 focus:ring-blue-400"
         />
       </div>
       <div className="grid gap-2">
-        <Label htmlFor="bankName">Bank Name</Label>
+        <Label htmlFor="bankName" className="text-blue-800">
+          Bank Name
+        </Label>
         <Input
           id="bankName"
           name="bankName"
           value={userInfo?.bankName || ""}
           onChange={onChange}
           autoComplete="organization"
+          className="border-blue-200 focus:border-blue-400 focus:ring-blue-400"
         />
       </div>
       <div className="grid gap-2">
-        <Label htmlFor="branchName">Branch Name</Label>
+        <Label htmlFor="branchName" className="text-blue-800">
+          Branch Name
+        </Label>
         <Input
           id="branchName"
           name="branchName"
           value={userInfo?.branchName || ""}
           onChange={onChange}
           autoComplete="off"
+          className="border-blue-200 focus:border-blue-400 focus:ring-blue-400"
         />
       </div>
       <div className="grid gap-2">
-        <Label htmlFor="rib">RIB</Label>
-        <Input id="rib" name="rib" value={userInfo?.rib || ""} onChange={onChange} autoComplete="off" />
+        <Label htmlFor="rib" className="text-blue-800">
+          RIB
+        </Label>
+        <Input
+          id="rib"
+          name="rib"
+          value={userInfo?.rib || ""}
+          onChange={onChange}
+          autoComplete="off"
+          className="border-blue-200 focus:border-blue-400 focus:ring-blue-400"
+        />
       </div>
       <div className="flex items-center space-x-2">
-        <Checkbox id="terms" />
-        <label htmlFor="terms" className="text-sm text-gray-600">
+        <Checkbox
+          id="terms"
+          className="text-blue-500 border-blue-300 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+        />
+        <label htmlFor="terms" className="text-sm text-blue-700">
           I certify that I am the holder of this bank/postal account
         </label>
       </div>
-      <Button className="w-full">Save Changes</Button>
+      <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+        <Button className="w-full bg-blue-500 hover:bg-blue-600 text-white">Save Changes</Button>
+      </motion.div>
     </div>
-  </div>
+  </motion.div>
 )
 
 const Donations = () => (
-  <div className="bg-white p-6 rounded-lg shadow">
-    <h2 className="text-2xl font-bold mb-6">My Donations</h2>
-    <div className="text-center py-12">
-      <CreditCard className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-      <p className="text-gray-600">No donation requests found</p>
-    </div>
-  </div>
+  <motion.div
+    className="bg-white p-6 rounded-lg shadow-md border border-blue-100"
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.5 }}
+  >
+    <h2 className="text-2xl font-bold mb-6 text-blue-900">My Donations</h2>
+    <motion.div
+      className="text-center py-12"
+      initial={{ scale: 0.9, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ delay: 0.2, duration: 0.4 }}
+    >
+      <CreditCard className="w-12 h-12 mx-auto text-blue-400 mb-4" />
+      <p className="text-blue-600">No donation requests found</p>
+    </motion.div>
+  </motion.div>
 )
 
 const Participations = () => (
-  <div className="bg-white p-6 rounded-lg shadow">
-    <h2 className="text-2xl font-bold mb-6">My Participations</h2>
-    <div className="text-center py-12">
-      <HandHeart className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-      <p className="text-gray-600">No participations found</p>
-    </div>
-  </div>
+  <motion.div
+    className="bg-white p-6 rounded-lg shadow-md border border-blue-100"
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.5 }}
+  >
+    <h2 className="text-2xl font-bold mb-6 text-blue-900">My Participations</h2>
+    <motion.div
+      className="text-center py-12"
+      initial={{ scale: 0.9, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ delay: 0.2, duration: 0.4 }}
+    >
+      <HandHeart className="w-12 h-12 mx-auto text-blue-400 mb-4" />
+      <p className="text-blue-600">No participations found</p>
+    </motion.div>
+  </motion.div>
 )
 
 const PasswordChange = () => (
   <div className="grid gap-6">
-    <div className="bg-white p-6 rounded-lg shadow">
-      <h2 className="text-2xl font-bold mb-6">Change Password</h2>
+    <motion.div
+      className="bg-white p-6 rounded-lg shadow-md border border-blue-100"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <h2 className="text-2xl font-bold mb-6 text-blue-900">Change Password</h2>
       <div className="space-y-4">
         <div className="grid gap-2">
-          <Label htmlFor="currentPassword">Current Password</Label>
-          <Input id="currentPassword" type="password" autoComplete="current-password" />
+          <Label htmlFor="currentPassword" className="text-blue-800">
+            Current Password
+          </Label>
+          <Input
+            id="currentPassword"
+            type="password"
+            autoComplete="current-password"
+            className="border-blue-200 focus:border-blue-400 focus:ring-blue-400"
+          />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="newPassword">New Password</Label>
-          <Input id="newPassword" type="password" autoComplete="new-password" />
+          <Label htmlFor="newPassword" className="text-blue-800">
+            New Password
+          </Label>
+          <Input
+            id="newPassword"
+            type="password"
+            autoComplete="new-password"
+            className="border-blue-200 focus:border-blue-400 focus:ring-blue-400"
+          />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="confirmPassword">Confirm New Password</Label>
-          <Input id="confirmPassword" type="password" autoComplete="new-password" />
+          <Label htmlFor="confirmPassword" className="text-blue-800">
+            Confirm New Password
+          </Label>
+          <Input
+            id="confirmPassword"
+            type="password"
+            autoComplete="new-password"
+            className="border-blue-200 focus:border-blue-400 focus:ring-blue-400"
+          />
         </div>
-        <Button className="w-full">Change Password</Button>
+        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+          <Button className="w-full bg-blue-500 hover:bg-blue-600 text-white">Change Password</Button>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
 
-    <div className="bg-white p-6 rounded-lg shadow">
-      <h2 className="text-2xl font-bold mb-6">Link Social Accounts</h2>
+    <motion.div
+      className="bg-white p-6 rounded-lg shadow-md border border-blue-100"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.2 }}
+    >
+      <h2 className="text-2xl font-bold mb-6 text-blue-900">Link Social Accounts</h2>
       <div className="space-y-4">
-        <Button variant="outline" className="w-full">
-          <Mail className="mr-2 h-4 w-4" />
-          Continue with Google
-        </Button>
-        <Button variant="outline" className="w-full">
-          <Mail className="mr-2 h-4 w-4" />
-          Continue with Facebook
-        </Button>
-        <Button variant="outline" className="w-full">
-          <Mail className="mr-2 h-4 w-4" />
-          Continue with Twitter
-        </Button>
+        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+          <Button variant="outline" className="w-full border-blue-500 text-blue-500 hover:bg-blue-50">
+            <Mail className="mr-2 h-4 w-4" />
+            Continue with Google
+          </Button>
+        </motion.div>
+        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+          <Button variant="outline" className="w-full border-blue-500 text-blue-500 hover:bg-blue-50">
+            <Mail className="mr-2 h-4 w-4" />
+            Continue with Facebook
+          </Button>
+        </motion.div>
+        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+          <Button variant="outline" className="w-full border-blue-500 text-blue-500 hover:bg-blue-50">
+            <Mail className="mr-2 h-4 w-4" />
+            Continue with Twitter
+          </Button>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   </div>
 )
 
@@ -673,8 +857,13 @@ const DashboardOverview = ({ userInfo, setActiveSection }) => {
 
   return (
     <div className="grid gap-6">
-      <div className="bg-white p-6 rounded-lg shadow">
-        <h2 className="text-2xl font-bold mb-6">Notifications</h2>
+      <motion.div
+        className="bg-white p-6 rounded-lg shadow-md border border-blue-100"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <h2 className="text-2xl font-bold mb-6 text-blue-900">Notifications</h2>
         <div className="space-y-4">
           <div className="flex items-center text-red-600">
             <span className="mr-2">•</span>
@@ -686,114 +875,163 @@ const DashboardOverview = ({ userInfo, setActiveSection }) => {
           </div>
         </div>
         <div className="mt-4">
-          <Button
-            onClick={() => setActiveSection("documents")}
-            variant="outline"
-            className="text-yellow-600 border-yellow-500 hover:bg-yellow-50"
-          >
-            Modifier
-          </Button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-2xl font-bold mb-6">Mes Coordonnées</h2>
-          <div className="space-y-2">
-            <p>
-              <span className="font-semibold">Nom:</span> {userInfo?.nom || "Non renseigné"}
-            </p>
-            <p>
-              <span className="font-semibold">Prénom:</span> {userInfo?.prenom || "Non renseigné"}
-            </p>
-            <p>
-              <span className="font-semibold">Adresse:</span> {userInfo?.adresse || "Non renseignée"}
-            </p>
-            <p>
-              <span className="font-semibold">Téléphone:</span> {userInfo?.telephone || "Non renseigné"}
-            </p>
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Button
-              onClick={() => setActiveSection("my-info")}
+              onClick={() => setActiveSection("documents")}
               variant="outline"
-              className="w-full mt-4 text-yellow-600 border-yellow-500 hover:bg-yellow-50"
+              className="text-blue-600 border-blue-500 hover:bg-blue-50"
             >
               Modifier
             </Button>
-          </div>
+          </motion.div>
         </div>
+      </motion.div>
 
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-2xl font-bold mb-6">Mes Infos de Connexion</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <motion.div
+          className="bg-white p-6 rounded-lg shadow-md border border-blue-100"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+        >
+          <h2 className="text-2xl font-bold mb-6 text-blue-900">Mes Coordonnées</h2>
           <div className="space-y-2">
-            <p>
-              <span className="font-semibold">Email:</span> {userInfo?.email || "Non renseigné"}
+            <p className="text-blue-700">
+              <span className="font-semibold text-blue-800">Nom:</span> {userInfo?.nom || "Non renseigné"}
             </p>
-            <p>
-              <span className="font-semibold">Mot de passe:</span> ••••••••
+            <p className="text-blue-700">
+              <span className="font-semibold text-blue-800">Prénom:</span> {userInfo?.prenom || "Non renseigné"}
             </p>
-            <p>
-              <span className="font-semibold">Comptes associés:</span>
+            <p className="text-blue-700">
+              <span className="font-semibold text-blue-800">Adresse:</span> {userInfo?.adresse || "Non renseignée"}
+            </p>
+            <p className="text-blue-700">
+              <span className="font-semibold text-blue-800">Téléphone:</span> {userInfo?.telephone || "Non renseigné"}
+            </p>
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Button
+                onClick={() => setActiveSection("my-info")}
+                variant="outline"
+                className="w-full mt-4 text-blue-600 border-blue-500 hover:bg-blue-50"
+              >
+                Modifier
+              </Button>
+            </motion.div>
+          </div>
+        </motion.div>
+
+        <motion.div
+          className="bg-white p-6 rounded-lg shadow-md border border-blue-100"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          <h2 className="text-2xl font-bold mb-6 text-blue-900">Mes Infos de Connexion</h2>
+          <div className="space-y-2">
+            <p className="text-blue-700">
+              <span className="font-semibold text-blue-800">Email:</span> {userInfo?.email || "Non renseigné"}
+            </p>
+            <p className="text-blue-700">
+              <span className="font-semibold text-blue-800">Mot de passe:</span> ••••••••
+            </p>
+            <p className="text-blue-700">
+              <span className="font-semibold text-blue-800">Comptes associés:</span>
             </p>
             <div className="flex gap-2 mt-2">
-              <Button variant="outline" size="icon" className="rounded-full w-8 h-8">
-                <span className="sr-only">Facebook</span>f
-              </Button>
-              <Button variant="outline" size="icon" className="rounded-full w-8 h-8">
-                <span className="sr-only">Google</span>g
-              </Button>
-              <Button variant="outline" size="icon" className="rounded-full w-8 h-8">
-                <span className="sr-only">Twitter</span>t
-              </Button>
+              <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                <Button variant="outline" size="icon" className="rounded-full w-8 h-8 border-blue-300 text-blue-500">
+                  <span className="sr-only">Facebook</span>f
+                </Button>
+              </motion.button>
+              <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                <Button variant="outline" size="icon" className="rounded-full w-8 h-8 border-blue-300 text-blue-500">
+                  <span className="sr-only">Google</span>g
+                </Button>
+              </motion.button>
+              <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                <Button variant="outline" size="icon" className="rounded-full w-8 h-8 border-blue-300 text-blue-500">
+                  <span className="sr-only">Twitter</span>t
+                </Button>
+              </motion.button>
             </div>
-            <Button
-              onClick={() => setActiveSection("my-info")}
-              variant="outline"
-              className="w-full mt-4 text-yellow-600 border-yellow-500 hover:bg-yellow-50"
-            >
-              Modifier
-            </Button>
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Button
+                onClick={() => setActiveSection("my-info")}
+                variant="outline"
+                className="w-full mt-4 text-blue-600 border-blue-500 hover:bg-blue-50"
+              >
+                Modifier
+              </Button>
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-2xl font-bold mb-6">Nous contacter</h2>
+        <motion.div
+          className="bg-white p-6 rounded-lg shadow-md border border-blue-100"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+        >
+          <h2 className="text-2xl font-bold mb-6 text-blue-900">Nous contacter</h2>
           <div className="flex justify-center gap-8">
-            <div className="text-center">
-              <Phone className="w-12 h-12 mx-auto text-gray-700 mb-2" />
-              <p className="text-sm">Par téléphone</p>
-            </div>
-            <div className="text-center">
-              <Mail className="w-12 h-12 mx-auto text-gray-700 mb-2" />
-              <p className="text-sm">Par email</p>
-            </div>
+            <motion.div
+              className="text-center"
+              whileHover={{ y: -5 }}
+              transition={{ type: "spring", stiffness: 400, damping: 10 }}
+            >
+              <Phone className="w-12 h-12 mx-auto text-blue-500 mb-2" />
+              <p className="text-sm text-blue-700">Par téléphone</p>
+            </motion.div>
+            <motion.div
+              className="text-center"
+              whileHover={{ y: -5 }}
+              transition={{ type: "spring", stiffness: 400, damping: 10 }}
+            >
+              <Mail className="w-12 h-12 mx-auto text-blue-500 mb-2" />
+              <p className="text-sm text-blue-700">Par email</p>
+            </motion.div>
           </div>
           <div className="mt-6 text-center">
-            <Button
-              onClick={() => navigate("/contact")}
-              variant="outline"
-              className="text-yellow-600 border-yellow-500 hover:bg-yellow-50"
-            >
-              Voir les moyens de contact
-            </Button>
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button
+                onClick={() => navigate("/contact")}
+                variant="outline"
+                className="text-blue-600 border-blue-500 hover:bg-blue-50"
+              >
+                Voir les moyens de contact
+              </Button>
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-2xl font-bold mb-6">Une question ?</h2>
-          <div className="text-center">
-            <HelpCircle className="w-12 h-12 mx-auto text-gray-700 mb-2" />
-            <p className="text-sm mb-6">Consultez notre FAQ</p>
-            <Button
-              onClick={() => navigate("/about")}
-              variant="outline"
-              className="text-yellow-600 border-yellow-500 hover:bg-yellow-50"
-            >
-              Consulter la FAQ
-            </Button>
-          </div>
-        </div>
+        <motion.div
+          className="bg-white p-6 rounded-lg shadow-md border border-blue-100"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+        >
+          <h2 className="text-2xl font-bold mb-6 text-blue-900">Une question ?</h2>
+          <motion.div
+            className="text-center"
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.5, duration: 0.4 }}
+          >
+            <HelpCircle className="w-12 h-12 mx-auto text-blue-500 mb-2" />
+            <p className="text-sm mb-6 text-blue-700">Consultez notre FAQ</p>
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button
+                onClick={() => navigate("/about")}
+                variant="outline"
+                className="text-blue-600 border-blue-500 hover:bg-blue-50"
+              >
+                Consulter la FAQ
+              </Button>
+            </motion.div>
+          </motion.div>
+        </motion.div>
       </div>
     </div>
   )

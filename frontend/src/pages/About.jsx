@@ -1,92 +1,119 @@
+"use client"
+
+import { motion } from "framer-motion"
 import NavigationBar from "../components/NavigationBar"
-import { Heart, Users, Globe, Target } from "lucide-react"
+import { Heart, Users, Globe, Target } from 'lucide-react'
 
 const About = () => {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 text-white">
       <NavigationBar />
       <div className="pt-16">
         {/* Hero Section */}
-        <div className="bg-gradient-to-b from-gray-50 to-white py-16">
+        <motion.div 
+          className="bg-gradient-to-b from-blue-800/50 to-indigo-900/50 backdrop-blur-sm py-16"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8 }}
+        >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center">
-              <h1 className="text-4xl font-bold text-gray-900 mb-4">About CharityHub</h1>
-              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            <motion.div 
+              className="text-center"
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.6 }}
+            >
+              <h1 className="text-4xl font-bold text-white mb-4">About CharityHub</h1>
+              <p className="text-xl text-blue-100 max-w-2xl mx-auto">
                 We're on a mission to create positive change and make the world a better place.
               </p>
-            </div>
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Mission Section */}
         <section className="py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-              <div>
-                <h2 className="text-3xl font-bold text-gray-900 mb-6">Our Mission</h2>
-                <p className="text-gray-600 mb-6">
+              <motion.div
+                initial={{ x: -50, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+              >
+                <h2 className="text-3xl font-bold text-white mb-6">Our Mission</h2>
+                <p className="text-blue-100 mb-6">
                   CharityHub was founded with a simple but powerful mission: to connect generous donors with meaningful
                   causes around the world. We believe that everyone has the power to make a difference, no matter how
                   small the contribution.
                 </p>
-                <p className="text-gray-600">
+                <p className="text-blue-100">
                   Through our platform, we've helped raise millions of dollars for various causes, from providing clean
                   water to communities in need to supporting education initiatives and protecting wildlife.
                 </p>
-              </div>
+              </motion.div>
               <div className="grid grid-cols-2 gap-6">
-                <div className="bg-gray-50 p-6 rounded-lg">
-                  <Heart className="w-8 h-8 text-primary mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Care</h3>
-                  <p className="text-gray-600">Supporting those in need with compassion</p>
-                </div>
-                <div className="bg-gray-50 p-6 rounded-lg">
-                  <Users className="w-8 h-8 text-primary mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Community</h3>
-                  <p className="text-gray-600">Building stronger communities together</p>
-                </div>
-                <div className="bg-gray-50 p-6 rounded-lg">
-                  <Globe className="w-8 h-8 text-primary mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Global</h3>
-                  <p className="text-gray-600">Making an impact worldwide</p>
-                </div>
-                <div className="bg-gray-50 p-6 rounded-lg">
-                  <Target className="w-8 h-8 text-primary mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Impact</h3>
-                  <p className="text-gray-600">Achieving measurable results</p>
-                </div>
+                {[
+                  { icon: Heart, title: "Care", desc: "Supporting those in need with compassion" },
+                  { icon: Users, title: "Community", desc: "Building stronger communities together" },
+                  { icon: Globe, title: "Global", desc: "Making an impact worldwide" },
+                  { icon: Target, title: "Impact", desc: "Achieving measurable results" }
+                ].map((item, index) => (
+                  <motion.div 
+                    key={item.title}
+                    className="bg-white/10 backdrop-blur-sm p-6 rounded-lg border border-blue-500/20"
+                    initial={{ y: 30, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ duration: 0.5, delay: 0.3 + index * 0.1 }}
+                    whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(59, 130, 246, 0.1)" }}
+                  >
+                    <item.icon className="w-8 h-8 text-blue-300 mb-4" />
+                    <h3 className="text-xl font-semibold text-white mb-2">{item.title}</h3>
+                    <p className="text-blue-100">{item.desc}</p>
+                  </motion.div>
+                ))}
               </div>
             </div>
           </div>
         </section>
 
         {/* Stats Section */}
-        <section className="bg-gray-50 py-16">
+        <motion.section 
+          className="bg-blue-900/50 backdrop-blur-sm py-16"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8, delay: 0.4 }}
+        >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
-              <div>
-                <div className="text-4xl font-bold text-primary mb-2">$10M+</div>
-                <div className="text-gray-600">Funds Raised</div>
-              </div>
-              <div>
-                <div className="text-4xl font-bold text-primary mb-2">500+</div>
-                <div className="text-gray-600">Successful Projects</div>
-              </div>
-              <div>
-                <div className="text-4xl font-bold text-primary mb-2">100K+</div>
-                <div className="text-gray-600">Donors</div>
-              </div>
-              <div>
-                <div className="text-4xl font-bold text-primary mb-2">50+</div>
-                <div className="text-gray-600">Countries Reached</div>
-              </div>
+              {[
+                { value: "$10M+", label: "Funds Raised" },
+                { value: "500+", label: "Successful Projects" },
+                { value: "100K+", label: "Donors" },
+                { value: "50+", label: "Countries Reached" }
+              ].map((stat, index) => (
+                <motion.div 
+                  key={stat.label}
+                  initial={{ y: 30, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ duration: 0.5, delay: 0.5 + index * 0.1 }}
+                >
+                  <motion.div 
+                    className="text-4xl font-bold text-blue-300 mb-2"
+                    initial={{ scale: 0.9 }}
+                    animate={{ scale: 1 }}
+                    transition={{ duration: 0.5, delay: 0.7 + index * 0.1 }}
+                  >
+                    {stat.value}
+                  </motion.div>
+                  <div className="text-blue-100">{stat.label}</div>
+                </motion.div>
+              ))}
             </div>
           </div>
-        </section>
+        </motion.section>
       </div>
     </div>
   )
 }
 
 export default About
-

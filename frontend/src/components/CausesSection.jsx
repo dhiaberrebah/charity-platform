@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import CauseCard from "./CauseCard"
+import { motion } from "framer-motion"
 
 const CausesSection = () => {
   const [causes, setCauses] = useState([])
@@ -55,52 +56,90 @@ const CausesSection = () => {
   }
 
   return (
-    <div className="container mx-auto py-12">
-      <h2 className="text-3xl font-bold mb-6 text-center">Featured Causes</h2>
+    <motion.div 
+      className="container mx-auto py-12"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+    >
+      <motion.h2 
+        className="text-3xl font-bold mb-6 text-center text-white"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.2 }}
+      >
+        Featured Causes
+      </motion.h2>
 
       {loading && (
-        <div className="text-center py-10">
+        <motion.div 
+          className="text-center py-10"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4 }}
+        >
           <div
-            className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"
+            className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-300 border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"
             role="status"
           >
             <span className="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">
               Loading...
             </span>
           </div>
-          <p className="mt-2 text-gray-600">Loading causes...</p>
-        </div>
+          <p className="mt-2 text-blue-200">Loading causes...</p>
+        </motion.div>
       )}
 
       {error && (
-        <div className="text-center py-10">
-          <p className="text-red-500">{error}</p>
-        </div>
+        <motion.div 
+          className="text-center py-10"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4 }}
+        >
+          <p className="text-red-300">{error}</p>
+        </motion.div>
       )}
 
       {!loading && !error && causes.length === 0 && (
-        <div className="text-center py-10">
-          <p className="text-gray-600">No causes found. Check back later!</p>
-        </div>
+        <motion.div 
+          className="text-center py-10"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4 }}
+        >
+          <p className="text-blue-200">No causes found. Check back later!</p>
+        </motion.div>
       )}
 
       {!loading && !error && causes.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {causes.map((cause) => (
-            <CauseCard
+        <motion.div 
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+        >
+          {causes.map((cause, index) => (
+            <motion.div
               key={cause._id}
-              id={cause._id}
-              title={cause.title}
-              description={cause.description}
-              image={getImageUrl(cause)}
-              raised={cause.currentAmount || 0}
-              goal={cause.targetAmount}
-              category={cause.category}
-            />
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.5 + index * 0.1 }}
+            >
+              <CauseCard
+                id={cause._id}
+                title={cause.title}
+                description={cause.description}
+                image={getImageUrl(cause)}
+                raised={cause.currentAmount || 0}
+                goal={cause.targetAmount}
+                category={cause.category}
+              />
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       )}
-    </div>
+    </motion.div>
   )
 }
 
