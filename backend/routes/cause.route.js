@@ -7,16 +7,16 @@ import {
   updateCause,
   deleteCause,
 } from "../controllers/cause.controller.js"
-import { protectRoute, adminRoute } from "../middleware/auth.middleware.js"
+import { protectRoute } from "../middleware/auth.middleware.js"
 
 const router = express.Router()
 
-router.post("/", createCause)
+router.post("/", protectRoute, createCause)
 router.get("/", getCauses)
-router.get("/user", getUserCauses)
+router.get("/user", protectRoute, getUserCauses)
 router.get("/:id", getCause)
-router.put("/:id", updateCause)
-router.delete("/:id", deleteCause)
+router.put("/:id", protectRoute, updateCause)
+router.delete("/:id", protectRoute, deleteCause)
 
 export default router
 

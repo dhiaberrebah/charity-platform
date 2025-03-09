@@ -7,7 +7,7 @@ router.post("/signup", signup)
 router.post("/login", login)
 router.get("/get", protectRoute, getUsers)
 router.post("/logout", logout)
-router.get("/check", checkAuth)
+router.get("/check", protectRoute, checkAuth)
 router.put("/users/:id", protectRoute, updateUser)
 router.delete("/users/:id", protectRoute, adminRoute, deleteUser)
 
