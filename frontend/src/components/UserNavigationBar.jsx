@@ -16,7 +16,7 @@ const UserNavigationBar = () => {
   }
 
   return (
-    <nav className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white shadow-md">
+    <nav className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white shadow-md relative z-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
@@ -46,7 +46,7 @@ const UserNavigationBar = () => {
                 </motion.div>
                 <motion.div whileHover={{ y: -2 }} transition={{ type: "spring", stiffness: 400, damping: 10 }}>
                   <Link
-                    to="/user/explore"
+                    to="/causes/"
                     className="px-3 py-2 rounded-md text-sm font-medium text-blue-100 hover:bg-blue-800 hover:text-white transition-colors"
                   >
                     Explore
@@ -54,7 +54,7 @@ const UserNavigationBar = () => {
                 </motion.div>
                 <motion.div whileHover={{ y: -2 }} transition={{ type: "spring", stiffness: 400, damping: 10 }}>
                   <Link
-                    to="/user/donations"
+                    to="/user/dashboard/mycauses"
                     className="px-3 py-2 rounded-md text-sm font-medium text-blue-100 hover:bg-blue-800 hover:text-white transition-colors"
                   >
                     My Donations
@@ -103,7 +103,7 @@ const UserNavigationBar = () => {
                 </div>
                 {isProfileOpen && (
                   <motion.div
-                    className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5"
+                    className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 z-50"
                     role="menu"
                     aria-orientation="vertical"
                     aria-labelledby="user-menu"
@@ -119,7 +119,7 @@ const UserNavigationBar = () => {
                       <User className="mr-2 h-4 w-4 text-blue-500" /> Your Profile
                     </Link>
                     <Link
-                      to="/user/settings"
+                      to="/user/dashboard"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 flex items-center"
                       role="menuitem"
                     >

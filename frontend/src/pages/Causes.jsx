@@ -7,7 +7,7 @@ import CausesSection from "../components/CausesSection"
 const Causes = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 text-white">
-      <NavigationBar />
+      
       <div className="pt-16">
         {/* Hero Section */}
         <motion.div 
