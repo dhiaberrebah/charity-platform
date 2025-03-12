@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { ArrowLeft, Edit, Trash2, PlusCircle, X, Upload, ImageIcon } from "lucide-react"
+import { ArrowLeft, Edit, Trash2, PlusCircle, X, Upload, ImageIcon, LinkIcon } from "lucide-react"
 import { toast } from "sonner"
 import { motion, AnimatePresence } from "framer-motion"
 import { Link } from "react-router-dom"
@@ -17,6 +17,7 @@ const AddCauseModal = ({ onClose, onAdd }) => {
     category: "education",
     image: "", // URL for remote images
     status: "pending",
+    url: "", // New URL field
   })
 
   const [selectedFile, setSelectedFile] = useState(null)
@@ -113,8 +114,23 @@ const AddCauseModal = ({ onClose, onAdd }) => {
       newErrors.targetAmount = "Target amount must be greater than 0"
     }
 
+    // Validate URL if provided
+    if (formData.url && !isValidUrl(formData.url)) {
+      newErrors.url = "Please enter a valid URL"
+    }
+
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
+  }
+
+  // Helper function to validate URL
+  const isValidUrl = (string) => {
+    try {
+      new URL(string)
+      return true
+    } catch (_) {
+      return false
+    }
   }
 
   const handleSubmit = async (e) => {
@@ -139,6 +155,11 @@ const AddCauseModal = ({ onClose, onAdd }) => {
       formDataObj.append("submissionId", submissionId)
       formDataObj.append("status", formData.status)
 
+      // Add the URL if provided
+      if (formData.url) {
+        formDataObj.append("url", formData.url)
+      }
+
       // If there's an image URL, add it
       if (formData.image) {
         formDataObj.append("imageUrl", formData.image)
@@ -162,6 +183,7 @@ const AddCauseModal = ({ onClose, onAdd }) => {
         category: "education",
         image: "",
         status: "pending",
+        url: "",
       })
       handleRemoveFile()
     } catch (error) {
@@ -237,6 +259,26 @@ const AddCauseModal = ({ onClose, onAdd }) => {
               placeholder="Enter target amount"
             />
             {errors.targetAmount && <p className="text-red-300 text-sm mt-1">{errors.targetAmount}</p>}
+          </div>
+
+          {/* New URL field */}
+          <div>
+            <label className="block text-sm font-medium text-blue-100 mb-1">URL (Optional)</label>
+            <div className="flex">
+              <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-blue-500/30 bg-white/10 text-blue-300">
+                <LinkIcon size={18} />
+              </span>
+              <input
+                type="text"
+                name="url"
+                value={formData.url}
+                onChange={handleChange}
+                className={`w-full p-2 bg-white/10 border rounded-r-lg ${errors.url ? "border-red-500" : "border-blue-500/30"} text-white focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400`}
+                placeholder="https://example.com"
+              />
+            </div>
+            {errors.url && <p className="text-red-300 text-sm mt-1">{errors.url}</p>}
+            <p className="text-xs text-blue-300 mt-1">Add an external link related to this cause (optional)</p>
           </div>
 
           <div>

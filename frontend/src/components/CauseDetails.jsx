@@ -1,17 +1,19 @@
 "use client"
 
 import { useState } from "react"
-import { X, Edit } from "lucide-react"
+import { X, Edit, LinkIcon, ExternalLink, Save } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { motion } from "framer-motion"
+import { toast } from "sonner"
 
 const CauseDetails = ({ cause, onClose, isAdmin, onEdit }) => {
   const [isEditing, setIsEditing] = useState(false)
   const [editedCause, setEditedCause] = useState(cause)
+  const [isUpdatingUrl, setIsUpdatingUrl] = useState(false)
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -20,6 +22,41 @@ const CauseDetails = ({ cause, onClose, isAdmin, onEdit }) => {
 
   const handleSelectChange = (name, value) => {
     setEditedCause((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const generateDefaultUrl = () => {
+    // Generate a default URL based on the cause title
+    const baseUrl = "http://yourplatform.com/causes/"
+    const slug = editedCause.title
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^\w-]+/g, "")
+    return `${baseUrl}${slug}`
+  }
+
+  const handleUrlUpdate = async () => {
+    try {
+      setIsUpdatingUrl(true)
+
+      // If URL is empty, generate a default one
+      if (!editedCause.url) {
+        const defaultUrl = generateDefaultUrl()
+        setEditedCause((prev) => ({ ...prev, url: defaultUrl }))
+
+        // Save the updated cause with the new URL
+        await onEdit({ ...editedCause, url: defaultUrl })
+        toast.success("URL generated and saved successfully")
+      } else {
+        // Save the existing URL
+        await onEdit(editedCause)
+        toast.success("URL saved successfully")
+      }
+    } catch (error) {
+      console.error("Error updating URL:", error)
+      toast.error("Failed to update URL")
+    } finally {
+      setIsUpdatingUrl(false)
+    }
   }
 
   const handleSubmit = async (e) => {
@@ -122,6 +159,26 @@ const CauseDetails = ({ cause, onClose, isAdmin, onEdit }) => {
                   className="bg-blue-50/50 border-blue-200 focus:border-blue-400 focus:ring-blue-400"
                 />
               </div>
+              {/* URL field */}
+              <div>
+                <Label htmlFor="url" className="text-blue-800">
+                  URL (Optional)
+                </Label>
+                <div className="flex">
+                  <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-blue-200 bg-blue-50/50 text-blue-500">
+                    <LinkIcon size={18} />
+                  </span>
+                  <Input
+                    id="url"
+                    name="url"
+                    value={editedCause.url || ""}
+                    onChange={handleChange}
+                    className="rounded-l-none bg-blue-50/50 border-blue-200 focus:border-blue-400 focus:ring-blue-400"
+                    placeholder="https://example.com"
+                  />
+                </div>
+                <p className="text-xs text-blue-500 mt-1">Leave empty to auto-generate a URL based on the title</p>
+              </div>
               {isAdmin && (
                 <div>
                   <Label htmlFor="status" className="text-blue-800">
@@ -183,6 +240,49 @@ const CauseDetails = ({ cause, onClose, isAdmin, onEdit }) => {
               <p className="text-blue-800">
                 <strong className="text-blue-900">Montant actuel:</strong> {cause.currentAmount} DH
               </p>
+
+              {/* URL section with update button */}
+              <div className="flex flex-col space-y-2">
+                <div className="flex items-center">
+                  <strong className="text-blue-900 mr-2">URL:</strong>
+                  {cause.url ? (
+                    <a
+                      href={cause.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline flex items-center"
+                    >
+                      {cause.url}
+                      <ExternalLink size={14} className="ml-1" />
+                    </a>
+                  ) : (
+                    <span className="text-blue-800 italic">No URL set</span>
+                  )}
+                </div>
+
+                <div className="flex">
+                  <Input
+                    value={editedCause.url || ""}
+                    onChange={(e) => setEditedCause((prev) => ({ ...prev, url: e.target.value }))}
+                    placeholder="https://example.com"
+                    className="bg-blue-50/50 border-blue-200 focus:border-blue-400 focus:ring-blue-400 mr-2"
+                  />
+                  <Button
+                    onClick={handleUrlUpdate}
+                    disabled={isUpdatingUrl}
+                    className="bg-blue-500 hover:bg-blue-600 text-white"
+                  >
+                    {isUpdatingUrl ? "Saving..." : cause.url ? "Update URL" : "Generate URL"}
+                    <Save className="ml-2 h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="text-xs text-blue-500">
+                  {!cause.url
+                    ? "Leave empty to auto-generate a URL based on the title"
+                    : "Enter a new URL or leave empty to auto-generate"}
+                </p>
+              </div>
+
               {cause.image && (
                 <div>
                   <strong className="text-blue-900">Image:</strong>
