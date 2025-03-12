@@ -5,7 +5,10 @@ import { useParams, Link } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import { ArrowLeft, Share2, Facebook, Twitter, Linkedin, Copy, Check, ImageIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import NavigationBar from "@/components/NavigationBar"
+import { useAuth } from "../context/AuthContext"
+import NavigationBar from "../components/NavigationBar"
+import UserNavigationBar from "../components/UserNavigationBar"
+import AdminNavbar from "../components/AdminNavbar"
 import { Progress } from "@/components/ui/progress"
 import { toast } from "sonner"
 import DonationModal from "@/components/DonationModal"
@@ -19,6 +22,17 @@ const CauseShare = () => {
   const [copied, setCopied] = useState(false)
   const [imageError, setImageError] = useState(false)
   const [isDonationModalOpen, setIsDonationModalOpen] = useState(false)
+
+  const { isAuthenticated, isAdmin } = useAuth()
+  let NavbarComponent = NavigationBar
+
+  if (isAdmin) {
+    NavbarComponent = AdminNavbar
+  } else if (isAuthenticated) {
+    NavbarComponent = UserNavigationBar
+  } else {
+    NavbarComponent = NavigationBar
+  }
 
   useEffect(() => {
     const fetchCause = async () => {
@@ -134,7 +148,7 @@ const CauseShare = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 text-white">
-        <NavigationBar />
+        <NavbarComponent />
         <div className="pt-24 px-4 flex justify-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-300"></div>
         </div>
@@ -145,7 +159,7 @@ const CauseShare = () => {
   if (error || !cause) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 text-white">
-        <NavigationBar />
+        <NavbarComponent />
         <div className="pt-24 px-4 max-w-4xl mx-auto">
           <div className="bg-white/10 backdrop-blur-sm p-8 rounded-lg border border-blue-500/20">
             <h1 className="text-2xl font-bold mb-4">Cause Not Found</h1>
@@ -168,7 +182,7 @@ const CauseShare = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 text-white">
-      <NavigationBar />
+      <NavbarComponent />
       <div className="pt-24 px-4 max-w-4xl mx-auto">
         <motion.div
           className="bg-white/10 backdrop-blur-sm rounded-lg overflow-hidden border border-blue-500/20 mb-8"
@@ -279,7 +293,12 @@ const CauseShare = () => {
             </div>
 
             <div className="mb-8">
-              <DonationList causeId={cause._id} />
+              {cause._id && (
+                <>
+                  {console.log("Passing causeId to DonationList:", cause._id)}
+                  <DonationList causeId={cause._id} />
+                </>
+              )}
             </div>
 
             <motion.button
