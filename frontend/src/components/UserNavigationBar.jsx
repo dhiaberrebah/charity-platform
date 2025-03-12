@@ -102,7 +102,7 @@ const UserNavigationBar = () => {
                 <Bell className="h-6 w-6" />
               </motion.button>
 
-              <div className="ml-3 relative">
+              <div className="relative ml-3">
                 <div>
                   <motion.button
                     className="max-w-xs bg-blue-800 rounded-full flex items-center text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-blue-800 focus:ring-white"
@@ -126,7 +126,7 @@ const UserNavigationBar = () => {
                 </div>
                 {isProfileOpen && (
                   <motion.div
-                    className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5"
+                    className="absolute right-0 z-50 w-48 py-1 mt-2 origin-top-right bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
                     role="menu"
                     aria-orientation="vertical"
                     aria-labelledby="user-menu"
