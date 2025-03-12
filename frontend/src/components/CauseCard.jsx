@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
 import { Progress } from "@/components/ui/progress"
 import { motion } from "framer-motion"
 import { Share2 } from "lucide-react"
@@ -10,6 +11,7 @@ const CauseCard = ({ id, title, description, image, raised, goal, category, shar
   const [imageError, setImageError] = useState(false)
   const [imageSrc, setImageSrc] = useState("")
   const progress = Math.min((raised / goal) * 100, 100)
+  const navigate = useNavigate()
 
   // Process the image URL when component mounts or image changes
   useEffect(() => {
@@ -132,7 +134,7 @@ const CauseCard = ({ id, title, description, image, raised, goal, category, shar
 
           <motion.button
             className="w-full py-3 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors font-medium"
-            onClick={() => console.log(`Donate clicked for cause: ${id}`)}
+            onClick={() => navigate(`/causes/share/${shareUrl || id}`)}
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
           >
