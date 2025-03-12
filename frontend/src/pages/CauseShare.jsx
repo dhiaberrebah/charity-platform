@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from "react"
 import { useParams, Link } from "react-router-dom"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import { ArrowLeft, Share2, Facebook, Twitter, Linkedin, Copy, Check, ImageIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import NavigationBar from "@/components/NavigationBar"
 import { Progress } from "@/components/ui/progress"
 import { toast } from "sonner"
+import DonationModal from "@/components/DonationModal"
+import DonationList from "@/components/DonationList"
 
 const CauseShare = () => {
   const { shareUrl } = useParams()
@@ -16,6 +18,7 @@ const CauseShare = () => {
   const [error, setError] = useState(null)
   const [copied, setCopied] = useState(false)
   const [imageError, setImageError] = useState(false)
+  const [isDonationModalOpen, setIsDonationModalOpen] = useState(false)
 
   useEffect(() => {
     const fetchCause = async () => {
@@ -118,6 +121,14 @@ const CauseShare = () => {
     setImageError(true)
     // Use a placeholder image
     e.target.src = "https://placehold.co/600x400/3b82f6/ffffff?text=Image+Not+Available"
+  }
+
+  const openDonationModal = () => {
+    setIsDonationModalOpen(true)
+  }
+
+  const closeDonationModal = () => {
+    setIsDonationModalOpen(false)
   }
 
   if (loading) {
@@ -267,10 +278,15 @@ const CauseShare = () => {
               </div>
             </div>
 
+            <div className="mb-8">
+              <DonationList causeId={cause._id} />
+            </div>
+
             <motion.button
               className="w-full py-4 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors font-medium text-lg"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
+              onClick={openDonationModal}
             >
               Donate Now
             </motion.button>
@@ -309,6 +325,10 @@ const CauseShare = () => {
           </Button>
         </div>
       </div>
+
+      <AnimatePresence>
+        {isDonationModalOpen && <DonationModal cause={cause} onClose={closeDonationModal} />}
+      </AnimatePresence>
     </div>
   )
 }

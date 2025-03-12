@@ -9,6 +9,9 @@ import cors from "cors"
 import path from "path"
 import { fileURLToPath } from "url"
 import fs from "fs"
+import multer from "multer"
+// Import the donations route using ES modules syntax
+import donationsRoutes from "./routes/donations.js"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -52,9 +55,62 @@ app.get("/api/test", (req, res) => {
   res.json({ message: "API is working!" })
 })
 
+// Add a test route for donations
+app.get("/api/donations/test", (req, res) => {
+  console.log("Donations test route hit directly from server.js")
+  res.json({ message: "Donations test API is working directly from server.js!" })
+})
+
+// Add a temporary mock donations API
+app.get("/api/donations/cause/:causeId", (req, res) => {
+  // Return mock data
+  const mockDonations = [
+    {
+      _id: "1",
+      amount: 50,
+      isAnonymous: false,
+      donor: {
+        firstName: "John",
+        lastName: "D.",
+      },
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 days ago
+    },
+    {
+      _id: "2",
+      amount: 100,
+      isAnonymous: true,
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
+    },
+    {
+      _id: "3",
+      amount: 25,
+      isAnonymous: false,
+      donor: {
+        firstName: "Sarah",
+        lastName: "M.",
+      },
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 12), // 12 hours ago
+    },
+  ]
+  res.json(mockDonations)
+})
+
+// Register the donations route
+app.use("/api/donations", donationsRoutes)
+
 app.use("/api/auth", authRoutes)
 app.use("/api/causes", causeRoutes)
 app.use("/api/dashboard", dashboardRoutes)
+
+// Make sure your multer configuration is saving files to this directory
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, "uploads/"))
+  },
+  filename: (req, file, cb) => {
+    cb(null, "image-" + Date.now() + path.extname(file.originalname))
+  },
+})
 
 app.listen(PORT, () => {
   console.log("Server is running on port " + PORT)
