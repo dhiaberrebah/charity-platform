@@ -16,7 +16,7 @@ import Login from "./pages/Login"
 import Unauthorized from "./pages/Unauthorized"
 
 // Admin pages
-import Dashboard from "./pages/admin/Dashboard"
+import AdminDashboard from "./pages/admin/Dashboard"
 import ManageUsers from "./pages/admin/ManageUsers"
 import ManageCauses from "./pages/admin/ManageCauses"
 import ViewDonations from "./pages/admin/ViewDonations"
@@ -25,6 +25,9 @@ import AdminHome from "./pages/admin/adminhome"
 // User pages
 import UserDashboard from "./pages/user/Dashboard"
 import UserHome from "./pages/user/Home"
+
+// Cause Share Route
+import CauseShare from "./pages/CauseShare"
 
 const queryClient = new QueryClient()
 
@@ -58,13 +61,16 @@ const App = () => (
             {/* Protected Admin Routes */}
             <Route element={<ProtectedRoute />}>
               <Route element={<AdminRoute />}>
-                <Route path="/admin/dashboard" element={<Dashboard />} />
+                <Route path="/admin/dashboard" element={<AdminDashboard />} />
                 <Route path="/admin/users" element={<ManageUsers />} />
                 <Route path="/admin/causes" element={<ManageCauses />} />
                 <Route path="/admin/donations" element={<ViewDonations />} />
                 <Route path="/admin/home" element={<AdminHome />} />
               </Route>
             </Route>
+
+            {/* Cause Share Route */}
+            <Route path="/causes/share/:shareUrl" element={<CauseShare />} />
 
             {/* Catch-all route */}
             <Route path="*" element={<NotFound />} />

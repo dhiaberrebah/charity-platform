@@ -158,3 +158,31 @@ export const deleteCause = async (req, res) => {
     res.status(500).json({ message: error.message })
   }
 }
+
+export const getShareableCause = async (req, res) => {
+  try {
+    const shareUrl = req.params.shareUrl
+
+    // Extract the ID from the shareUrl (it's the part after the last dash)
+    const parts = shareUrl.split("-")
+    const causeId = parts[parts.length - 1]
+
+    // Find the cause by ID
+    const cause = await Cause.findById(causeId).populate("createdBy", "nom prenom")
+
+    if (!cause) {
+      return res.status(404).json({ message: "Cause not found" })
+    }
+
+    // Only return approved causes for public sharing
+    if (cause.status !== "approved") {
+      return res.status(403).json({ message: "This cause is not available for public viewing" })
+    }
+
+    res.json(cause)
+  } catch (error) {
+    console.error("Error in getShareableCause:", error)
+    res.status(500).json({ message: error.message })
+  }
+}
+

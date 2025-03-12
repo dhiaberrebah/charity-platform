@@ -3,8 +3,10 @@
 import { useState, useEffect } from "react"
 import { Progress } from "@/components/ui/progress"
 import { motion } from "framer-motion"
+import { Share2 } from "lucide-react"
+import { toast } from "sonner"
 
-const CauseCard = ({ id, title, description, image, raised, goal, category }) => {
+const CauseCard = ({ id, title, description, image, raised, goal, category, shareUrl }) => {
   const [imageError, setImageError] = useState(false)
   const [imageSrc, setImageSrc] = useState("")
   const progress = Math.min((raised / goal) * 100, 100)
@@ -45,6 +47,42 @@ const CauseCard = ({ id, title, description, image, raised, goal, category }) =>
   // Determine the final image source with fallback
   const finalImageSrc = imageError ? "https://placehold.co/600x400/e2e8f0/64748b?text=Image+Not+Found" : imageSrc
 
+  // New function to handle sharing
+  const handleShare = async () => {
+    const shareLink = `${window.location.origin}/causes/share/${shareUrl || id}`
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: title,
+          text: `Check out this cause: ${title}`,
+          url: shareLink,
+        })
+        toast.success("Shared successfully!")
+      } catch (error) {
+        console.error("Error sharing:", error)
+        // Fallback to clipboard if sharing fails
+        copyToClipboard(shareLink)
+      }
+    } else {
+      // Fallback for browsers that don't support navigator.share
+      copyToClipboard(shareLink)
+    }
+  }
+
+  // Helper function to copy to clipboard
+  const copyToClipboard = (text) => {
+    navigator.clipboard
+      .writeText(text)
+      .then(() => {
+        toast.success("Link copied to clipboard!")
+      })
+      .catch((err) => {
+        console.error("Failed to copy:", err)
+        toast.error("Failed to copy link")
+      })
+  }
+
   return (
     <motion.div
       className="bg-white/10 backdrop-blur-sm rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-blue-500/20"
@@ -62,6 +100,16 @@ const CauseCard = ({ id, title, description, image, raised, goal, category }) =>
             {category}
           </div>
         )}
+        {/* New share button */}
+        <motion.button
+          className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm text-blue-500 p-2 rounded-full hover:bg-blue-500 hover:text-white transition-colors"
+          onClick={handleShare}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          title="Share this cause"
+        >
+          <Share2 className="h-4 w-4" />
+        </motion.button>
       </div>
       <div className="p-6">
         <h3 className="text-xl font-semibold text-white mb-2 line-clamp-1">{title}</h3>

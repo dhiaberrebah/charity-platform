@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { Heart } from 'lucide-react'
+import { Heart } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import CreateCauseForm from "@/components/CreateCauseForm"
 import CauseDetails from "@/components/CauseDetails"
@@ -49,25 +49,31 @@ const MyCauses = () => {
   const handleSubmitForm = useCallback(
     async (formData) => {
       try {
+        // Add a console log to see what's being sent
+        console.log("Submitting form data:", formData)
+
         const response = await fetch("http://localhost:5001/api/causes", {
           method: "POST",
           body: formData,
           credentials: "include",
         })
 
-        const data = await response.json()
-
         if (!response.ok) {
-          throw new Error(data.message || "Failed to create cause")
+          const errorData = await response.json()
+          throw new Error(errorData.message || "Failed to create cause")
         }
 
+        const data = await response.json()
+        console.log("Cause created successfully:", data)
+
+        // Refresh the causes list
         await fetchCauses()
-        toast.success("Votre Cha9a9a a été créée avec succès!")
+        toast.success("Your cause has been created successfully!")
         setShowCreateForm(false)
       } catch (error) {
         console.error("Error creating cause:", error)
         if (error.message.includes("duplicate key error")) {
-          toast.error("Une Cha9a9a avec ce titre existe déjà.")
+          toast.error("A cause with this title already exists.")
         } else {
           toast.error("Failed to create cause: " + error.message)
         }
@@ -117,7 +123,7 @@ const MyCauses = () => {
   }
 
   return (
-    <motion.div 
+    <motion.div
       className="bg-gradient-to-br from-blue-900/10 to-indigo-900/10 backdrop-blur-sm p-6 rounded-lg shadow border border-blue-500/20"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -126,10 +132,7 @@ const MyCauses = () => {
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-blue-900">My Causes</h2>
         <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-          <Button 
-            onClick={handleCreateCause} 
-            className="bg-blue-500 hover:bg-blue-600 text-white"
-          >
+          <Button onClick={handleCreateCause} className="bg-blue-500 hover:bg-blue-600 text-white">
             Create New Cause
           </Button>
         </motion.div>
@@ -138,8 +141,8 @@ const MyCauses = () => {
       {causes.length > 0 ? (
         <div className="grid gap-4">
           {causes.map((cause, index) => (
-            <motion.div 
-              key={cause._id} 
+            <motion.div
+              key={cause._id}
               className="border border-blue-200 bg-white/50 rounded-lg p-4 flex justify-between items-center"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -165,7 +168,7 @@ const MyCauses = () => {
           ))}
         </div>
       ) : (
-        <motion.div 
+        <motion.div
           className="text-center py-12 border-2 border-dashed border-blue-200 rounded-lg bg-white/30"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -181,10 +184,7 @@ const MyCauses = () => {
           <p className="text-blue-800 mb-2">You haven't created any causes yet</p>
           <p className="text-sm text-blue-600 mb-4">Create your first cause to start collecting donations</p>
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <Button 
-              onClick={handleCreateCause} 
-              className="bg-blue-500 hover:bg-blue-600 text-white rounded-full px-8"
-            >
+            <Button onClick={handleCreateCause} className="bg-blue-500 hover:bg-blue-600 text-white rounded-full px-8">
               Create New Cause
             </Button>
           </motion.div>
@@ -200,3 +200,4 @@ const MyCauses = () => {
 }
 
 export default MyCauses
+

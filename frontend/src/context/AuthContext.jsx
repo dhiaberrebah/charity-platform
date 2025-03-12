@@ -80,14 +80,21 @@ export const AuthProvider = ({ children }) => {
   // Function to switch to user mode (for admins)
   const switchToUserMode = () => {
     if (user?.isAdmin) {
+      console.log("Switching to user mode")
+      // First set the state, then navigate
       setAdminInUserMode(true)
-      navigate("/user/home") // Redirect to user home page
+
+      // Use a small timeout to ensure the state is updated before navigation
+      setTimeout(() => {
+        navigate("/user/home")
+      }, 50)
     }
   }
 
   // Function to switch back to admin mode
   const switchToAdminMode = () => {
     if (user?.isAdmin) {
+      console.log("Switching to admin mode")
       setAdminInUserMode(false)
       navigate("/admin/dashboard") // Redirect to admin dashboard
     }
