@@ -1,13 +1,30 @@
 "use client"
 
 import { motion } from "framer-motion"
+import { useAuth } from "../context/AuthContext"
 import NavigationBar from "../components/NavigationBar"
+import UserNavigationBar from "../components/UserNavigationBar"
+import AdminNavbar from "../components/AdminNavbar"
 import { Mail, Phone, MapPin } from "lucide-react"
+import { useState, useEffect } from "react"
 
 const Contact = () => {
+  const [navbar, setNavbar] = useState(<NavigationBar />)
+  const { isAuthenticated, isAdmin } = useAuth()
+
+  useEffect(() => {
+    if (isAdmin) {
+      setNavbar(<AdminNavbar />)
+    } else if (isAuthenticated) {
+      setNavbar(<UserNavigationBar />)
+    } else {
+      setNavbar(<NavigationBar />)
+    }
+  }, [isAuthenticated, isAdmin])
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 text-white">
-      <NavigationBar />
+      {navbar}
       <div className="pt-16">
         {/* Hero Section */}
         <motion.div

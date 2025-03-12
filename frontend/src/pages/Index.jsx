@@ -1,7 +1,10 @@
 "use client"
 
 import { motion } from "framer-motion"
+import { useAuth } from "../context/AuthContext"
 import NavigationBar from "../components/NavigationBar"
+import UserNavigationBar from "../components/UserNavigationBar"
+import AdminNavbar from "../components/AdminNavbar"
 import Hero from "../components/Hero"
 import CausesSection from "../components/CausesSection"
 import ImpactMetrics from "../components/ImpactMetrics"
@@ -9,6 +12,15 @@ import SearchBar from "@/components/SearchBar"
 import BlogPreview from "@/components/BlogPreview"
 
 const Index = () => {
+  const { isAuthenticated, isAdmin, isAdminInUserMode } = useAuth()
+  let NavbarComponent = NavigationBar
+
+  if (isAdmin) {
+    NavbarComponent = AdminNavbar
+  } else if (isAuthenticated || isAdminInUserMode) {
+    NavbarComponent = UserNavigationBar
+  }
+
   // Animated floating hearts for background
   const renderFloatingHearts = () => {
     const hearts = Array(10)
@@ -85,7 +97,7 @@ const Index = () => {
 
       {/* Content */}
       <div className="relative z-10">
-        <NavigationBar />
+        <NavbarComponent />
 
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6 }}>
           <Hero />

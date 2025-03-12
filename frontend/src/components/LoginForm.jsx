@@ -8,7 +8,7 @@ import { Input } from "./ui/input"
 import { Label } from "./ui/label"
 import { Separator } from "./ui/separator"
 import { motion } from "framer-motion"
-import axios from "axios"
+import { useAuth } from "../context/AuthContext"
 
 const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false)
@@ -20,6 +20,7 @@ const LoginForm = () => {
   const [isLoading, setIsLoading] = useState(false)
 
   const navigate = useNavigate()
+  const { login } = useAuth()
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value })
@@ -31,22 +32,21 @@ const LoginForm = () => {
     setError("")
 
     try {
-      const response = await axios.post("http://localhost:5001/api/auth/login", formData, {
-        withCredentials: true, // Important for cookies to be sent
-      })
+      const result = await login(formData)
 
-      // Store user data in localStorage for persistence
-      localStorage.setItem("userData", JSON.stringify(response.data))
-
-      // Check user role and redirect accordingly
-      if (response.data.isAdmin || response.data.role === "admin") {
-        navigate("/admin/home")
+      if (result.success) {
+        // Navigate based on user role
+        if (result.user.isAdmin) {
+          navigate("/admin/dashboard")
+        } else {
+          navigate("/user/home")
+        }
       } else {
-        navigate("/user/home")
+        setError(result.error || "Login failed. Please check your credentials.")
       }
     } catch (error) {
-      console.error("Login error:", error.response?.data || error.message)
-      setError(error.response?.data?.message || "Login failed. Please check your credentials.")
+      console.error("Login error:", error)
+      setError("An unexpected error occurred. Please try again.")
     } finally {
       setIsLoading(false)
     }

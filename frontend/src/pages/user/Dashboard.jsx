@@ -286,7 +286,6 @@ const UserInformation = ({ userInfo, onChange, refreshUserInfo, setActiveSection
             <div className="w-24 h-24 rounded-full bg-blue-100 flex items-center justify-center">
               <UserCircle className="w-12 h-12 text-blue-500" />
             </div>
-           
           </div>
         </motion.div>
         <div className="grid gap-4">

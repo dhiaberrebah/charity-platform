@@ -1,23 +1,40 @@
 "use client"
 
 import { motion } from "framer-motion"
+import { useAuth } from "../context/AuthContext"
 import NavigationBar from "../components/NavigationBar"
-import { Heart, Users, Globe, Target } from 'lucide-react'
+import UserNavigationBar from "../components/UserNavigationBar"
+import AdminNavbar from "../components/AdminNavbar"
+import { Heart, Users, Globe, Target } from "lucide-react"
+import { useState, useEffect } from "react"
 
 const About = () => {
+  const [navbar, setNavbar] = useState(<NavigationBar />)
+  const { isAuthenticated, isAdmin } = useAuth()
+
+  useEffect(() => {
+    if (isAdmin) {
+      setNavbar(<AdminNavbar />)
+    } else if (isAuthenticated) {
+      setNavbar(<UserNavigationBar />)
+    } else {
+      setNavbar(<NavigationBar />)
+    }
+  }, [isAuthenticated, isAdmin])
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 text-white">
-      <NavigationBar />
+      {navbar}
       <div className="pt-16">
         {/* Hero Section */}
-        <motion.div 
+        <motion.div
           className="bg-gradient-to-b from-blue-800/50 to-indigo-900/50 backdrop-blur-sm py-16"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8 }}
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <motion.div 
+            <motion.div
               className="text-center"
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -56,9 +73,9 @@ const About = () => {
                   { icon: Heart, title: "Care", desc: "Supporting those in need with compassion" },
                   { icon: Users, title: "Community", desc: "Building stronger communities together" },
                   { icon: Globe, title: "Global", desc: "Making an impact worldwide" },
-                  { icon: Target, title: "Impact", desc: "Achieving measurable results" }
+                  { icon: Target, title: "Impact", desc: "Achieving measurable results" },
                 ].map((item, index) => (
-                  <motion.div 
+                  <motion.div
                     key={item.title}
                     className="bg-white/10 backdrop-blur-sm p-6 rounded-lg border border-blue-500/20"
                     initial={{ y: 30, opacity: 0 }}
@@ -77,7 +94,7 @@ const About = () => {
         </section>
 
         {/* Stats Section */}
-        <motion.section 
+        <motion.section
           className="bg-blue-900/50 backdrop-blur-sm py-16"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -89,15 +106,15 @@ const About = () => {
                 { value: "$10M+", label: "Funds Raised" },
                 { value: "500+", label: "Successful Projects" },
                 { value: "100K+", label: "Donors" },
-                { value: "50+", label: "Countries Reached" }
+                { value: "50+", label: "Countries Reached" },
               ].map((stat, index) => (
-                <motion.div 
+                <motion.div
                   key={stat.label}
                   initial={{ y: 30, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ duration: 0.5, delay: 0.5 + index * 0.1 }}
                 >
-                  <motion.div 
+                  <motion.div
                     className="text-4xl font-bold text-blue-300 mb-2"
                     initial={{ scale: 0.9 }}
                     animate={{ scale: 1 }}
@@ -117,3 +134,4 @@ const About = () => {
 }
 
 export default About
+

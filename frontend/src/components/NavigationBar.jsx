@@ -5,9 +5,11 @@ import { Link } from "react-router-dom"
 import { HandHeart, Menu, X } from "lucide-react"
 import { Button } from "./ui/button"
 import { motion } from "framer-motion"
+import { useAuth } from "../context/AuthContext"
 
 const NavigationBar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const { isAuthenticated, isAdmin, logout } = useAuth()
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
@@ -51,18 +53,39 @@ const NavigationBar = () => {
                 Contact
               </Link>
             </motion.div>
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Link to="/login">
-                <Button variant="ghost" className="text-blue-100 hover:text-white hover:bg-blue-800">
-                  Login
-                </Button>
-              </Link>
-            </motion.div>
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Link to="/signup">
-                <Button className="bg-blue-500 hover:bg-blue-600 text-white">Sign Up</Button>
-              </Link>
-            </motion.div>
+
+            {isAuthenticated ? (
+              <>
+                <motion.div whileHover={{ y: -2 }} transition={{ type: "spring", stiffness: 400, damping: 10 }}>
+                  <Link
+                    to={isAdmin ? "/admin/dashboard" : "/user/dashboard"}
+                    className="text-blue-100 hover:text-white transition-colors"
+                  >
+                    Dashboard
+                  </Link>
+                </motion.div>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button onClick={logout} className="bg-blue-500 hover:bg-blue-600 text-white">
+                    Logout
+                  </Button>
+                </motion.div>
+              </>
+            ) : (
+              <>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Link to="/login">
+                    <Button variant="ghost" className="text-blue-100 hover:text-white hover:bg-blue-800">
+                      Login
+                    </Button>
+                  </Link>
+                </motion.div>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Link to="/signup">
+                    <Button className="bg-blue-500 hover:bg-blue-600 text-white">Sign Up</Button>
+                  </Link>
+                </motion.div>
+              </>
+            )}
           </div>
 
           <div className="md:hidden">
@@ -109,18 +132,38 @@ const NavigationBar = () => {
             >
               Contact
             </Link>
-            <Link
-              to="/login"
-              className="block px-3 py-2 rounded-md text-base font-medium text-blue-100 hover:text-white hover:bg-blue-800"
-            >
-              Login
-            </Link>
-            <Link
-              to="/signup"
-              className="block px-3 py-2 rounded-md text-base font-medium text-white bg-blue-500 hover:bg-blue-600"
-            >
-              Sign Up
-            </Link>
+
+            {isAuthenticated ? (
+              <>
+                <Link
+                  to={isAdmin ? "/admin/dashboard" : "/user/dashboard"}
+                  className="block px-3 py-2 rounded-md text-base font-medium text-blue-100 hover:text-white hover:bg-blue-800"
+                >
+                  Dashboard
+                </Link>
+                <button
+                  onClick={logout}
+                  className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-blue-100 hover:text-white hover:bg-blue-800"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-blue-100 hover:text-white hover:bg-blue-800"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/signup"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-white bg-blue-500 hover:bg-blue-600"
+                >
+                  Sign Up
+                </Link>
+              </>
+            )}
           </div>
         </motion.div>
       )}

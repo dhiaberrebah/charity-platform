@@ -1,23 +1,37 @@
 "use client"
 
 import { motion } from "framer-motion"
+import { useAuth } from "../context/AuthContext"
 import NavigationBar from "../components/NavigationBar"
+import UserNavigationBar from "../components/UserNavigationBar"
+import AdminNavbar from "../components/AdminNavbar"
 import CausesSection from "../components/CausesSection"
 
 const Causes = () => {
+  const { isAuthenticated, isAdmin } = useAuth()
+  let NavbarComponent = NavigationBar
+
+  if (isAdmin) {
+    NavbarComponent = AdminNavbar
+  } else if (isAuthenticated) {
+    NavbarComponent = UserNavigationBar
+  } else {
+    NavbarComponent = NavigationBar
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 text-white">
-      
+      <NavbarComponent />
       <div className="pt-16">
         {/* Hero Section */}
-        <motion.div 
+        <motion.div
           className="bg-gradient-to-b from-blue-800/50 to-indigo-900/50 backdrop-blur-sm py-16"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8 }}
         >
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <motion.div 
+          <div className="max-w-7xl mx-auto px-4 sm:px:6 lg:px:8">
+            <motion.div
               className="text-center"
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -45,3 +59,4 @@ const Causes = () => {
 }
 
 export default Causes
+
