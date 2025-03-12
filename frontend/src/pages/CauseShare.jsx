@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useParams, Link } from "react-router-dom"
 import { motion } from "framer-motion"
-import { ArrowLeft, Share2, Facebook, Twitter, Linkedin, Copy, Check } from "lucide-react"
+import { ArrowLeft, Share2, Facebook, Twitter, Linkedin, Copy, Check, ImageIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import NavigationBar from "@/components/NavigationBar"
 import { Progress } from "@/components/ui/progress"
@@ -15,18 +15,21 @@ const CauseShare = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [copied, setCopied] = useState(false)
+  const [imageError, setImageError] = useState(false)
 
   useEffect(() => {
     const fetchCause = async () => {
       try {
         setLoading(true)
+        console.log("Fetching cause with shareUrl:", shareUrl)
         const response = await fetch(`http://localhost:5001/api/causes/share/${shareUrl}`)
 
         if (!response.ok) {
-          throw new Error("Failed to fetch cause")
+          throw new Error(`Failed to fetch cause: ${response.status}`)
         }
 
         const data = await response.json()
+        console.log("Fetched cause data:", data)
         setCause(data)
         setError(null)
       } catch (error) {
@@ -80,6 +83,43 @@ const CauseShare = () => {
     window.open(shareUrl, "_blank", "width=600,height=400")
   }
 
+  // Function to properly format image URL
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return null
+
+    // If it's already a full URL with http:// or https://
+    if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
+      return imagePath
+    }
+
+    // Check if it's an absolute file system path (starts with / or contains :\)
+    const isAbsolutePath =
+      imagePath.startsWith("/") ||
+      imagePath.includes(":\\") ||
+      imagePath.includes("/Users/") ||
+      imagePath.includes("/home/")
+
+    if (isAbsolutePath) {
+      // Extract just the filename from the path
+      const filename = imagePath.split("/").pop().split("\\").pop()
+      console.log("Extracted filename:", filename)
+
+      // Use the filename with the uploads endpoint
+      return `http://localhost:5001/uploads/${filename}`
+    }
+
+    // For relative paths, just append to the base URL
+    return `http://localhost:5001/${imagePath.replace(/^\/+/, "")}`
+  }
+
+  // Handle image loading error
+  const handleImageError = (e) => {
+    console.error("Image failed to load:", e.target.src)
+    setImageError(true)
+    // Use a placeholder image
+    e.target.src = "https://placehold.co/600x400/3b82f6/ffffff?text=Image+Not+Available"
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 text-white">
@@ -112,6 +152,8 @@ const CauseShare = () => {
   }
 
   const progress = Math.min((cause.currentAmount / cause.targetAmount) * 100, 100)
+  const imageUrl = cause.image ? getImageUrl(cause.image) : null
+  console.log("Image URL:", imageUrl)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 text-white">
@@ -123,18 +165,22 @@ const CauseShare = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          {cause.image && (
-            <div className="w-full h-64 md:h-96 bg-blue-900/20">
+          {/* Image section with better error handling */}
+          <div className="w-full h-64 md:h-96 bg-blue-900/20 relative">
+            {imageError || !imageUrl ? (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-blue-900/50 text-blue-200">
+                <ImageIcon size={48} className="mb-2 opacity-50" />
+                <p className="text-sm opacity-70">Image not available</p>
+              </div>
+            ) : (
               <img
-                src={cause.image.startsWith("http") ? cause.image : `http://localhost:5001/${cause.image}`}
+                src={imageUrl || "/placeholder.svg"}
                 alt={cause.title}
                 className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.target.src = "https://placehold.co/600x400/e2e8f0/64748b?text=Image+Not+Found"
-                }}
+                onError={handleImageError}
               />
-            </div>
-          )}
+            )}
+          </div>
 
           <div className="p-6 md:p-8">
             <div className="flex flex-wrap justify-between items-start gap-4 mb-6">
@@ -187,6 +233,21 @@ const CauseShare = () => {
             <div className="mb-8">
               <p className="text-blue-100 whitespace-pre-line">{cause.description}</p>
             </div>
+
+            {/* Display URL if available */}
+            {cause.url && (
+              <div className="bg-blue-900/30 p-4 rounded-lg mb-6">
+                <h3 className="text-lg font-semibold text-white mb-2">External Link</h3>
+                <a
+                  href={cause.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-300 hover:text-blue-100 underline break-all"
+                >
+                  {cause.url}
+                </a>
+              </div>
+            )}
 
             <div className="bg-blue-900/30 p-6 rounded-lg mb-8">
               <div className="flex justify-between items-center mb-2">
