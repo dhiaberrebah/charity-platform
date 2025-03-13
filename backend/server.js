@@ -38,6 +38,8 @@ app.use(
   }),
 )
 
+app.use("/uploads", express.static(path.join(__dirname, "uploads")))
+
 // Add error handling middleware
 app.use((err, req, res, next) => {
   console.error("Global error handler:", err.stack)
@@ -47,8 +49,6 @@ app.use((err, req, res, next) => {
     stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
   })
 })
-
-app.use("/uploads", express.static(path.join(__dirname, "uploads")))
 
 // Add a simple test route
 app.get("/api/test", (req, res) => {
@@ -61,39 +61,7 @@ app.get("/api/donations/test", (req, res) => {
   res.json({ message: "Donations test API is working directly from server.js!" })
 })
 
-// Add a temporary mock donations API
-app.get("/api/donations/cause/:causeId", (req, res) => {
-  // Return mock data
-  const mockDonations = [
-    {
-      _id: "1",
-      amount: 50,
-      isAnonymous: false,
-      donor: {
-        firstName: "John",
-        lastName: "D.",
-      },
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 days ago
-    },
-    {
-      _id: "2",
-      amount: 100,
-      isAnonymous: true,
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
-    },
-    {
-      _id: "3",
-      amount: 25,
-      isAnonymous: false,
-      donor: {
-        firstName: "Sarah",
-        lastName: "M.",
-      },
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 12), // 12 hours ago
-    },
-  ]
-  res.json(mockDonations)
-})
+// REMOVED: The temporary mock donations API that was causing the issue
 
 // Register the donations route
 app.use("/api/donations", donationsRoutes)

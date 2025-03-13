@@ -22,7 +22,17 @@ const DonationList = ({ causeId }) => {
         setLoading(true)
         console.log(`Fetching donations for cause: ${causeId}`)
 
-        const response = await fetch(`http://localhost:5001/api/donations/cause/${causeId}`)
+        // First, let's check the test endpoint to see if the API is working
+        try {
+          const testResponse = await fetch(`http://localhost:5001/api/donations/test`)
+          const testData = await testResponse.json()
+          console.log("Test endpoint response:", testData)
+        } catch (testError) {
+          console.error("Error hitting test endpoint:", testError)
+        }
+
+        // Now fetch the actual donations with a timestamp to prevent caching
+        const response = await fetch(`http://localhost:5001/api/donations/cause/${causeId}?t=${Date.now()}`)
         console.log(`Response status: ${response.status}`)
 
         if (!response.ok) {
@@ -32,41 +42,20 @@ const DonationList = ({ causeId }) => {
         }
 
         const data = await response.json()
-        console.log(`Received ${data.length} donations:`, data)
+        console.log(`Received ${data.length} donations from API:`, data)
 
         setDonations(data)
         setError(null)
       } catch (error) {
         console.error("Error fetching donations:", error)
         setError(`Failed to load donations: ${error.message}`)
-
-        // Use mock data as fallback
-        setDonations([
-          {
-            _id: "mock1",
-            amount: 50,
-            isAnonymous: false,
-            donor: {
-              firstName: "John",
-              lastName: "D.",
-            },
-            createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 days ago
-          },
-          {
-            _id: "mock2",
-            amount: 100,
-            isAnonymous: true,
-            createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
-          },
-        ])
+        setDonations([])
       } finally {
         setLoading(false)
       }
     }
 
-    if (causeId) {
-      fetchDonations()
-    }
+    fetchDonations()
   }, [causeId])
 
   if (loading) {
@@ -89,7 +78,6 @@ const DonationList = ({ causeId }) => {
     )
   }
 
-  // Always show something, even if there's an error or no donations
   return (
     <div className="bg-blue-900/30 p-4 rounded-lg">
       <h3 className="text-lg font-semibold text-white mb-4">Recent Supporters</h3>
@@ -105,30 +93,35 @@ const DonationList = ({ causeId }) => {
         <p className="text-blue-200">Be the first to donate to this cause!</p>
       ) : (
         <div className="space-y-4">
-          {donations.slice(0, 5).map((donation, index) => (
-            <motion.div
-              key={donation._id || index}
-              className="flex items-center justify-between"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <div className="flex items-center">
-                <div className="h-10 w-10 rounded-full bg-blue-700/50 flex items-center justify-center mr-3">
-                  <Heart className="h-5 w-5 text-pink-300" />
+          {donations.slice(0, 5).map((donation, index) => {
+            // Ensure we're using the correct donor information
+            const donorName = donation.isAnonymous
+              ? "Anonymous"
+              : donation.donor
+                ? `${donation.donor.firstName || ""}${donation.donor.lastName ? ` ${donation.donor.lastName}` : ""}`
+                : "Anonymous"
+
+            return (
+              <motion.div
+                key={donation._id || index}
+                className="flex items-center justify-between"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+              >
+                <div className="flex items-center">
+                  <div className="h-10 w-10 rounded-full bg-blue-700/50 flex items-center justify-center mr-3">
+                    <Heart className="h-5 w-5 text-pink-300" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-white">{donorName}</p>
+                    <p className="text-xs text-blue-300">{new Date(donation.createdAt).toLocaleDateString()}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-medium text-white">
-                    {donation.isAnonymous || !donation.donor
-                      ? "Anonymous"
-                      : `${donation.donor.firstName || "Donor"} ${donation.donor.lastName || ""}`}
-                  </p>
-                  <p className="text-xs text-blue-300">{new Date(donation.createdAt).toLocaleDateString()}</p>
-                </div>
-              </div>
-              <div className="font-semibold text-white">${donation.amount.toFixed(2)}</div>
-            </motion.div>
-          ))}
+                <div className="font-semibold text-white">${Number(donation.amount).toFixed(2)}</div>
+              </motion.div>
+            )
+          })}
         </div>
       )}
     </div>

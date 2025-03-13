@@ -1,6 +1,11 @@
 import express from "express"
 import mongoose from "mongoose"
-import Donation from "../models/Donation.js"
+
+// Import the Donation model with a different name to avoid conflicts
+import DonationModel from "../models/Donation.js"
+
+console.log("DonationModel type:", typeof DonationModel)
+console.log("DonationModel:", DonationModel)
 
 const router = express.Router()
 
@@ -10,7 +15,30 @@ router.get("/test", (req, res) => {
   res.json({
     message: "Donations API is working!",
     mongodbStatus: mongoose.connection.readyState === 1 ? "connected" : "disconnected",
+    donationModelType: typeof DonationModel,
   })
+})
+
+// Add a debug route to check database status and donations
+router.get("/debug", async (req, res) => {
+  try {
+    console.log("=== Debug route hit ===")
+
+    // Check MongoDB connection
+    const mongoStatus = mongoose.connection.readyState === 1 ? "connected" : "disconnected"
+    console.log("MongoDB status:", mongoStatus)
+    console.log("DonationModel type:", typeof DonationModel)
+
+    // Return basic debug info without trying to query the database
+    res.json({
+      mongoStatus,
+      donationModelType: typeof DonationModel,
+      donationModel: DonationModel ? JSON.stringify(DonationModel) : null,
+    })
+  } catch (error) {
+    console.error("Error in debug route:", error)
+    res.status(500).json({ error: error.message })
+  }
 })
 
 // Create a new donation
@@ -74,9 +102,18 @@ router.post("/", async (req, res) => {
       })
     }
 
+    // Check if DonationModel model is properly defined
+    if (typeof DonationModel !== "function" || typeof DonationModel.find !== "function") {
+      console.error("DonationModel model is not properly defined:", DonationModel)
+      return res.status(500).json({
+        message: "Server configuration error",
+        details: "The DonationModel model is not properly defined.",
+      })
+    }
+
     // Create donation record
     console.log("Creating donation document...")
-    const donation = new Donation({
+    const donation = new DonationModel({
       cause: causeId,
       amount: Number.parseFloat(amount),
       donor: {
@@ -160,10 +197,19 @@ router.get("/", async (req, res) => {
       })
     }
 
+    // Check if DonationModel model is properly defined
+    if (typeof DonationModel !== "function" || typeof DonationModel.find !== "function") {
+      console.error("DonationModel model is not properly defined:", DonationModel)
+      return res.status(500).json({
+        message: "Server configuration error",
+        details: "The DonationModel model is not properly defined.",
+      })
+    }
+
     // In a real app, you would check if the user is an admin here
     // For example: if (!req.user.isAdmin) return res.status(403).json({ message: "Unauthorized" })
 
-    const donations = await Donation.find()
+    const donations = await DonationModel.find()
       .populate("cause", "title") // Populate cause with just the title
       .sort({ createdAt: -1 })
 
@@ -185,34 +231,42 @@ router.get("/cause/:causeId", async (req, res) => {
     const { causeId } = req.params
     console.log("=== Fetching donations for cause ===")
     console.log("CauseId:", causeId)
+    console.log("MongoDB connection state:", mongoose.connection.readyState)
+    console.log("DonationModel type:", typeof DonationModel)
 
     // Check MongoDB connection
     if (mongoose.connection.readyState !== 1) {
       console.error("MongoDB not connected! Connection state:", mongoose.connection.readyState)
-      // Return mock data as fallback
-      return res.json([
-        {
-          _id: new mongoose.Types.ObjectId().toString(),
-          amount: 50,
-          isAnonymous: false,
-          donor: {
-            firstName: "John",
-            lastName: "D.",
-          },
-          createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 days ago
-        },
-        {
-          _id: new mongoose.Types.ObjectId().toString(),
-          amount: 100,
-          isAnonymous: true,
-          createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
-        },
-      ])
+      return res.status(500).json({
+        message: "Database connection error",
+        details: "MongoDB is not connected. Please check your database connection.",
+      })
+    }
+
+    // Check if DonationModel model is properly defined
+    if (typeof DonationModel !== "function" || typeof DonationModel.find !== "function") {
+      console.error("DonationModel model is not properly defined:", DonationModel)
+      return res.status(500).json({
+        message: "Server configuration error",
+        details: "The DonationModel model is not properly defined.",
+      })
     }
 
     // Get donations for this cause
     console.log("Executing database query for donations...")
-    const donations = await Donation.find({ cause: causeId }).sort({ createdAt: -1 })
+
+    // Temporary fix: Return empty array if DonationModel.find is not a function
+    let donations = []
+    try {
+      donations = await DonationModel.find({ cause: causeId }).sort({ createdAt: -1 })
+    } catch (findError) {
+      console.error("Error finding donations:", findError)
+      return res.status(500).json({
+        message: "Database query error",
+        error: findError.message,
+      })
+    }
+
     console.log(`Found ${donations.length} donations for cause ${causeId}`)
 
     // Format the response to protect donor privacy
@@ -245,26 +299,30 @@ router.get("/cause/:causeId", async (req, res) => {
   } catch (error) {
     console.error("Error fetching cause donations:", error)
 
-    // Return mock data as fallback in case of error
-    return res.status(200).json([
-      {
-        _id: new mongoose.Types.ObjectId().toString(),
-        amount: 50,
-        isAnonymous: false,
-        donor: {
-          firstName: "John",
-          lastName: "D.",
-        },
-        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 days ago
-      },
-      {
-        _id: new mongoose.Types.ObjectId().toString(),
-        amount: 100,
-        isAnonymous: true,
-        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
-      },
-    ])
+    // Return error instead of mock data
+    return res.status(500).json({
+      message: "Server error",
+      error: error.message,
+      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
+    })
   }
 })
 
+// Add a new route to check if we're getting mock data
+router.get("/cause/:causeId/debug", async (req, res) => {
+  const { causeId } = req.params
+  console.log("=== DEBUG: Fetching donations for cause ===")
+  console.log("CauseId:", causeId)
+  console.log("MongoDB connection state:", mongoose.connection.readyState)
+
+  // Check if there's any middleware intercepting this request
+  res.json({
+    message: "Debug route hit",
+    causeId,
+    mongodbStatus: mongoose.connection.readyState === 1 ? "connected" : "disconnected",
+    timestamp: new Date().toISOString(),
+  })
+})
+
 export default router
+
