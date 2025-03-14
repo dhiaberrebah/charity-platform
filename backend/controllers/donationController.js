@@ -1,5 +1,7 @@
 import mongoose from "mongoose"
 import Donation from "../models/Donation.js"
+import { createNotification } from "./notification.controller.js"
+import Cause from "../models/cause.model.js" // Import Cause model to get cause details
 
 // Create a new donation
 export const createDonation = async (req, res) => {
@@ -49,6 +51,17 @@ export const createDonation = async (req, res) => {
       })
     }
 
+    // Get cause details for the notification
+    let causeTitle = "Unknown Cause"
+    try {
+      const cause = await Cause.findById(causeId)
+      if (cause) {
+        causeTitle = cause.title
+      }
+    } catch (causeError) {
+      console.error("Error fetching cause details:", causeError)
+    }
+
     // Create donation object
     console.log("Creating donation document...")
     const donation = new Donation({
@@ -81,6 +94,28 @@ export const createDonation = async (req, res) => {
     const savedDonation = await donation.save()
     console.log("✅ Donation saved successfully to database!")
     console.log("Donation ID:", savedDonation._id)
+
+    // Create notification for new donation with more detailed information
+    const donorName = isAnonymous ? "Anonymous" : `${firstName} ${lastName}`
+    const notificationMessage = `New donation of $${amount} received for "${causeTitle}" from ${donorName}`
+
+    console.log("Creating donation notification with message:", notificationMessage)
+
+    try {
+      const notification = await createNotification("donation", notificationMessage, {
+        donationId: savedDonation._id,
+        causeId: savedDonation.cause,
+        causeTitle: causeTitle,
+        amount: savedDonation.amount,
+        donorName: donorName,
+        isAnonymous: isAnonymous,
+        date: new Date(),
+      })
+
+      console.log("✅ Donation notification created successfully:", notification)
+    } catch (notificationError) {
+      console.error("❌ Error creating donation notification:", notificationError)
+    }
 
     // Return success response
     return res.status(201).json({

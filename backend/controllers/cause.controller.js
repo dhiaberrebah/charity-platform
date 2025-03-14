@@ -2,6 +2,7 @@ import Cause from "../models/cause.model.js"
 import multer from "multer"
 import path from "path"
 import fs from "fs"
+import { createNotification } from "./notification.controller.js"
 
 // Configure multer for file upload
 const storage = multer.diskStorage({
@@ -20,6 +21,7 @@ const upload = multer({ storage: storage }).single("image")
 // Keep track of processed submissions
 const processedSubmissions = new Set()
 
+// Make sure to export all functions
 export const createCause = async (req, res) => {
   upload(req, res, async (err) => {
     if (err instanceof multer.MulterError) {
@@ -60,6 +62,15 @@ export const createCause = async (req, res) => {
         createdBy: req.user._id,
       })
       await newCause.save()
+
+      // Create notification for new cause
+      await createNotification("cause", `New cause created: ${title}`, {
+        causeId: newCause._id,
+        title: newCause.title,
+        category: newCause.category,
+        targetAmount: newCause.targetAmount,
+        createdBy: req.user._id,
+      })
 
       // Mark this submission as processed
       processedSubmissions.add(submissionId)
@@ -185,4 +196,3 @@ export const getShareableCause = async (req, res) => {
     res.status(500).json({ message: error.message })
   }
 }
-

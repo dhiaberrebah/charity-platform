@@ -2,9 +2,10 @@
 
 import { useState } from "react"
 import { Link } from "react-router-dom"
-import { Menu, X, User, Bell, LogOut, Settings, ChevronDown, HandHeart, Shield } from "lucide-react"
+import { Menu, X, User, LogOut, Settings, ChevronDown, HandHeart, Shield } from "lucide-react"
 import { motion } from "framer-motion"
 import { useAuth } from "../context/AuthContext"
+import UserNotificationBell from "./UserNotificationBell" // Import the UserNotificationBell component
 
 const UserNavigationBar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -93,14 +94,8 @@ const UserNavigationBar = () => {
           </div>
           <div className="hidden md:block">
             <div className="ml-4 flex items-center md:ml-6">
-              <motion.button
-                className="p-1 rounded-full text-blue-200 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-blue-800 focus:ring-white"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <span className="sr-only">View notifications</span>
-                <Bell className="h-6 w-6" />
-              </motion.button>
+              {/* Replace the Bell button with UserNotificationBell component */}
+              <UserNotificationBell />
 
               <div className="relative ml-3">
                 <div>
@@ -243,10 +238,10 @@ const UserNavigationBar = () => {
                 </div>
                 <div className="text-sm font-medium leading-none text-blue-200 mt-1">{user?.email}</div>
               </div>
-              <button className="ml-auto bg-blue-800 flex-shrink-0 p-1 rounded-full text-blue-200 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-blue-800 focus:ring-white">
-                <span className="sr-only">View notifications</span>
-                <Bell className="h-6 w-6" />
-              </button>
+              {/* Replace the Bell button with UserNotificationBell component in mobile view */}
+              <div className="ml-auto">
+                <UserNotificationBell />
+              </div>
             </div>
             <div className="mt-3 px-2 space-y-1">
               <Link

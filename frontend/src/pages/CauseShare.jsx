@@ -14,6 +14,9 @@ import { toast } from "sonner"
 import DonationModal from "@/components/DonationModal"
 import DonationList from "@/components/DonationList"
 
+// Define the API base URL
+const API_BASE_URL = "http://localhost:5001"
+
 const CauseShare = () => {
   const { shareUrl } = useParams()
   const [cause, setCause] = useState(null)
@@ -39,8 +42,7 @@ const CauseShare = () => {
       try {
         setLoading(true)
         console.log("Fetching cause with shareUrl:", shareUrl)
-        const response = await fetch(`http://localhost:5001/api/causes/share/${shareUrl}`)
-
+        const response = await fetch(`${API_BASE_URL}/api/causes/public/${shareUrl}`)
         if (!response.ok) {
           throw new Error(`Failed to fetch cause: ${response.status}`)
         }
@@ -122,11 +124,11 @@ const CauseShare = () => {
       console.log("Extracted filename:", filename)
 
       // Use the filename with the uploads endpoint
-      return `http://localhost:5001/uploads/${filename}`
+      return `${API_BASE_URL}/uploads/${filename}`
     }
 
     // For relative paths, just append to the base URL
-    return `http://localhost:5001/${imagePath.replace(/^\/+/, "")}`
+    return `${API_BASE_URL}/${imagePath.replace(/^\/+/, "")}`
   }
 
   // Handle image loading error

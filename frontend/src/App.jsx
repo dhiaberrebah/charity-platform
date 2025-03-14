@@ -21,10 +21,12 @@ import ManageUsers from "./pages/admin/ManageUsers"
 import ManageCauses from "./pages/admin/ManageCauses"
 import ViewDonations from "./pages/admin/ViewDonations"
 import AdminHome from "./pages/admin/adminhome"
+import AdminNotificationsPage from "./pages/admin/NotificationsPage" // Import the NotificationsPage
 
 // User pages
 import UserDashboard from "./pages/user/Dashboard"
 import UserHome from "./pages/user/Home"
+import NotificationsPage from "./pages/user/UserNotificationsPage"
 
 // Cause Share Route
 import CauseShare from "./pages/CauseShare"
@@ -56,6 +58,7 @@ const App = () => (
             <Route element={<ProtectedRoute />}>
               <Route path="/user/dashboard" element={<UserDashboard />} />
               <Route path="/user/home" element={<UserHome />} />
+              <Route path="/user/notifications" element={<NotificationsPage />} />
             </Route>
 
             {/* Protected Admin Routes */}
@@ -66,6 +69,8 @@ const App = () => (
                 <Route path="/admin/causes" element={<ManageCauses />} />
                 <Route path="/admin/donations" element={<ViewDonations />} />
                 <Route path="/admin/home" element={<AdminHome />} />
+                <Route path="/admin/notifications" element={<AdminNotificationsPage />} />{" "}
+                {/* Add the NotificationsPage route */}
               </Route>
             </Route>
 

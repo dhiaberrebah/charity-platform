@@ -3,6 +3,8 @@ import mongoose from "mongoose"
 
 // Import the Donation model with a different name to avoid conflicts
 import DonationModel from "../models/Donation.js"
+import { createNotification } from "../controllers/notification.controller.js"
+import Cause from "../models/cause.model.js"
 
 console.log("DonationModel type:", typeof DonationModel)
 console.log("DonationModel:", DonationModel)
@@ -111,6 +113,20 @@ router.post("/", async (req, res) => {
       })
     }
 
+    // Get cause details for the notification
+    let causeTitle = "Unknown Cause"
+    try {
+      const cause = await Cause.findById(causeId)
+      if (cause) {
+        causeTitle = cause.title
+        console.log(`Found cause title: "${causeTitle}" for ID: ${causeId}`)
+      } else {
+        console.log(`No cause found with ID: ${causeId}`)
+      }
+    } catch (causeError) {
+      console.error("Error fetching cause details:", causeError)
+    }
+
     // Create donation record
     console.log("Creating donation document...")
     const donation = new DonationModel({
@@ -143,6 +159,28 @@ router.post("/", async (req, res) => {
     const savedDonation = await donation.save()
     console.log("✅ Donation saved successfully to database!")
     console.log("Donation ID:", savedDonation._id)
+
+    // Create notification for new donation
+    try {
+      const donorName = isAnonymous ? "Anonymous" : `${firstName} ${lastName}`
+      const notificationMessage = `New donation of $${amount} received for "${causeTitle}" from ${donorName}`
+
+      console.log("Creating donation notification with message:", notificationMessage)
+
+      const notification = await createNotification("donation", notificationMessage, {
+        donationId: savedDonation._id,
+        causeId: savedDonation.cause,
+        causeTitle: causeTitle,
+        amount: savedDonation.amount,
+        donorName: donorName,
+        isAnonymous: isAnonymous,
+        date: new Date(),
+      })
+
+      console.log("✅ Donation notification created successfully:", notification)
+    } catch (notificationError) {
+      console.error("❌ Error creating donation notification:", notificationError)
+    }
 
     // Return success response
     return res.status(201).json({
@@ -322,6 +360,30 @@ router.get("/cause/:causeId/debug", async (req, res) => {
     mongodbStatus: mongoose.connection.readyState === 1 ? "connected" : "disconnected",
     timestamp: new Date().toISOString(),
   })
+})
+
+// Get donation by ID
+router.get("/:id", async (req, res) => {
+  try {
+    const { id } = req.params
+    console.log(`=== Fetching donation with ID: ${id} ===`)
+
+    const donation = await DonationModel.findById(id).populate("cause", "title")
+
+    if (!donation) {
+      console.log(`Donation with ID ${id} not found`)
+      return res.status(404).json({ message: "Donation not found" })
+    }
+
+    console.log("Donation found:", donation._id)
+    return res.json(donation)
+  } catch (error) {
+    console.error("Error fetching donation by ID:", error)
+    return res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    })
+  }
 })
 
 export default router

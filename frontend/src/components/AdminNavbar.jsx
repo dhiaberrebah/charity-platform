@@ -5,6 +5,7 @@ import { Link } from "react-router-dom"
 import { Menu, X, User, LogOut, Settings, ChevronDown, HandHeart, UserCheck } from "lucide-react"
 import { motion } from "framer-motion"
 import { useAuth } from "../context/AuthContext"
+import NotificationBell from "./NotificationBell"
 
 const AdminNavbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -83,6 +84,9 @@ const AdminNavbar = () => {
           </div>
           <div className="hidden md:block">
             <div className="ml-4 flex items-center md:ml-6">
+              {/* Add the NotificationBell component here */}
+              <NotificationBell />
+
               <div className="ml-3 relative">
                 <div>
                   <motion.button

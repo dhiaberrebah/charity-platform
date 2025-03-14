@@ -12,6 +12,8 @@ import fs from "fs"
 import multer from "multer"
 // Import the donations route using ES modules syntax
 import donationsRoutes from "./routes/donations.js"
+// Add this import at the top with your other route imports
+import notificationRoutes from "./routes/notification.route.js"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -61,14 +63,18 @@ app.get("/api/donations/test", (req, res) => {
   res.json({ message: "Donations test API is working directly from server.js!" })
 })
 
-// REMOVED: The temporary mock donations API that was causing the issue
+// Add this line to debug API requests
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.url}`)
+  next()
+})
 
-// Register the donations route
+// Then keep your existing routes
 app.use("/api/donations", donationsRoutes)
-
 app.use("/api/auth", authRoutes)
 app.use("/api/causes", causeRoutes)
 app.use("/api/dashboard", dashboardRoutes)
+app.use("/api/notifications", notificationRoutes)
 
 // Make sure your multer configuration is saving files to this directory
 const storage = multer.diskStorage({

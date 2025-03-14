@@ -2,6 +2,7 @@ import { generateToken } from "../lib/utils.js"
 import User from "../models/user.model.js"
 import bcrypt from "bcryptjs"
 import util from "util"
+import { createNotification } from "./notification.controller.js"
 
 export const getUsers = async (req, res) => {
   try {
@@ -58,6 +59,14 @@ export const signup = async (req, res) => {
     if (newUser) {
       generateToken(newUser._id, res)
       await newUser.save()
+
+      // Create notification for new user
+      await createNotification("user", `New user registered: ${prenom} ${nom}`, {
+        userId: newUser._id,
+        email: newUser.email,
+        role: newUser.role,
+      })
+
       res.status(201).json({
         _id: newUser._id,
         nom: newUser.nom,
