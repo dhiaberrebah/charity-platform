@@ -17,7 +17,7 @@ router.get("/public/:shareUrl", getShareableCause)
 
 // Protected routes
 router.post("/", protectRoute, createCause)
-router.get("/", protectRoute, getCauses)
+router.get("/", getCauses)
 router.get("/user", protectRoute, getUserCauses)
 router.get("/:id", protectRoute, getCause)
 router.put("/:id", protectRoute, updateCause)
