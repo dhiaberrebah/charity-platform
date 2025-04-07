@@ -73,15 +73,15 @@ const CauseDetails = ({ cause, onClose, isAdmin, onEdit }) => {
 
   return (
     <div className="fixed inset-0 z-50">
-      {/* Background overlay */}
-      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+      {/* Background overlay - updated to match the blue theme */}
+      <div className="fixed inset-0 bg-blue-900/80 backdrop-blur-sm" onClick={onClose} />
 
       {/* Content container - positioned a bit lower */}
       <div className="fixed inset-0 flex items-start justify-center pt-20 p-4">
         <div className="relative bg-blue-800/30 backdrop-blur-sm border border-blue-500/20 w-full max-w-4xl mx-auto rounded-lg shadow-xl max-h-[90vh] overflow-y-auto text-white">
           {/* Header */}
           <div className="sticky top-0 z-10 flex justify-between items-center p-6 bg-gradient-to-r from-blue-900/80 to-indigo-900/80 backdrop-blur-sm border-b border-blue-500/20">
-            <h2 className="text-2xl font-bold text-white">Détails de la Cha9a9a</h2>
+            <h2 className="text-2xl font-bold text-white">Détails de la Cause</h2>
             <button
               type="button"
               onClick={onClose}

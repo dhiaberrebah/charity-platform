@@ -108,8 +108,8 @@ const CreateCauseForm = ({ onClose, onSubmit }) => {
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-50">
-        {/* Background overlay */}
-        <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+        {/* Background overlay - updated to match the blue theme */}
+        <div className="absolute inset-0 bg-blue-900/80 backdrop-blur-sm" onClick={onClose} />
 
         {/* Content container */}
         <div className="fixed inset-0 flex items-start justify-center pt-20 p-4">
