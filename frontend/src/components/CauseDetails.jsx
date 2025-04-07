@@ -46,13 +46,13 @@ const CauseDetails = ({ cause, onClose, isAdmin, onEdit }) => {
   const getStatusColor = (status) => {
     switch (status) {
       case "approved":
-        return "text-green-600 bg-green-100"
+        return "text-green-300 bg-green-900/30 border border-green-500/30"
       case "pending":
-        return "text-yellow-600 bg-yellow-100"
+        return "text-yellow-300 bg-yellow-900/30 border border-yellow-500/30"
       case "rejected":
-        return "text-red-600 bg-red-100"
+        return "text-red-300 bg-red-900/30 border border-red-500/30"
       default:
-        return "text-gray-600 bg-gray-100"
+        return "text-gray-300 bg-gray-900/30 border border-gray-500/30"
     }
   }
 
@@ -74,18 +74,18 @@ const CauseDetails = ({ cause, onClose, isAdmin, onEdit }) => {
   return (
     <div className="fixed inset-0 z-50">
       {/* Background overlay */}
-      <div className="fixed inset-0 bg-blue-900/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
 
       {/* Content container - positioned a bit lower */}
       <div className="fixed inset-0 flex items-start justify-center pt-20 p-4">
-        <div className="relative bg-white w-full max-w-4xl mx-auto rounded-lg shadow-xl max-h-[90vh] overflow-y-auto">
+        <div className="relative bg-blue-800/30 backdrop-blur-sm border border-blue-500/20 w-full max-w-4xl mx-auto rounded-lg shadow-xl max-h-[90vh] overflow-y-auto text-white">
           {/* Header */}
-          <div className="sticky top-0 z-10 flex justify-between items-center p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100">
-            <h2 className="text-2xl font-bold text-blue-900">Détails de la Cha9a9a</h2>
+          <div className="sticky top-0 z-10 flex justify-between items-center p-6 bg-gradient-to-r from-blue-900/80 to-indigo-900/80 backdrop-blur-sm border-b border-blue-500/20">
+            <h2 className="text-2xl font-bold text-white">Détails de la Cha9a9a</h2>
             <button
               type="button"
               onClick={onClose}
-              className="text-blue-500 hover:text-blue-700 hover:bg-blue-100 p-2 rounded-full"
+              className="text-blue-300 hover:text-blue-100 hover:bg-blue-700/50 p-2 rounded-full"
             >
               <X className="h-5 w-5" />
             </button>
@@ -95,13 +95,13 @@ const CauseDetails = ({ cause, onClose, isAdmin, onEdit }) => {
           <div className="p-6">
             <div className="space-y-6">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold text-blue-900">{isEditing ? "Edit Cause" : "Cause Details"}</h2>
+                <h2 className="text-xl font-bold text-white">{isEditing ? "Edit Cause" : "Cause Details"}</h2>
                 <div className="flex items-center space-x-2">
                   {!isEditing && (
                     <Button
                       variant="outline"
                       size="sm"
-                      className="text-blue-500 border-blue-500 hover:bg-blue-50"
+                      className="border-blue-400 text-blue-300 hover:bg-blue-700/50"
                       onClick={handleEditToggle}
                     >
                       <Edit className="h-4 w-4 mr-1" />
@@ -114,7 +114,7 @@ const CauseDetails = ({ cause, onClose, isAdmin, onEdit }) => {
               {isEditing ? (
                 <div className="space-y-4">
                   <div>
-                    <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="title" className="block text-sm font-medium text-blue-100 mb-1">
                       Title
                     </label>
                     <input
@@ -123,12 +123,12 @@ const CauseDetails = ({ cause, onClose, isAdmin, onEdit }) => {
                       name="title"
                       value={editedCause.title}
                       onChange={handleInputChange}
-                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                        errors.title ? "border-red-500" : "border-gray-300"
+                      className={`w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border-blue-500/30 bg-blue-900/30 text-white ${
+                        errors.title ? "border-red-500" : ""
                       }`}
                     />
                     {errors.title && (
-                      <p className="mt-1 text-sm text-red-500 flex items-center">
+                      <p className="mt-1 text-sm text-red-400 flex items-center">
                         <AlertCircle className="h-3 w-3 mr-1" />
                         {errors.title}
                       </p>
@@ -136,7 +136,7 @@ const CauseDetails = ({ cause, onClose, isAdmin, onEdit }) => {
                   </div>
 
                   <div>
-                    <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="description" className="block text-sm font-medium text-blue-100 mb-1">
                       Description
                     </label>
                     <textarea
@@ -145,12 +145,12 @@ const CauseDetails = ({ cause, onClose, isAdmin, onEdit }) => {
                       value={editedCause.description}
                       onChange={handleInputChange}
                       rows={4}
-                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                        errors.description ? "border-red-500" : "border-gray-300"
+                      className={`w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border-blue-500/30 bg-blue-900/30 text-white ${
+                        errors.description ? "border-red-500" : ""
                       }`}
                     ></textarea>
                     {errors.description && (
-                      <p className="mt-1 text-sm text-red-500 flex items-center">
+                      <p className="mt-1 text-sm text-red-400 flex items-center">
                         <AlertCircle className="h-3 w-3 mr-1" />
                         {errors.description}
                       </p>
@@ -158,7 +158,7 @@ const CauseDetails = ({ cause, onClose, isAdmin, onEdit }) => {
                   </div>
 
                   <div>
-                    <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="category" className="block text-sm font-medium text-blue-100 mb-1">
                       Category
                     </label>
                     <select
@@ -166,7 +166,7 @@ const CauseDetails = ({ cause, onClose, isAdmin, onEdit }) => {
                       name="category"
                       value={editedCause.category}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border-blue-500/30 bg-blue-900/30 text-white"
                     >
                       <option value="education">Education</option>
                       <option value="health">Health</option>
@@ -178,7 +178,7 @@ const CauseDetails = ({ cause, onClose, isAdmin, onEdit }) => {
                   </div>
 
                   <div>
-                    <label htmlFor="targetAmount" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="targetAmount" className="block text-sm font-medium text-blue-100 mb-1">
                       Target Amount (DH)
                     </label>
                     <input
@@ -187,14 +187,14 @@ const CauseDetails = ({ cause, onClose, isAdmin, onEdit }) => {
                       name="targetAmount"
                       value={editedCause.targetAmount}
                       onChange={handleInputChange}
-                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                        errors.targetAmount ? "border-red-500" : "border-gray-300"
+                      className={`w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border-blue-500/30 bg-blue-900/30 text-white ${
+                        errors.targetAmount ? "border-red-500" : ""
                       }`}
                       min="1"
                       step="1"
                     />
                     {errors.targetAmount && (
-                      <p className="mt-1 text-sm text-red-500 flex items-center">
+                      <p className="mt-1 text-sm text-red-400 flex items-center">
                         <AlertCircle className="h-3 w-3 mr-1" />
                         {errors.targetAmount}
                       </p>
@@ -206,11 +206,11 @@ const CauseDetails = ({ cause, onClose, isAdmin, onEdit }) => {
                       type="button"
                       variant="outline"
                       onClick={handleEditToggle}
-                      className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                      className="border-blue-400 text-blue-300 hover:bg-blue-700/50"
                     >
                       Cancel
                     </Button>
-                    <Button type="button" className="bg-blue-500 hover:bg-blue-600 text-white" onClick={handleSave}>
+                    <Button type="button" className="bg-blue-600 hover:bg-blue-500 text-white" onClick={handleSave}>
                       <Check className="h-4 w-4 mr-1" />
                       Save Changes
                     </Button>
@@ -246,25 +246,25 @@ const CauseDetails = ({ cause, onClose, isAdmin, onEdit }) => {
                     </span>
                   </div>
 
-                  <h3 className="text-xl font-bold text-blue-900 mb-2">{cause.title}</h3>
+                  <h3 className="text-xl font-bold text-white mb-2">{cause.title}</h3>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div className="flex items-center text-gray-600">
-                      <Calendar className="h-4 w-4 mr-2 text-blue-500" />
+                    <div className="flex items-center text-blue-200">
+                      <Calendar className="h-4 w-4 mr-2 text-blue-400" />
                       <span className="text-sm">Created: {formatDate(cause.createdAt)}</span>
                     </div>
-                    <div className="flex items-center text-gray-600">
-                      <User className="h-4 w-4 mr-2 text-blue-500" />
+                    <div className="flex items-center text-blue-200">
+                      <User className="h-4 w-4 mr-2 text-blue-400" />
                       <span className="text-sm">
                         By: {cause.createdBy?.nom} {cause.createdBy?.prenom}
                       </span>
                     </div>
-                    <div className="flex items-center text-gray-600">
-                      <Target className="h-4 w-4 mr-2 text-blue-500" />
+                    <div className="flex items-center text-blue-200">
+                      <Target className="h-4 w-4 mr-2 text-blue-400" />
                       <span className="text-sm">Category: {cause.category}</span>
                     </div>
-                    <div className="flex items-center text-gray-600">
-                      <DollarSign className="h-4 w-4 mr-2 text-blue-500" />
+                    <div className="flex items-center text-blue-200">
+                      <DollarSign className="h-4 w-4 mr-2 text-blue-400" />
                       <span className="text-sm">
                         Raised: {cause.currentAmount} DH of {cause.targetAmount} DH
                       </span>
@@ -273,31 +273,31 @@ const CauseDetails = ({ cause, onClose, isAdmin, onEdit }) => {
 
                   <div className="mb-6">
                     <div className="flex justify-between items-center mb-1">
-                      <span className="text-sm text-gray-600">Progress</span>
-                      <span className="text-sm text-gray-600">{progress.toFixed(1)}%</span>
+                      <span className="text-sm text-blue-200">Progress</span>
+                      <span className="text-sm text-blue-200">{progress.toFixed(1)}%</span>
                     </div>
                     <Progress value={progress} className="h-2" />
                   </div>
 
-                  <div className="bg-gray-50 p-4 rounded-lg mb-6">
-                    <h4 className="font-medium text-gray-700 mb-2">Description</h4>
-                    <p className="text-gray-600 whitespace-pre-line">{cause.description}</p>
+                  <div className="bg-blue-900/20 p-4 rounded-lg mb-6 border border-blue-500/20">
+                    <h4 className="font-medium text-blue-100 mb-2">Description</h4>
+                    <p className="text-blue-200 whitespace-pre-line">{cause.description}</p>
                   </div>
 
                   {isAdmin && (
-                    <div className="border-t pt-4">
-                      <h4 className="font-medium text-gray-700 mb-2">Admin Actions</h4>
+                    <div className="border-t border-blue-500/20 pt-4">
+                      <h4 className="font-medium text-blue-100 mb-2">Admin Actions</h4>
                       <div className="flex space-x-2">
                         <Button
                           variant="outline"
-                          className="border-green-500 text-green-600 hover:bg-green-50"
+                          className="border-green-400 text-green-300 hover:bg-green-900/30"
                           onClick={() => onEdit({ ...cause, status: "approved" })}
                         >
                           Approve
                         </Button>
                         <Button
                           variant="outline"
-                          className="border-red-500 text-red-600 hover:bg-red-50"
+                          className="border-red-400 text-red-300 hover:bg-red-900/30"
                           onClick={() => onEdit({ ...cause, status: "rejected" })}
                         >
                           Reject

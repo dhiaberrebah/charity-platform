@@ -109,18 +109,18 @@ const CreateCauseForm = ({ onClose, onSubmit }) => {
     <AnimatePresence>
       <div className="fixed inset-0 z-50">
         {/* Background overlay */}
-        <div className="absolute inset-0 bg-blue-900/50 backdrop-blur-sm" onClick={onClose} />
+        <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
 
         {/* Content container */}
         <div className="fixed inset-0 flex items-start justify-center pt-20 p-4">
-          <div className="relative bg-white w-full max-w-4xl mx-auto rounded-lg shadow-xl max-h-[90vh] overflow-y-auto">
+          <div className="relative bg-blue-800/30 backdrop-blur-sm border border-blue-500/20 w-full max-w-4xl mx-auto rounded-lg shadow-xl max-h-[90vh] overflow-y-auto text-white">
             {/* Header */}
-            <div className="sticky top-0 z-10 flex justify-between items-center p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100">
-              <h2 className="text-2xl font-bold text-blue-900">Créer une Cha9a9a</h2>
+            <div className="sticky top-0 z-10 flex justify-between items-center p-6 bg-gradient-to-r from-blue-900/80 to-indigo-900/80 backdrop-blur-sm border-b border-blue-500/20">
+              <h2 className="text-2xl font-bold text-white">Créer une Cha9a9a</h2>
               <button
                 type="button"
                 onClick={onClose}
-                className="text-blue-500 hover:text-blue-700 hover:bg-blue-100 p-2 rounded-full"
+                className="text-blue-300 hover:text-blue-100 hover:bg-blue-700/50 p-2 rounded-full"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -131,7 +131,7 @@ const CreateCauseForm = ({ onClose, onSubmit }) => {
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="title" className="text-blue-800">
+                    <Label htmlFor="title" className="text-blue-100">
                       Titre de votre Cha9a9a
                     </Label>
                     <Input
@@ -139,45 +139,45 @@ const CreateCauseForm = ({ onClose, onSubmit }) => {
                       name="title"
                       value={formData.title}
                       onChange={handleChange}
-                      className={`bg-blue-50/50 border-blue-200 focus:border-blue-400 focus:ring-blue-400 ${errors.title ? "border-red-500" : ""}`}
+                      className={`border-blue-500/30 bg-blue-900/30 text-white focus:border-blue-400 focus:ring-blue-400 ${errors.title ? "border-red-500" : ""}`}
                     />
-                    {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
+                    {errors.title && <p className="text-red-400 text-sm mt-1">{errors.title}</p>}
                   </div>
 
                   <div>
-                    <Label htmlFor="category" className="text-blue-800">
+                    <Label htmlFor="category" className="text-blue-100">
                       Catégorie
                     </Label>
                     <Select onValueChange={(value) => handleSelectChange("category", value)} value={formData.category}>
                       <SelectTrigger
                         id="category"
-                        className={`bg-blue-50/50 border-blue-200 ${errors.category ? "border-red-500" : ""}`}
+                        className={`border-blue-500/30 bg-blue-900/30 text-white ${errors.category ? "border-red-500" : ""}`}
                       >
                         <SelectValue placeholder="Sélectionner une catégorie" />
                       </SelectTrigger>
-                      <SelectContent className="bg-white border border-blue-100">
-                        <SelectItem value="medical" className="text-blue-800 hover:bg-blue-50">
+                      <SelectContent className="bg-blue-800 border border-blue-500/20 text-white">
+                        <SelectItem value="medical" className="text-blue-100 hover:bg-blue-700/50">
                           Médical
                         </SelectItem>
-                        <SelectItem value="education" className="text-blue-800 hover:bg-blue-50">
+                        <SelectItem value="education" className="text-blue-100 hover:bg-blue-700/50">
                           Éducation
                         </SelectItem>
-                        <SelectItem value="emergency" className="text-blue-800 hover:bg-blue-50">
+                        <SelectItem value="emergency" className="text-blue-100 hover:bg-blue-700/50">
                           Urgence
                         </SelectItem>
-                        <SelectItem value="community" className="text-blue-800 hover:bg-blue-50">
+                        <SelectItem value="community" className="text-blue-100 hover:bg-blue-700/50">
                           Communauté
                         </SelectItem>
-                        <SelectItem value="other" className="text-blue-800 hover:bg-blue-50">
+                        <SelectItem value="other" className="text-blue-100 hover:bg-blue-700/50">
                           Autre
                         </SelectItem>
                       </SelectContent>
                     </Select>
-                    {errors.category && <p className="text-red-500 text-sm mt-1">{errors.category}</p>}
+                    {errors.category && <p className="text-red-400 text-sm mt-1">{errors.category}</p>}
                   </div>
 
                   <div>
-                    <Label htmlFor="targetAmount" className="text-blue-800">
+                    <Label htmlFor="targetAmount" className="text-blue-100">
                       Montant cible (DH)
                     </Label>
                     <Input
@@ -186,13 +186,13 @@ const CreateCauseForm = ({ onClose, onSubmit }) => {
                       type="number"
                       value={formData.targetAmount}
                       onChange={handleChange}
-                      className={`bg-blue-50/50 border-blue-200 focus:border-blue-400 focus:ring-blue-400 ${errors.targetAmount ? "border-red-500" : ""}`}
+                      className={`border-blue-500/30 bg-blue-900/30 text-white focus:border-blue-400 focus:ring-blue-400 ${errors.targetAmount ? "border-red-500" : ""}`}
                     />
-                    {errors.targetAmount && <p className="text-red-500 text-sm mt-1">{errors.targetAmount}</p>}
+                    {errors.targetAmount && <p className="text-red-400 text-sm mt-1">{errors.targetAmount}</p>}
                   </div>
 
                   <div>
-                    <Label htmlFor="description" className="text-blue-800">
+                    <Label htmlFor="description" className="text-blue-100">
                       Description
                     </Label>
                     <Textarea
@@ -201,13 +201,13 @@ const CreateCauseForm = ({ onClose, onSubmit }) => {
                       value={formData.description}
                       onChange={handleChange}
                       rows={5}
-                      className={`bg-blue-50/50 border-blue-200 focus:border-blue-400 focus:ring-blue-400 ${errors.description ? "border-red-500" : ""}`}
+                      className={`border-blue-500/30 bg-blue-900/30 text-white focus:border-blue-400 focus:ring-blue-400 ${errors.description ? "border-red-500" : ""}`}
                     />
-                    {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description}</p>}
+                    {errors.description && <p className="text-red-400 text-sm mt-1">{errors.description}</p>}
                   </div>
 
                   <div>
-                    <Label htmlFor="image" className="text-blue-800">
+                    <Label htmlFor="image" className="text-blue-100">
                       Image (optionnel)
                     </Label>
                     <Input
@@ -216,16 +216,16 @@ const CreateCauseForm = ({ onClose, onSubmit }) => {
                       type="file"
                       accept="image/*"
                       onChange={handleImageChange}
-                      className="bg-blue-50/50 border-blue-200 focus:border-blue-400 focus:ring-blue-400"
+                      className="border-blue-500/30 bg-blue-900/30 text-white focus:border-blue-400 focus:ring-blue-400"
                     />
                   </div>
 
                   <div>
-                    <Label htmlFor="customShareUrl" className="block text-sm font-medium text-blue-800 mb-1">
+                    <Label htmlFor="customShareUrl" className="block text-sm font-medium text-blue-100 mb-1">
                       Custom Share URL (optional)
                     </Label>
                     <div className="flex items-center">
-                      <span className="bg-blue-100 text-blue-800 px-3 py-2 rounded-l-lg border border-r-0 border-blue-200">
+                      <span className="bg-blue-900/50 text-blue-200 px-3 py-2 rounded-l-lg border border-r-0 border-blue-500/30">
                         {window.location.origin}/causes/share/
                       </span>
                       <Input
@@ -233,11 +233,11 @@ const CreateCauseForm = ({ onClose, onSubmit }) => {
                         name="customShareUrl"
                         value={formData.customShareUrl || ""}
                         onChange={handleChange}
-                        className="rounded-l-none bg-blue-50/50 border-blue-200 focus:border-blue-400 focus:ring-blue-400"
+                        className="rounded-l-none border-blue-500/30 bg-blue-900/30 text-white focus:border-blue-400 focus:ring-blue-400"
                         placeholder="my-awesome-cause"
                       />
                     </div>
-                    <p className="text-xs text-blue-600 mt-1">
+                    <p className="text-xs text-blue-300 mt-1">
                       Leave empty to generate automatically. Use only letters, numbers, and hyphens.
                     </p>
                   </div>
@@ -257,29 +257,29 @@ const CreateCauseForm = ({ onClose, onSubmit }) => {
                     />
                     <label
                       htmlFor="acceptTerms"
-                      className={`text-sm ${errors.acceptTerms ? "text-red-500" : "text-blue-700"}`}
+                      className={`text-sm ${errors.acceptTerms ? "text-red-400" : "text-blue-200"}`}
                     >
                       J'accepte les conditions générales et je certifie que toutes les informations fournies sont
                       exactes
                     </label>
                   </div>
-                  {errors.acceptTerms && <p className="text-red-500 text-sm">{errors.acceptTerms}</p>}
+                  {errors.acceptTerms && <p className="text-red-400 text-sm">{errors.acceptTerms}</p>}
 
-                  {errors.submit && <p className="text-red-500 text-sm">{errors.submit}</p>}
+                  {errors.submit && <p className="text-red-400 text-sm">{errors.submit}</p>}
 
-                  <div className="flex justify-end space-x-4 pt-4 border-t border-blue-100">
+                  <div className="flex justify-end space-x-4 pt-4 border-t border-blue-500/20">
                     <Button
                       type="button"
                       variant="outline"
                       onClick={onClose}
-                      className="border-blue-500 text-blue-500 hover:bg-blue-50"
+                      className="border-blue-400 text-blue-300 hover:bg-blue-700/50"
                     >
                       Annuler
                     </Button>
                     <Button
                       type="submit"
                       disabled={isSubmitting || hasSubmittedRef.current}
-                      className="bg-blue-500 hover:bg-blue-600 text-white"
+                      className="bg-blue-600 hover:bg-blue-500 text-white"
                     >
                       {isSubmitting ? "Création en cours..." : "Créer ma Cha9a9a"}
                     </Button>

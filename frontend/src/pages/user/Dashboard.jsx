@@ -5,7 +5,6 @@ import {
   LayoutDashboard,
   Heart,
   FileText,
-  BanknoteIcon,
   CreditCard,
   HandHeart,
   LockKeyhole,
@@ -60,8 +59,6 @@ const Dashboard = () => {
     { id: "my-causes", label: "My Causes", icon: Heart },
     { id: "my-info", label: "My Information", icon: UserCircle },
     { id: "documents", label: "My Documents", icon: FileText },
-    { id: "bank-details", label: "Bank Details", icon: BanknoteIcon },
-    { id: "donations", label: "My Donations", icon: CreditCard },
     { id: "participations", label: "My Participations", icon: HandHeart },
     { id: "password", label: "Password", icon: LockKeyhole },
   ]
@@ -81,7 +78,7 @@ const Dashboard = () => {
   const renderContent = () => {
     if (loading) {
       return (
-        <div className="flex justify-center items-center h-64 bg-blue-50/50 rounded-lg border border-blue-200">
+        <div className="flex justify-center items-center h-64 bg-blue-800/20 rounded-lg border border-blue-500/20">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
         </div>
       )
@@ -89,7 +86,7 @@ const Dashboard = () => {
 
     if (error) {
       return (
-        <div className="bg-red-50 border border-red-200 p-6 rounded-lg text-red-600">
+        <div className="bg-red-900/30 text-red-300 border border-red-500/30 p-6 rounded-lg">
           <p className="font-medium">Error:</p>
           <p>{error}</p>
         </div>
@@ -108,10 +105,6 @@ const Dashboard = () => {
         )
       case "documents":
         return <DocumentUpload />
-      case "bank-details":
-        return <BankDetails userInfo={userInfo} onChange={handleInputChange} />
-      case "donations":
-        return <Donations />
       case "participations":
         return <Participations />
       case "password":
@@ -125,19 +118,19 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 text-white">
       {/* Navigation Bar */}
       <NavigationBar />
 
       {/* Left Sidebar - adjusted to account for navbar */}
-      <aside className="fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 bg-white/80 backdrop-blur-sm border-r border-blue-200 overflow-y-auto">
+      <aside className="fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 bg-blue-800/30 backdrop-blur-sm border-r border-blue-500/20 overflow-y-auto">
         <nav className="px-4 py-2">
           {menuItems.map((item) => (
             <motion.button
               key={item.id}
               onClick={() => setActiveSection(item.id)}
               className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-1 transition-colors ${
-                activeSection === item.id ? "bg-blue-500 text-white" : "text-blue-700 hover:bg-blue-100"
+                activeSection === item.id ? "bg-blue-500 text-white" : "text-blue-100 hover:bg-blue-700/50"
               }`}
               whileHover={{ x: activeSection === item.id ? 0 : 5 }}
               whileTap={{ scale: 0.98 }}
@@ -269,12 +262,12 @@ const UserInformation = ({ userInfo, onChange, refreshUserInfo, setActiveSection
 
   return (
     <motion.div
-      className="bg-white p-6 rounded-lg shadow-md border border-blue-100"
+      className="bg-blue-800/30 backdrop-blur-sm p-6 rounded-lg shadow-md border border-blue-500/20"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <h2 className="text-2xl font-bold mb-6 text-blue-900">My Information</h2>
+      <h2 className="text-2xl font-bold mb-6 text-white">My Information</h2>
       <form onSubmit={handleSaveChanges} className="space-y-6">
         <motion.div
           className="flex items-center justify-center"
@@ -290,7 +283,7 @@ const UserInformation = ({ userInfo, onChange, refreshUserInfo, setActiveSection
         </motion.div>
         <div className="grid gap-4">
           <div className="grid gap-2">
-            <Label htmlFor="email" className="text-blue-800">
+            <Label htmlFor="email" className="text-blue-100">
               Email
             </Label>
             <Input
@@ -299,11 +292,11 @@ const UserInformation = ({ userInfo, onChange, refreshUserInfo, setActiveSection
               value={userInfo?.email || ""}
               onChange={handleInputChange}
               autoComplete="email"
-              className="border-blue-200 focus:border-blue-400 focus:ring-blue-400"
+              className="border-blue-500/30 bg-blue-900/30 text-white focus:border-blue-400 focus:ring-blue-400"
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="nom" className="text-blue-800">
+            <Label htmlFor="nom" className="text-blue-100">
               Nom
             </Label>
             <Input
@@ -312,11 +305,11 @@ const UserInformation = ({ userInfo, onChange, refreshUserInfo, setActiveSection
               value={userInfo?.nom || ""}
               onChange={handleInputChange}
               autoComplete="family-name"
-              className="border-blue-200 focus:border-blue-400 focus:ring-blue-400"
+              className="border-blue-500/30 bg-blue-900/30 text-white focus:border-blue-400 focus:ring-blue-400"
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="prenom" className="text-blue-800">
+            <Label htmlFor="prenom" className="text-blue-100">
               Prénom
             </Label>
             <Input
@@ -325,11 +318,11 @@ const UserInformation = ({ userInfo, onChange, refreshUserInfo, setActiveSection
               value={userInfo?.prenom || ""}
               onChange={handleInputChange}
               autoComplete="given-name"
-              className="border-blue-200 focus:border-blue-400 focus:ring-blue-400"
+              className="border-blue-500/30 bg-blue-900/30 text-white focus:border-blue-400 focus:ring-blue-400"
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="age" className="text-blue-800">
+            <Label htmlFor="age" className="text-blue-100">
               Age
             </Label>
             <Input
@@ -339,11 +332,11 @@ const UserInformation = ({ userInfo, onChange, refreshUserInfo, setActiveSection
               value={userInfo?.age || ""}
               onChange={handleInputChange}
               autoComplete="age"
-              className="border-blue-200 focus:border-blue-400 focus:ring-blue-400"
+              className="border-blue-500/30 bg-blue-900/30 text-white focus:border-blue-400 focus:ring-blue-400"
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="adresse" className="text-blue-800">
+            <Label htmlFor="adresse" className="text-blue-100">
               Adresse
             </Label>
             <Input
@@ -352,11 +345,11 @@ const UserInformation = ({ userInfo, onChange, refreshUserInfo, setActiveSection
               value={userInfo?.adresse || ""}
               onChange={handleInputChange}
               autoComplete="street-address"
-              className="border-blue-200 focus:border-blue-400 focus:ring-blue-400"
+              className="border-blue-500/30 bg-blue-900/30 text-white focus:border-blue-400 focus:ring-blue-400"
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="telephone" className="text-blue-800">
+            <Label htmlFor="telephone" className="text-blue-100">
               Téléphone
             </Label>
             <Input
@@ -365,14 +358,14 @@ const UserInformation = ({ userInfo, onChange, refreshUserInfo, setActiveSection
               value={userInfo?.telephone || ""}
               onChange={handleInputChange}
               autoComplete="tel"
-              className="border-blue-200 focus:border-blue-400 focus:ring-blue-400"
+              className="border-blue-500/30 bg-blue-900/30 text-white focus:border-blue-400 focus:ring-blue-400"
             />
           </div>
           <div className="flex gap-3">
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="flex-1">
               <Button
                 type="submit"
-                className="w-full bg-blue-500 hover:bg-blue-600 text-white"
+                className="bg-blue-600 hover:bg-blue-500 text-white"
                 disabled={isSaving || !hasChanges}
               >
                 {isSaving ? "Saving..." : "Save Changes"}
@@ -382,7 +375,7 @@ const UserInformation = ({ userInfo, onChange, refreshUserInfo, setActiveSection
               <Button
                 type="button"
                 variant="outline"
-                className="w-auto border-blue-500 text-blue-500 hover:bg-blue-50"
+                className="border-blue-400 text-blue-300 hover:bg-blue-700/50 w-auto"
                 onClick={resetForm}
                 disabled={!hasChanges}
               >
@@ -392,11 +385,11 @@ const UserInformation = ({ userInfo, onChange, refreshUserInfo, setActiveSection
             </motion.div>
           </div>
           {!hasChanges && !saveSuccess && !saveError && (
-            <p className="text-sm text-blue-500 text-center">Make changes to enable saving</p>
+            <p className="text-sm text-blue-300 text-center">Make changes to enable saving</p>
           )}
           {saveError && (
             <motion.div
-              className="p-3 mt-3 bg-red-50 border border-red-200 rounded-md text-red-600"
+              className="bg-red-900/30 text-red-300 border border-red-500/30 p-3 mt-3 rounded-md"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
@@ -408,7 +401,7 @@ const UserInformation = ({ userInfo, onChange, refreshUserInfo, setActiveSection
           )}
           {saveSuccess && (
             <motion.div
-              className="p-3 mt-3 bg-green-50 border border-green-200 rounded-md text-green-600"
+              className="bg-green-900/30 text-green-300 border border-green-500/30 p-3 mt-3 rounded-md"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
@@ -530,22 +523,22 @@ const DocumentUpload = () => {
 
   return (
     <motion.div
-      className="bg-white p-6 rounded-lg shadow-md border border-blue-100"
+      className="bg-blue-800/30 backdrop-blur-sm p-6 rounded-lg shadow-md border border-blue-500/20"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <h2 className="text-2xl font-bold mb-6 text-blue-900">My Documents</h2>
+      <h2 className="text-2xl font-bold mb-6 text-white">My Documents</h2>
 
-      <div className="bg-blue-50 p-4 rounded-lg mb-6">
-        <h3 className="font-semibold mb-2 text-blue-800">Identity Documents</h3>
+      <div className="bg-blue-900/20 p-4 rounded-lg mb-6 border border-blue-500/20">
+        <h3 className="font-semibold mb-2 text-blue-100">Identity Documents</h3>
 
         <div className="flex gap-4 flex-col md:flex-row">
           {/* Front Document */}
           <div className="flex-1">
-            <p className="text-sm font-medium mb-2 text-blue-700">Front side of ID</p>
+            <p className="text-sm font-medium mb-2 text-blue-200">Front side of ID</p>
             <motion.div
-              className={`border-2 border-dashed ${frontPreview ? "border-blue-500" : "border-blue-300"} rounded-lg p-4 text-center relative overflow-hidden cursor-pointer`}
+              className={`border-2 border-dashed ${frontPreview ? "border-blue-400" : "border-blue-500/30"} rounded-lg p-4 text-center relative overflow-hidden cursor-pointer bg-blue-900/20`}
               onClick={() => frontInputRef.current.click()}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -557,7 +550,7 @@ const DocumentUpload = () => {
                     alt="ID Front Preview"
                     className="mx-auto max-h-32 object-contain mb-2"
                   />
-                  <p className="text-sm text-blue-600">{frontDocument.name}</p>
+                  <p className="text-sm text-blue-300">{frontDocument.name}</p>
                 </>
               ) : (
                 <>
@@ -569,8 +562,8 @@ const DocumentUpload = () => {
                   >
                     <Camera className="w-8 h-8 mx-auto text-blue-400" />
                   </motion.div>
-                  <p className="text-sm text-blue-600 mb-2">Upload front side</p>
-                  <p className="text-xs text-blue-500">JPG, PNG or PDF accepted</p>
+                  <p className="text-sm text-blue-300 mb-2">Upload front side</p>
+                  <p className="text-xs text-blue-300">JPG, PNG or PDF accepted</p>
                 </>
               )}
               <input
@@ -585,9 +578,9 @@ const DocumentUpload = () => {
 
           {/* Back Document */}
           <div className="flex-1">
-            <p className="text-sm font-medium mb-2 text-blue-700">Back side of ID</p>
+            <p className="text-sm font-medium mb-2 text-blue-200">Back side of ID</p>
             <motion.div
-              className={`border-2 border-dashed ${backPreview ? "border-blue-500" : "border-blue-300"} rounded-lg p-4 text-center relative overflow-hidden cursor-pointer`}
+              className={`border-2 border-dashed ${backPreview ? "border-blue-400" : "border-blue-500/30"} rounded-lg p-4 text-center relative overflow-hidden cursor-pointer bg-blue-900/20`}
               onClick={() => backInputRef.current.click()}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -599,7 +592,7 @@ const DocumentUpload = () => {
                     alt="ID Back Preview"
                     className="mx-auto max-h-32 object-contain mb-2"
                   />
-                  <p className="text-sm text-blue-600">{backDocument.name}</p>
+                  <p className="text-sm text-blue-300">{backDocument.name}</p>
                 </>
               ) : (
                 <>
@@ -611,8 +604,8 @@ const DocumentUpload = () => {
                   >
                     <Camera className="w-8 h-8 mx-auto text-blue-400" />
                   </motion.div>
-                  <p className="text-sm text-blue-600 mb-2">Upload back side</p>
-                  <p className="text-xs text-blue-500">JPG, PNG or PDF accepted</p>
+                  <p className="text-sm text-blue-300 mb-2">Upload back side</p>
+                  <p className="text-xs text-blue-300">JPG, PNG or PDF accepted</p>
                 </>
               )}
               <input
@@ -631,7 +624,7 @@ const DocumentUpload = () => {
       <div>
         <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
           <Button
-            className="w-full flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white"
+            className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white"
             onClick={handleUpload}
             disabled={uploading || (!frontDocument && !backDocument)}
           >
@@ -641,7 +634,7 @@ const DocumentUpload = () => {
 
         {uploadStatus.message && (
           <motion.div
-            className={`mt-4 p-3 rounded-md ${uploadStatus.success ? "bg-green-50 text-green-700 border border-green-200" : "bg-red-50 text-red-700 border border-red-200"}`}
+            className={`mt-4 p-3 rounded-md ${uploadStatus.success ? "bg-green-900/30 text-green-300 border border-green-500/30" : "bg-red-900/30 text-red-300 border border-red-500/30"}`}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
@@ -656,15 +649,15 @@ const DocumentUpload = () => {
 
 const BankDetails = ({ userInfo, onChange }) => (
   <motion.div
-    className="bg-white p-6 rounded-lg shadow-md border border-blue-100"
+    className="bg-blue-800/30 backdrop-blur-sm p-6 rounded-lg shadow-md border border-blue-500/20"
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.5 }}
   >
-    <h2 className="text-2xl font-bold mb-6 text-blue-900">Bank Details</h2>
+    <h2 className="text-2xl font-bold mb-6 text-white">Bank Details</h2>
     <div className="space-y-4">
       <div className="grid gap-2">
-        <Label htmlFor="bankHolder" className="text-blue-800">
+        <Label htmlFor="bankHolder" className="text-blue-100">
           Account Holder Name
         </Label>
         <Input
@@ -673,11 +666,11 @@ const BankDetails = ({ userInfo, onChange }) => (
           value={userInfo?.bankHolder || ""}
           onChange={onChange}
           autoComplete="name"
-          className="border-blue-200 focus:border-blue-400 focus:ring-blue-400"
+          className="border-blue-500/30 bg-blue-900/30 text-white focus:border-blue-400 focus:ring-blue-400"
         />
       </div>
       <div className="grid gap-2">
-        <Label htmlFor="bankName" className="text-blue-800">
+        <Label htmlFor="bankName" className="text-blue-100">
           Bank Name
         </Label>
         <Input
@@ -686,11 +679,11 @@ const BankDetails = ({ userInfo, onChange }) => (
           value={userInfo?.bankName || ""}
           onChange={onChange}
           autoComplete="organization"
-          className="border-blue-200 focus:border-blue-400 focus:ring-blue-400"
+          className="border-blue-500/30 bg-blue-900/30 text-white focus:border-blue-400 focus:ring-blue-400"
         />
       </div>
       <div className="grid gap-2">
-        <Label htmlFor="branchName" className="text-blue-800">
+        <Label htmlFor="branchName" className="text-blue-100">
           Branch Name
         </Label>
         <Input
@@ -699,11 +692,11 @@ const BankDetails = ({ userInfo, onChange }) => (
           value={userInfo?.branchName || ""}
           onChange={onChange}
           autoComplete="off"
-          className="border-blue-200 focus:border-blue-400 focus:ring-blue-400"
+          className="border-blue-500/30 bg-blue-900/30 text-white focus:border-blue-400 focus:ring-blue-400"
         />
       </div>
       <div className="grid gap-2">
-        <Label htmlFor="rib" className="text-blue-800">
+        <Label htmlFor="rib" className="text-blue-100">
           RIB
         </Label>
         <Input
@@ -712,7 +705,7 @@ const BankDetails = ({ userInfo, onChange }) => (
           value={userInfo?.rib || ""}
           onChange={onChange}
           autoComplete="off"
-          className="border-blue-200 focus:border-blue-400 focus:ring-blue-400"
+          className="border-blue-500/30 bg-blue-900/30 text-white focus:border-blue-400 focus:ring-blue-400"
         />
       </div>
       <div className="flex items-center space-x-2">
@@ -720,12 +713,12 @@ const BankDetails = ({ userInfo, onChange }) => (
           id="terms"
           className="text-blue-500 border-blue-300 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
         />
-        <label htmlFor="terms" className="text-sm text-blue-700">
+        <label htmlFor="terms" className="text-sm text-blue-200">
           I certify that I am the holder of this bank/postal account
         </label>
       </div>
       <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-        <Button className="w-full bg-blue-500 hover:bg-blue-600 text-white">Save Changes</Button>
+        <Button className="w-full bg-blue-600 hover:bg-blue-500 text-white">Save Changes</Button>
       </motion.div>
     </div>
   </motion.div>
@@ -733,12 +726,12 @@ const BankDetails = ({ userInfo, onChange }) => (
 
 const Donations = () => (
   <motion.div
-    className="bg-white p-6 rounded-lg shadow-md border border-blue-100"
+    className="bg-blue-800/30 backdrop-blur-sm p-6 rounded-lg shadow-md border border-blue-500/20"
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.5 }}
   >
-    <h2 className="text-2xl font-bold mb-6 text-blue-900">My Donations</h2>
+    <h2 className="text-2xl font-bold mb-6 text-white">My Donations</h2>
     <motion.div
       className="text-center py-12"
       initial={{ scale: 0.9, opacity: 0 }}
@@ -746,19 +739,19 @@ const Donations = () => (
       transition={{ delay: 0.2, duration: 0.4 }}
     >
       <CreditCard className="w-12 h-12 mx-auto text-blue-400 mb-4" />
-      <p className="text-blue-600">No donation requests found</p>
+      <p className="text-blue-300">No donation requests found</p>
     </motion.div>
   </motion.div>
 )
 
 const Participations = () => (
   <motion.div
-    className="bg-white p-6 rounded-lg shadow-md border border-blue-100"
+    className="bg-blue-800/30 backdrop-blur-sm p-6 rounded-lg shadow-md border border-blue-500/20"
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.5 }}
   >
-    <h2 className="text-2xl font-bold mb-6 text-blue-900">My Participations</h2>
+    <h2 className="text-2xl font-bold mb-6 text-white">My Participations</h2>
     <motion.div
       className="text-center py-12"
       initial={{ scale: 0.9, opacity: 0 }}
@@ -766,89 +759,58 @@ const Participations = () => (
       transition={{ delay: 0.2, duration: 0.4 }}
     >
       <HandHeart className="w-12 h-12 mx-auto text-blue-400 mb-4" />
-      <p className="text-blue-600">No participations found</p>
+      <p className="text-blue-300">No participations found</p>
     </motion.div>
   </motion.div>
 )
 
 const PasswordChange = () => (
-  <div className="grid gap-6">
-    <motion.div
-      className="bg-white p-6 rounded-lg shadow-md border border-blue-100"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-    >
-      <h2 className="text-2xl font-bold mb-6 text-blue-900">Change Password</h2>
-      <div className="space-y-4">
-        <div className="grid gap-2">
-          <Label htmlFor="currentPassword" className="text-blue-800">
-            Current Password
-          </Label>
-          <Input
-            id="currentPassword"
-            type="password"
-            autoComplete="current-password"
-            className="border-blue-200 focus:border-blue-400 focus:ring-blue-400"
-          />
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor="newPassword" className="text-blue-800">
-            New Password
-          </Label>
-          <Input
-            id="newPassword"
-            type="password"
-            autoComplete="new-password"
-            className="border-blue-200 focus:border-blue-400 focus:ring-blue-400"
-          />
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor="confirmPassword" className="text-blue-800">
-            Confirm New Password
-          </Label>
-          <Input
-            id="confirmPassword"
-            type="password"
-            autoComplete="new-password"
-            className="border-blue-200 focus:border-blue-400 focus:ring-blue-400"
-          />
-        </div>
-        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-          <Button className="w-full bg-blue-500 hover:bg-blue-600 text-white">Change Password</Button>
-        </motion.div>
+  <motion.div
+    className="bg-blue-800/30 backdrop-blur-sm p-6 rounded-lg shadow-md border border-blue-500/20"
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.5 }}
+  >
+    <h2 className="text-2xl font-bold mb-6 text-white">Change Password</h2>
+    <div className="space-y-4">
+      <div className="grid gap-2">
+        <Label htmlFor="currentPassword" className="text-blue-100">
+          Current Password
+        </Label>
+        <Input
+          id="currentPassword"
+          type="password"
+          autoComplete="current-password"
+          className="border-blue-500/30 bg-blue-900/30 text-white focus:border-blue-400 focus:ring-blue-400"
+        />
       </div>
-    </motion.div>
-
-    <motion.div
-      className="bg-white p-6 rounded-lg shadow-md border border-blue-100"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.2 }}
-    >
-      <h2 className="text-2xl font-bold mb-6 text-blue-900">Link Social Accounts</h2>
-      <div className="space-y-4">
-        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-          <Button variant="outline" className="w-full border-blue-500 text-blue-500 hover:bg-blue-50">
-            <Mail className="mr-2 h-4 w-4" />
-            Continue with Google
-          </Button>
-        </motion.div>
-        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-          <Button variant="outline" className="w-full border-blue-500 text-blue-500 hover:bg-blue-50">
-            <Mail className="mr-2 h-4 w-4" />
-            Continue with Facebook
-          </Button>
-        </motion.div>
-        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-          <Button variant="outline" className="w-full border-blue-500 text-blue-500 hover:bg-blue-50">
-            <Mail className="mr-2 h-4 w-4" />
-            Continue with Twitter
-          </Button>
-        </motion.div>
+      <div className="grid gap-2">
+        <Label htmlFor="newPassword" className="text-blue-100">
+          New Password
+        </Label>
+        <Input
+          id="newPassword"
+          type="password"
+          autoComplete="new-password"
+          className="border-blue-500/30 bg-blue-900/30 text-white focus:border-blue-400 focus:ring-blue-400"
+        />
       </div>
-    </motion.div>
-  </div>
+      <div className="grid gap-2">
+        <Label htmlFor="confirmPassword" className="text-blue-100">
+          Confirm New Password
+        </Label>
+        <Input
+          id="confirmPassword"
+          type="password"
+          autoComplete="new-password"
+          className="border-blue-500/30 bg-blue-900/30 text-white focus:border-blue-400 focus:ring-blue-400"
+        />
+      </div>
+      <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+        <Button className="w-full bg-blue-600 hover:bg-blue-500 text-white">Change Password</Button>
+      </motion.div>
+    </div>
+  </motion.div>
 )
 
 const DashboardOverview = ({ userInfo, setActiveSection }) => {
@@ -857,12 +819,12 @@ const DashboardOverview = ({ userInfo, setActiveSection }) => {
   return (
     <div className="grid gap-6">
       <motion.div
-        className="bg-white p-6 rounded-lg shadow-md border border-blue-100"
+        className="bg-blue-800/30 backdrop-blur-sm p-6 rounded-lg shadow-md border border-blue-500/20"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <h2 className="text-2xl font-bold mb-6 text-blue-900">Notifications</h2>
+        <h2 className="text-2xl font-bold mb-6 text-white">Notifications</h2>
         <div className="space-y-4">
           <div className="flex items-center text-red-600">
             <span className="mr-2">•</span>
@@ -878,7 +840,7 @@ const DashboardOverview = ({ userInfo, setActiveSection }) => {
             <Button
               onClick={() => setActiveSection("documents")}
               variant="outline"
-              className="text-blue-600 border-blue-500 hover:bg-blue-50"
+              className="border-blue-400 text-blue-300 hover:bg-blue-700/50"
             >
               Modifier
             </Button>
@@ -888,30 +850,30 @@ const DashboardOverview = ({ userInfo, setActiveSection }) => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <motion.div
-          className="bg-white p-6 rounded-lg shadow-md border border-blue-100"
+          className="bg-blue-800/30 backdrop-blur-sm p-6 rounded-lg shadow-md border border-blue-500/20"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
         >
-          <h2 className="text-2xl font-bold mb-6 text-blue-900">Mes Coordonnées</h2>
+          <h2 className="text-2xl font-bold mb-6 text-white">Mes Coordonnées</h2>
           <div className="space-y-2">
-            <p className="text-blue-700">
-              <span className="font-semibold text-blue-800">Nom:</span> {userInfo?.nom || "Non renseigné"}
+            <p className="text-blue-200">
+              <span className="font-semibold text-blue-100">Nom:</span> {userInfo?.nom || "Non renseigné"}
             </p>
-            <p className="text-blue-700">
-              <span className="font-semibold text-blue-800">Prénom:</span> {userInfo?.prenom || "Non renseigné"}
+            <p className="text-blue-200">
+              <span className="font-semibold text-blue-100">Prénom:</span> {userInfo?.prenom || "Non renseigné"}
             </p>
-            <p className="text-blue-700">
-              <span className="font-semibold text-blue-800">Adresse:</span> {userInfo?.adresse || "Non renseignée"}
+            <p className="text-blue-200">
+              <span className="font-semibold text-blue-100">Adresse:</span> {userInfo?.adresse || "Non renseignée"}
             </p>
-            <p className="text-blue-700">
-              <span className="font-semibold text-blue-800">Téléphone:</span> {userInfo?.telephone || "Non renseigné"}
+            <p className="text-blue-200">
+              <span className="font-semibold text-blue-100">Téléphone:</span> {userInfo?.telephone || "Non renseigné"}
             </p>
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
               <Button
                 onClick={() => setActiveSection("my-info")}
                 variant="outline"
-                className="w-full mt-4 text-blue-600 border-blue-500 hover:bg-blue-50"
+                className="border-blue-400 text-blue-300 hover:bg-blue-700/50 w-full mt-4"
               >
                 Modifier
               </Button>
@@ -920,21 +882,21 @@ const DashboardOverview = ({ userInfo, setActiveSection }) => {
         </motion.div>
 
         <motion.div
-          className="bg-white p-6 rounded-lg shadow-md border border-blue-100"
+          className="bg-blue-800/30 backdrop-blur-sm p-6 rounded-lg shadow-md border border-blue-500/20"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <h2 className="text-2xl font-bold mb-6 text-blue-900">Mes Infos de Connexion</h2>
+          <h2 className="text-2xl font-bold mb-6 text-white">Mes Infos de Connexion</h2>
           <div className="space-y-2">
-            <p className="text-blue-700">
-              <span className="font-semibold text-blue-800">Email:</span> {userInfo?.email || "Non renseigné"}
+            <p className="text-blue-200">
+              <span className="font-semibold text-blue-100">Email:</span> {userInfo?.email || "Non renseigné"}
             </p>
-            <p className="text-blue-700">
-              <span className="font-semibold text-blue-800">Mot de passe:</span> ••••••••
+            <p className="text-blue-200">
+              <span className="font-semibold text-blue-100">Mot de passe:</span> ••••••••
             </p>
-            <p className="text-blue-700">
-              <span className="font-semibold text-blue-800">Comptes associés:</span>
+            <p className="text-blue-200">
+              <span className="font-semibold text-blue-100">Comptes associés:</span>
             </p>
             <div className="flex gap-2 mt-2">
               <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
@@ -957,7 +919,7 @@ const DashboardOverview = ({ userInfo, setActiveSection }) => {
               <Button
                 onClick={() => setActiveSection("my-info")}
                 variant="outline"
-                className="w-full mt-4 text-blue-600 border-blue-500 hover:bg-blue-50"
+                className="border-blue-400 text-blue-300 hover:bg-blue-700/50 w-full mt-4"
               >
                 Modifier
               </Button>
@@ -968,12 +930,12 @@ const DashboardOverview = ({ userInfo, setActiveSection }) => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <motion.div
-          className="bg-white p-6 rounded-lg shadow-md border border-blue-100"
+          className="bg-blue-800/30 backdrop-blur-sm p-6 rounded-lg shadow-md border border-blue-500/20"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.3 }}
         >
-          <h2 className="text-2xl font-bold mb-6 text-blue-900">Nous contacter</h2>
+          <h2 className="text-2xl font-bold mb-6 text-white">Nous contacter</h2>
           <div className="flex justify-center gap-8">
             <motion.div
               className="text-center"
@@ -981,7 +943,7 @@ const DashboardOverview = ({ userInfo, setActiveSection }) => {
               transition={{ type: "spring", stiffness: 400, damping: 10 }}
             >
               <Phone className="w-12 h-12 mx-auto text-blue-500 mb-2" />
-              <p className="text-sm text-blue-700">Par téléphone</p>
+              <p className="text-sm text-blue-200">Par téléphone</p>
             </motion.div>
             <motion.div
               className="text-center"
@@ -989,7 +951,7 @@ const DashboardOverview = ({ userInfo, setActiveSection }) => {
               transition={{ type: "spring", stiffness: 400, damping: 10 }}
             >
               <Mail className="w-12 h-12 mx-auto text-blue-500 mb-2" />
-              <p className="text-sm text-blue-700">Par email</p>
+              <p className="text-sm text-blue-200">Par email</p>
             </motion.div>
           </div>
           <div className="mt-6 text-center">
@@ -997,7 +959,7 @@ const DashboardOverview = ({ userInfo, setActiveSection }) => {
               <Button
                 onClick={() => navigate("/contact")}
                 variant="outline"
-                className="text-blue-600 border-blue-500 hover:bg-blue-50"
+                className="border-blue-400 text-blue-300 hover:bg-blue-700/50"
               >
                 Voir les moyens de contact
               </Button>
@@ -1006,12 +968,12 @@ const DashboardOverview = ({ userInfo, setActiveSection }) => {
         </motion.div>
 
         <motion.div
-          className="bg-white p-6 rounded-lg shadow-md border border-blue-100"
+          className="bg-blue-800/30 backdrop-blur-sm p-6 rounded-lg shadow-md border border-blue-500/20"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.4 }}
         >
-          <h2 className="text-2xl font-bold mb-6 text-blue-900">Une question ?</h2>
+          <h2 className="text-2xl font-bold mb-6 text-white">Une question ?</h2>
           <motion.div
             className="text-center"
             initial={{ scale: 0.9, opacity: 0 }}
@@ -1019,12 +981,12 @@ const DashboardOverview = ({ userInfo, setActiveSection }) => {
             transition={{ delay: 0.5, duration: 0.4 }}
           >
             <HelpCircle className="w-12 h-12 mx-auto text-blue-500 mb-2" />
-            <p className="text-sm mb-6 text-blue-700">Consultez notre FAQ</p>
+            <p className="text-sm mb-6 text-blue-200">Consultez notre FAQ</p>
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Button
                 onClick={() => navigate("/about")}
                 variant="outline"
-                className="text-blue-600 border-blue-500 hover:bg-blue-50"
+                className="border-blue-400 text-blue-300 hover:bg-blue-700/50"
               >
                 Consulter la FAQ
               </Button>
