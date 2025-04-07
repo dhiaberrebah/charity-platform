@@ -69,6 +69,14 @@ const AdminNavbar = () => {
                     View Donations
                   </Link>
                 </motion.div>
+                <motion.div whileHover={{ y: -2 }} transition={{ type: "spring", stiffness: 400, damping: 10 }}>
+                  <Link
+                    to="/faq"
+                    className="px-3 py-2 rounded-md text-sm font-medium text-blue-100 hover:bg-blue-800 hover:text-white transition-colors"
+                  >
+                    FAQ
+                  </Link>
+                </motion.div>
                 <motion.div
                   whileHover={{ y: -2, scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -87,7 +95,7 @@ const AdminNavbar = () => {
               {/* Add the NotificationBell component here */}
               <NotificationBell />
 
-              <div className="ml-3 relative">
+              <div className="ml-3 relative z-50">
                 <div>
                   <motion.button
                     className="max-w-xs bg-blue-800 rounded-full flex items-center text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-blue-800 focus:ring-white"
@@ -109,7 +117,7 @@ const AdminNavbar = () => {
                 </div>
                 {isProfileOpen && (
                   <motion.div
-                    className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5"
+                    className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 z-50"
                     role="menu"
                     aria-orientation="vertical"
                     aria-labelledby="user-menu"
@@ -117,20 +125,7 @@ const AdminNavbar = () => {
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     transition={{ duration: 0.2 }}
                   >
-                    <Link
-                      to="/admin/profile"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 flex items-center"
-                      role="menuitem"
-                    >
-                      <User className="mr-2 h-4 w-4 text-blue-500" /> Your Profile
-                    </Link>
-                    <Link
-                      to="/admin/settings"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 flex items-center"
-                      role="menuitem"
-                    >
-                      <Settings className="mr-2 h-4 w-4 text-blue-500" /> Settings
-                    </Link>
+                    
                     <button
                       onClick={switchToUserMode}
                       className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 flex items-center"
@@ -195,6 +190,12 @@ const AdminNavbar = () => {
               className="block px-3 py-2 rounded-md text-base font-medium text-blue-100 hover:bg-blue-800 hover:text-white"
             >
               View Donations
+            </Link>
+            <Link
+              to="/faq"
+              className="block px-3 py-2 rounded-md text-base font-medium text-blue-100 hover:bg-blue-800 hover:text-white"
+            >
+              FAQ
             </Link>
             <button
               onClick={switchToUserMode}

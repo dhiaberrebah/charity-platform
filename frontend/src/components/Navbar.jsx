@@ -49,6 +49,9 @@ const NavigationBar = () => {
             <Link to="/causes" className="text-gray-600 hover:text-primary transition-colors">
               Causes
             </Link>
+            <Link to="/faq" className="text-gray-600 hover:text-primary transition-colors">
+              FAQ
+            </Link>
             <Link to="/about" className="text-gray-600 hover:text-primary transition-colors">
               About
             </Link>
@@ -86,6 +89,12 @@ const NavigationBar = () => {
               Causes
             </Link>
             <Link
+              to="/faq"
+              className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50"
+            >
+              FAQ
+            </Link>
+            <Link
               to="/about"
               className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50"
             >
@@ -97,16 +106,13 @@ const NavigationBar = () => {
             >
               Contact
             </Link>
-           
-              
-            
-              <Button onClick={handleLogout} 
-                className="w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50"
-              >
-                Logout
-              </Button>
-            
-           
+
+            <Button
+              onClick={handleLogout}
+              className="w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50"
+            >
+              Logout
+            </Button>
           </div>
         </div>
       )}

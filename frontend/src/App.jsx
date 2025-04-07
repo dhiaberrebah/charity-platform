@@ -14,6 +14,7 @@ import NotFound from "./pages/NotFound"
 import SignUp from "./pages/SignUp"
 import Login from "./pages/Login"
 import Unauthorized from "./pages/Unauthorized"
+import FAQ from "./pages/FAQ" // Import the FAQ page
 
 // Admin pages
 import AdminDashboard from "./pages/admin/Dashboard"
@@ -46,21 +47,19 @@ const App = () => (
             <Route path="/causes/:id" element={<Causes />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/faq" element={<FAQ />} /> {/* Add the FAQ route */}
             <Route path="/unauthorized" element={<Unauthorized />} />
-
             {/* Public Only Routes (redirect if logged in) */}
             <Route element={<PublicOnlyRoute />}>
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<SignUp />} />
             </Route>
-
             {/* Protected User Routes */}
             <Route element={<ProtectedRoute />}>
               <Route path="/user/dashboard" element={<UserDashboard />} />
               <Route path="/user/home" element={<UserHome />} />
               <Route path="/user/notifications" element={<NotificationsPage />} />
             </Route>
-
             {/* Protected Admin Routes */}
             <Route element={<ProtectedRoute />}>
               <Route element={<AdminRoute />}>
@@ -73,10 +72,8 @@ const App = () => (
                 {/* Add the NotificationsPage route */}
               </Route>
             </Route>
-
             {/* Cause Share Route */}
             <Route path="/causes/share/:shareUrl" element={<CauseShare />} />
-
             {/* Catch-all route */}
             <Route path="*" element={<NotFound />} />
           </Routes>
