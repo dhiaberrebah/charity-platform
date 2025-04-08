@@ -8,6 +8,8 @@ const CausesSection = () => {
   const [causes, setCauses] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [activeCategory, setActiveCategory] = useState("all")
+  const [categories, setCategories] = useState([])
 
   useEffect(() => {
     const fetchCauses = async () => {
@@ -27,6 +29,13 @@ const CausesSection = () => {
         // Filter to only show approved causes
         const approvedCauses = data.filter((cause) => cause.status === "approved")
         setCauses(approvedCauses)
+
+        // Extract unique categories from causes
+        const uniqueCategories = [...new Set(approvedCauses.map((cause) => cause.category))]
+          .filter((category) => category) // Remove any undefined or empty categories
+          .sort() // Sort alphabetically
+
+        setCategories(uniqueCategories)
         setError(null)
       } catch (error) {
         console.error("Error fetching causes:", error)
@@ -55,14 +64,17 @@ const CausesSection = () => {
     return "https://placehold.co/600x400/png?text=No+Image"
   }
 
+  // Filter causes by active category
+  const filteredCauses = activeCategory === "all" ? causes : causes.filter((cause) => cause.category === activeCategory)
+
   return (
-    <motion.div 
+    <motion.div
       className="container mx-auto py-12"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
     >
-      <motion.h2 
+      <motion.h2
         className="text-3xl font-bold mb-6 text-center text-white"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -72,7 +84,7 @@ const CausesSection = () => {
       </motion.h2>
 
       {loading && (
-        <motion.div 
+        <motion.div
           className="text-center py-10"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -91,7 +103,7 @@ const CausesSection = () => {
       )}
 
       {error && (
-        <motion.div 
+        <motion.div
           className="text-center py-10"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -102,7 +114,7 @@ const CausesSection = () => {
       )}
 
       {!loading && !error && causes.length === 0 && (
-        <motion.div 
+        <motion.div
           className="text-center py-10"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -113,35 +125,98 @@ const CausesSection = () => {
       )}
 
       {!loading && !error && causes.length > 0 && (
-        <motion.div 
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-        >
-          {causes.map((cause, index) => (
-            <motion.div
-              key={cause._id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.5 + index * 0.1 }}
+        <>
+          {/* Category Navigation */}
+          <motion.div
+            className="flex flex-wrap justify-center gap-2 mb-8"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
+            <motion.button
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                activeCategory === "all"
+                  ? "bg-blue-600 text-white"
+                  : "bg-blue-900/40 text-blue-200 hover:bg-blue-800/60"
+              }`}
+              onClick={() => setActiveCategory("all")}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-              <CauseCard
-                id={cause._id}
-                title={cause.title}
-                description={cause.description}
-                image={getImageUrl(cause)}
-                raised={cause.currentAmount || 0}
-                goal={cause.targetAmount}
-                category={cause.category}
-              />
+              All Causes
+            </motion.button>
+
+            {categories.map((category) => (
+              <motion.button
+                key={category}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                  activeCategory === category
+                    ? "bg-blue-600 text-white"
+                    : "bg-blue-900/40 text-blue-200 hover:bg-blue-800/60"
+                }`}
+                onClick={() => setActiveCategory(category)}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                {category}
+              </motion.button>
+            ))}
+          </motion.div>
+
+          {/* Category Title */}
+          {activeCategory !== "all" && (
+            <motion.h3
+              className="text-xl font-semibold mb-6 text-center text-blue-200"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              key={activeCategory}
+            >
+              {activeCategory}
+            </motion.h3>
+          )}
+
+          {/* No causes in selected category */}
+          {filteredCauses.length === 0 && (
+            <motion.div
+              className="text-center py-10"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.4 }}
+            >
+              <p className="text-blue-200">No causes found in this category. Please select another category.</p>
             </motion.div>
-          ))}
-        </motion.div>
+          )}
+
+          {/* Causes Grid */}
+          <motion.div
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+          >
+            {filteredCauses.map((cause, index) => (
+              <motion.div
+                key={cause._id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.5 + index * 0.1 }}
+              >
+                <CauseCard
+                  id={cause._id}
+                  title={cause.title}
+                  description={cause.description}
+                  image={getImageUrl(cause)}
+                  raised={cause.currentAmount || 0}
+                  goal={cause.targetAmount}
+                  category={cause.category}
+                />
+              </motion.div>
+            ))}
+          </motion.div>
+        </>
       )}
     </motion.div>
   )
 }
 
 export default CausesSection
-
