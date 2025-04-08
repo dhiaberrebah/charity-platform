@@ -14,6 +14,9 @@ import {
   Mail,
   HelpCircle,
   RotateCcw,
+  ExternalLink,
+  Eye,
+  X,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -106,7 +109,7 @@ const Dashboard = () => {
       case "documents":
         return <DocumentUpload />
       case "participations":
-        return <Participations />
+        return <Participations navigate={navigate} />
       case "password":
         return <PasswordChange />
       case "my-causes":
@@ -744,25 +747,332 @@ const Donations = () => (
   </motion.div>
 )
 
-const Participations = () => (
-  <motion.div
-    className="bg-blue-800/30 backdrop-blur-sm p-6 rounded-lg shadow-md border border-blue-500/20"
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.5 }}
-  >
-    <h2 className="text-2xl font-bold mb-6 text-white">My Participations</h2>
+const Participations = ({ navigate }) => {
+  const [donations, setDonations] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [selectedDonation, setSelectedDonation] = useState(null)
+
+  useEffect(() => {
+    const fetchUserDonations = async () => {
+      try {
+        setLoading(true)
+        // Fetch the user's donations from the API
+        const response = await fetch("http://localhost:5001/api/donations/user", {
+          credentials: "include", // Include cookies for authentication
+        })
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch donations")
+        }
+
+        const data = await response.json()
+        setDonations(data)
+      } catch (err) {
+        console.error("Error fetching donations:", err)
+        setError(err.message || "Failed to load donations")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchUserDonations()
+  }, [])
+
+  // Format currency
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(amount)
+  }
+
+  // Format date
+  const formatDate = (dateString) => {
+    const date = new Date(dateString)
+    return new Intl.DateTimeFormat("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    }).format(date)
+  }
+
+  // Handle click on a donation to navigate to the cause page
+  const handleDonationClick = (donation) => {
+    if (donation.cause && donation.cause._id) {
+      // Navigate to the specific cause detail page
+      navigate(`/cause/share/${donation.cause._id}`)
+    } else {
+      console.error("Cannot navigate: Missing cause ID", donation)
+    }
+  }
+
+  // Handle view details
+  const handleViewDetails = (donation) => {
+    setSelectedDonation(donation)
+  }
+
+  // Handle close details modal
+  const handleCloseDetails = () => {
+    setSelectedDonation(null)
+  }
+
+  return (
     <motion.div
-      className="text-center py-12"
-      initial={{ scale: 0.9, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      transition={{ delay: 0.2, duration: 0.4 }}
+      className="bg-blue-800/30 backdrop-blur-sm p-6 rounded-lg shadow-md border border-blue-500/20"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
     >
-      <HandHeart className="w-12 h-12 mx-auto text-blue-400 mb-4" />
-      <p className="text-blue-300">No participations found</p>
+      <h2 className="text-2xl font-bold mb-6 text-white">My Participations</h2>
+
+      {loading ? (
+        <div className="flex justify-center items-center h-40">
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      ) : error ? (
+        <motion.div
+          className="bg-red-900/30 text-red-300 border border-red-500/30 p-4 rounded-md"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <p className="font-medium">Error loading donations:</p>
+          <p>{error}</p>
+        </motion.div>
+      ) : donations.length === 0 ? (
+        <motion.div
+          className="text-center py-12"
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.2, duration: 0.4 }}
+        >
+          <HandHeart className="w-12 h-12 mx-auto text-blue-400 mb-4" />
+          <p className="text-blue-300">No participations found</p>
+        </motion.div>
+      ) : (
+        <div className="space-y-4">
+          {donations.map((donation) => (
+            <motion.div
+              key={donation._id}
+              className="bg-blue-900/30 rounded-lg p-4 border border-blue-500/30 cursor-pointer hover:bg-blue-800/40 transition-colors"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              whileHover={{ scale: 1.01 }}
+            >
+              <div className="flex flex-col md:flex-row justify-between">
+                <div>
+                  <div className="flex items-center">
+                    <h3 className="font-semibold text-blue-100">{donation.cause?.title || "Unknown Cause"}</h3>
+                    <ExternalLink
+                      className="w-4 h-4 ml-2 text-blue-300"
+                      onClick={() => handleDonationClick(donation)}
+                    />
+                  </div>
+                  <p className="text-sm text-blue-300">Donation ID: {donation.transactionId}</p>
+                  <p className="text-sm text-blue-300">Date: {formatDate(donation.createdAt)}</p>
+                </div>
+                <div className="mt-2 md:mt-0 md:text-right">
+                  <p className="text-lg font-bold text-blue-100">{formatCurrency(donation.amount)}</p>
+                  <span
+                    className={`inline-block px-2 py-1 text-xs rounded-full ${
+                      donation.status === "completed"
+                        ? "bg-green-900/30 text-green-300"
+                        : donation.status === "pending"
+                          ? "bg-yellow-900/30 text-yellow-300"
+                          : "bg-red-900/30 text-red-300"
+                    }`}
+                  >
+                    {donation.status.charAt(0).toUpperCase() + donation.status.slice(1)}
+                  </span>
+                </div>
+              </div>
+              {donation.message && (
+                <div className="mt-2 p-2 bg-blue-950/30 rounded border border-blue-800/30">
+                  <p className="text-sm text-blue-200 italic">"{donation.message}"</p>
+                </div>
+              )}
+              <div className="mt-3 flex justify-end">
+                <motion.button
+                  className="p-1.5 bg-blue-700/50 hover:bg-blue-600/50 rounded-full flex items-center"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleViewDetails(donation)
+                  }}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <Eye size={16} className="text-blue-200 mr-1" />
+                  <span className="text-xs text-blue-200 pr-1">View Details</span>
+                </motion.button>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
+
+      {/* Donation Details Modal */}
+      {selectedDonation && (
+        <div className="fixed inset-0 bg-blue-900/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <motion.div
+            className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="flex justify-between items-center p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+              <h2 className="text-2xl font-bold text-blue-900">Donation Details</h2>
+              <button onClick={handleCloseDetails} className="text-gray-500 hover:text-gray-700">
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-blue-900 mb-4">Donation Information</h3>
+
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-sm text-gray-500">Donation ID</p>
+                      <p className="text-gray-800 font-mono text-sm">{selectedDonation._id}</p>
+                    </div>
+
+                    <div>
+                      <p className="text-sm text-gray-500">Amount</p>
+                      <p className="text-gray-800 font-bold text-xl">{formatCurrency(selectedDonation.amount)}</p>
+                    </div>
+
+                    <div>
+                      <p className="text-sm text-gray-500">Date & Time</p>
+                      <p className="text-gray-800">
+                        {new Date(selectedDonation.createdAt).toLocaleDateString()} at{" "}
+                        {new Date(selectedDonation.createdAt).toLocaleTimeString()}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-sm text-gray-500">Status</p>
+                      <p
+                        className={`font-medium ${
+                          selectedDonation.status === "completed"
+                            ? "text-green-600"
+                            : selectedDonation.status === "pending"
+                              ? "text-yellow-600"
+                              : selectedDonation.status === "failed"
+                                ? "text-red-600"
+                                : "text-gray-600"
+                        }`}
+                      >
+                        {selectedDonation.status.charAt(0).toUpperCase() + selectedDonation.status.slice(1)}
+                      </p>
+                    </div>
+
+                    {selectedDonation.transactionId && (
+                      <div>
+                        <p className="text-sm text-gray-500">Transaction ID</p>
+                        <p className="text-gray-800 font-mono text-sm">{selectedDonation.transactionId}</p>
+                      </div>
+                    )}
+
+                    <div>
+                      <p className="text-sm text-gray-500">Payment Method</p>
+                      <p className="text-gray-800 capitalize">{selectedDonation.paymentMethod || "Card"}</p>
+                    </div>
+
+                    {selectedDonation.paymentDetails && (
+                      <div>
+                        <p className="text-sm text-gray-500">Card Details</p>
+                        <p className="text-gray-800">
+                          {selectedDonation.paymentDetails.cardName || "N/A"} ••••
+                          {selectedDonation.paymentDetails.last4 || "****"}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold text-blue-900 mb-4">Donor Information</h3>
+
+                  <div className="space-y-3">
+                    {selectedDonation.isAnonymous ? (
+                      <div className="bg-gray-100 p-4 rounded-lg">
+                        <p className="text-gray-800 italic">This donation was made anonymously</p>
+                      </div>
+                    ) : (
+                      <>
+                        <div>
+                          <p className="text-sm text-gray-500">Name</p>
+                          <p className="text-gray-800">
+                            {selectedDonation.donor?.firstName || ""} {selectedDonation.donor?.lastName || ""}
+                          </p>
+                        </div>
+
+                        <div>
+                          <p className="text-sm text-gray-500">Email</p>
+                          <p className="text-gray-800">{selectedDonation.donor?.email || "N/A"}</p>
+                        </div>
+
+                        {selectedDonation.donor?.phone && (
+                          <div>
+                            <p className="text-sm text-gray-500">Phone</p>
+                            <p className="text-gray-800">{selectedDonation.donor.phone}</p>
+                          </div>
+                        )}
+
+                        {selectedDonation.donor?.address && (
+                          <div>
+                            <p className="text-sm text-gray-500">Address</p>
+                            <p className="text-gray-800">
+                              {selectedDonation.donor.address}
+                              {selectedDonation.donor.city && `, ${selectedDonation.donor.city}`}
+                              {selectedDonation.donor.country && `, ${selectedDonation.donor.country}`}
+                            </p>
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                    {selectedDonation.message && (
+                      <div className="mt-4">
+                        <p className="text-sm text-gray-500">Message</p>
+                        <div className="bg-gray-100 p-3 rounded-lg mt-1">
+                          <p className="text-gray-800 italic">"{selectedDonation.message}"</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 pt-6 border-t border-gray-200 flex justify-between">
+                <Button
+                  onClick={() => {
+                    handleCloseDetails()
+                    if (selectedDonation.cause && selectedDonation.cause._id) {
+                      navigate(`/cause/${selectedDonation.cause._id}`)
+                    }
+                  }}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  View Cause
+                </Button>
+                <Button
+                  onClick={handleCloseDetails}
+                  variant="outline"
+                  className="px-4 py-2 border-blue-400 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors"
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </motion.div>
-  </motion.div>
-)
+  )
+}
 
 const PasswordChange = () => (
   <motion.div
@@ -999,4 +1309,3 @@ const DashboardOverview = ({ userInfo, setActiveSection }) => {
 }
 
 export default Dashboard
-

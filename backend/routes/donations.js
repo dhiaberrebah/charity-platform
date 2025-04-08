@@ -5,6 +5,7 @@ import mongoose from "mongoose"
 import DonationModel from "../models/Donation.js"
 import { createNotification } from "../controllers/notification.controller.js"
 import Cause from "../models/cause.model.js"
+import { protectRoute, adminRoute } from "../middleware/auth.middleware.js"
 
 console.log("DonationModel type:", typeof DonationModel)
 console.log("DonationModel:", DonationModel)
@@ -222,7 +223,7 @@ router.post("/", async (req, res) => {
 })
 
 // Get all donations (admin only)
-router.get("/", async (req, res) => {
+router.get("/", protectRoute, adminRoute, async (req, res) => {
   try {
     console.log("=== Fetching all donations ===")
 
@@ -244,9 +245,6 @@ router.get("/", async (req, res) => {
       })
     }
 
-    // In a real app, you would check if the user is an admin here
-    // For example: if (!req.user.isAdmin) return res.status(403).json({ message: "Unauthorized" })
-
     const donations = await DonationModel.find()
       .populate("cause", "title") // Populate cause with just the title
       .sort({ createdAt: -1 })
@@ -256,6 +254,56 @@ router.get("/", async (req, res) => {
     return res.json(donations)
   } catch (error) {
     console.error("Error fetching all donations:", error)
+    return res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    })
+  }
+})
+
+// Get donations for the authenticated user
+router.get("/user", protectRoute, async (req, res) => {
+  try {
+    console.log("=== Fetching donations for user ===")
+
+    // Get user email from the authenticated user
+    const userEmail = req.user?.email
+
+    if (!userEmail) {
+      console.log("No authenticated user found")
+      return res.status(401).json({ message: "Authentication required" })
+    }
+
+    console.log("User email:", userEmail)
+
+    // Check MongoDB connection
+    if (mongoose.connection.readyState !== 1) {
+      console.error("MongoDB not connected! Connection state:", mongoose.connection.readyState)
+      return res.status(500).json({
+        message: "Database connection error",
+        details: "MongoDB is not connected. Please check your database connection.",
+      })
+    }
+
+    // Check if DonationModel model is properly defined
+    if (typeof DonationModel !== "function" || typeof DonationModel.find !== "function") {
+      console.error("DonationModel model is not properly defined:", DonationModel)
+      return res.status(500).json({
+        message: "Server configuration error",
+        details: "The DonationModel model is not properly defined.",
+      })
+    }
+
+    // Find donations where the donor email matches the user's email
+    const donations = await DonationModel.find({ "donor.email": userEmail })
+      .populate("cause", "title") // Populate cause with just the title
+      .sort({ createdAt: -1 })
+
+    console.log(`Found ${donations.length} donations for user ${userEmail}`)
+
+    return res.json(donations)
+  } catch (error) {
+    console.error("Error fetching user donations:", error)
     return res.status(500).json({
       message: "Server error",
       error: error.message,
@@ -387,4 +435,3 @@ router.get("/:id", async (req, res) => {
 })
 
 export default router
-

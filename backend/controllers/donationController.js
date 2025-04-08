@@ -271,6 +271,47 @@ export const getDonationById = async (req, res) => {
   }
 }
 
+// Get donations by user email
+export const getDonationsByUser = async (req, res) => {
+  try {
+    console.log("=== Fetching donations for user ===")
+
+    // Get user email from the authenticated user
+    const userEmail = req.user?.email
+
+    if (!userEmail) {
+      console.log("No authenticated user found")
+      return res.status(401).json({ message: "Authentication required" })
+    }
+
+    console.log("User email:", userEmail)
+
+    // Check MongoDB connection
+    if (mongoose.connection.readyState !== 1) {
+      console.error("MongoDB not connected! Connection state:", mongoose.connection.readyState)
+      return res.status(500).json({
+        message: "Database connection error",
+        details: "MongoDB is not connected. Please check your database connection.",
+      })
+    }
+
+    // Find donations where the donor email matches the user's email
+    const donations = await Donation.find({ "donor.email": userEmail })
+      .populate("cause", "title") // Populate cause with just the title
+      .sort({ createdAt: -1 })
+
+    console.log(`Found ${donations.length} donations for user ${userEmail}`)
+
+    return res.json(donations)
+  } catch (error) {
+    console.error("Error fetching user donations:", error)
+    return res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    })
+  }
+}
+
 // Test function to verify controller is working
 export const testDonationController = (req, res) => {
   console.log("Donation controller test function called")
@@ -279,4 +320,3 @@ export const testDonationController = (req, res) => {
     timestamp: new Date().toISOString(),
   })
 }
-
