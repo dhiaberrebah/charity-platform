@@ -17,6 +17,9 @@ import {
   ExternalLink,
   Eye,
   X,
+  Bell,
+  LogOut,
+  Settings,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -81,7 +84,7 @@ const Dashboard = () => {
   const renderContent = () => {
     if (loading) {
       return (
-        <div className="flex justify-center items-center h-64 bg-blue-800/20 rounded-lg border border-blue-500/20">
+        <div className="flex justify-center items-center h-64 bg-blue-800/20 rounded-xl border border-blue-500/20 shadow-lg">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
         </div>
       )
@@ -89,7 +92,7 @@ const Dashboard = () => {
 
     if (error) {
       return (
-        <div className="bg-red-900/30 text-red-300 border border-red-500/30 p-6 rounded-lg">
+        <div className="bg-red-500/10 text-red-200 border border-red-500/20 p-6 rounded-xl shadow-lg">
           <p className="font-medium">Error:</p>
           <p>{error}</p>
         </div>
@@ -125,42 +128,128 @@ const Dashboard = () => {
       {/* Navigation Bar */}
       <NavigationBar />
 
-      {/* Left Sidebar - adjusted to account for navbar */}
-      <aside className="fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 bg-blue-800/30 backdrop-blur-sm border-r border-blue-500/20 overflow-y-auto">
-        <nav className="px-4 py-2">
-          {menuItems.map((item) => (
-            <motion.button
-              key={item.id}
-              onClick={() => setActiveSection(item.id)}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-1 transition-colors ${
-                activeSection === item.id ? "bg-blue-500 text-white" : "text-blue-100 hover:bg-blue-700/50"
-              }`}
-              whileHover={{ x: activeSection === item.id ? 0 : 5 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <item.icon size={20} />
-              <span>{item.label}</span>
-            </motion.button>
-          ))}
-        </nav>
-      </aside>
+      <div className="flex pt-16">
+        {/* Left Sidebar - professional design */}
+        <aside className="fixed top-16 left-0 w-72 bg-blue-950/80 backdrop-blur-xl border-r border-blue-500/20 shadow-xl z-10 h-[calc(100vh-4rem)] overflow-y-auto">
+          {/* User profile section */}
+          <div className="p-6 border-b border-blue-700/30 bg-gradient-to-r from-blue-900/30 to-indigo-900/30">
+            <div className="flex items-center space-x-3">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg">
+                {userInfo?.prenom ? (
+                  <span className="text-white font-semibold text-lg">{userInfo.prenom.charAt(0)}</span>
+                ) : (
+                  <UserCircle className="w-6 h-6 text-white" />
+                )}
+              </div>
+              <div>
+                <h3 className="font-medium text-white text-lg">
+                  {userInfo?.prenom ? `${userInfo.prenom} ${userInfo.nom || ""}` : "Welcome"}
+                </h3>
+                <p className="text-xs text-blue-300">{userInfo?.email || "User"}</p>
+              </div>
+            </div>
 
-      {/* Main Content - adjusted to account for navbar */}
-      <main className="ml-64 pt-16 p-8">
-        <div className="max-w-4xl mx-auto">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeSection}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
+            <div className="mt-4 flex justify-between">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-blue-300 hover:text-white hover:bg-blue-800/30"
+                onClick={() => navigate("/user/notifications")}
+              >
+                <Bell size={16} className="mr-1" />
+                <span className="text-xs">Notifications</span>
+              </Button>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-blue-300 hover:text-white hover:bg-blue-800/30"
+                onClick={() => navigate("/settings")}
+              >
+                <Settings size={16} className="mr-1" />
+                <span className="text-xs">Settings</span>
+              </Button>
+            </div>
+          </div>
+
+          {/* Navigation menu */}
+          <div className="py-4">
+            <div className="px-6 py-2">
+              <h3 className="text-xs font-semibold text-blue-400 uppercase tracking-wider">Main Menu</h3>
+            </div>
+            <nav className="mt-2">
+              {menuItems.map((item) => (
+                <motion.button
+                  key={item.id}
+                  onClick={() => setActiveSection(item.id)}
+                  className={`w-full flex items-center px-6 py-3 transition-all duration-200 ${
+                    activeSection === item.id
+                      ? "bg-gradient-to-r from-blue-800/60 to-transparent text-white border-l-4 border-blue-500"
+                      : "text-blue-300 hover:bg-blue-800/30 hover:text-white"
+                  }`}
+                  whileHover={{ x: 5 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <item.icon
+                    size={18}
+                    className={`mr-3 ${activeSection === item.id ? "text-blue-400" : "text-blue-400"}`}
+                  />
+                  <span className="font-medium">{item.label}</span>
+                </motion.button>
+              ))}
+            </nav>
+          </div>
+
+          {/* Logout button */}
+          <div className="fixed bottom-0 left-0 w-72 p-6 border-t border-blue-700/30 bg-blue-950/80">
+            <Button
+              variant="outline"
+              className="w-full border-blue-500/30 text-blue-300 hover:bg-blue-800/30 hover:text-white flex items-center justify-center"
+              onClick={() => navigate("/")}
             >
-              {renderContent()}
-            </motion.div>
-          </AnimatePresence>
-        </div>
-      </main>
+              <LogOut size={16} className="mr-2" />
+              Sign Out
+            </Button>
+          </div>
+        </aside>
+
+        {/* Main Content */}
+        <main className="flex-1 p-8 pb-24 overflow-y-auto h-[calc(100vh-4rem)] ml-72">
+          <div className="max-w-5xl mx-auto">
+            {/* Page header */}
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-white">
+                {activeSection === "dashboard" && "Dashboard"}
+                {activeSection === "my-causes" && "My Causes"}
+                {activeSection === "my-info" && "My Information"}
+                {activeSection === "documents" && "My Documents"}
+                {activeSection === "participations" && "My Participations"}
+                {activeSection === "password" && "Password Settings"}
+              </h1>
+              <p className="text-blue-300 mt-2">
+                {activeSection === "dashboard" && "Welcome back to your dashboard"}
+                {activeSection === "my-causes" && "Manage your causes and donations"}
+                {activeSection === "my-info" && "Update your personal information"}
+                {activeSection === "documents" && "Upload and manage your documents"}
+                {activeSection === "participations" && "View your participation history"}
+                {activeSection === "password" && "Manage your account security"}
+              </p>
+            </div>
+
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeSection}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                {renderContent()}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </main>
+      </div>
     </div>
   )
 }
@@ -265,13 +354,12 @@ const UserInformation = ({ userInfo, onChange, refreshUserInfo, setActiveSection
 
   return (
     <motion.div
-      className="bg-blue-800/30 backdrop-blur-sm p-6 rounded-lg shadow-md border border-blue-500/20"
+      className="bg-blue-800/30 backdrop-blur-sm p-8 rounded-xl shadow-xl border border-blue-500/20"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <h2 className="text-2xl font-bold mb-6 text-white">My Information</h2>
-      <form onSubmit={handleSaveChanges} className="space-y-6">
+      <form onSubmit={handleSaveChanges} className="space-y-8">
         <motion.div
           className="flex items-center justify-center"
           initial={{ scale: 0.9, opacity: 0 }}
@@ -279,93 +367,125 @@ const UserInformation = ({ userInfo, onChange, refreshUserInfo, setActiveSection
           transition={{ delay: 0.2, duration: 0.4 }}
         >
           <div className="relative">
-            <div className="w-24 h-24 rounded-full bg-blue-100 flex items-center justify-center">
-              <UserCircle className="w-12 h-12 text-blue-500" />
+            <div className="w-28 h-28 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center shadow-lg">
+              <UserCircle className="w-14 h-14 text-white" />
             </div>
+            <Button
+              size="sm"
+              className="absolute bottom-0 right-0 rounded-full bg-purple-600 hover:bg-purple-700 shadow-lg"
+            >
+              <Camera size={14} />
+            </Button>
           </div>
         </motion.div>
-        <div className="grid gap-4">
-          <div className="grid gap-2">
-            <Label htmlFor="email" className="text-blue-100">
-              Email
-            </Label>
-            <Input
-              id="email"
-              name="email"
-              value={userInfo?.email || ""}
-              onChange={handleInputChange}
-              autoComplete="email"
-              className="border-blue-500/30 bg-blue-900/30 text-white focus:border-blue-400 focus:ring-blue-400"
-            />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="prenom" className="text-slate-300 text-sm font-medium">
+                First Name
+              </Label>
+              <Input
+                id="prenom"
+                name="prenom"
+                value={userInfo?.prenom || ""}
+                onChange={handleInputChange}
+                autoComplete="given-name"
+                className="mt-1 bg-blue-900/30 border-blue-500/30 text-white focus:border-blue-400 focus:ring-blue-400"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="nom" className="text-slate-300 text-sm font-medium">
+                Last Name
+              </Label>
+              <Input
+                id="nom"
+                name="nom"
+                value={userInfo?.nom || ""}
+                onChange={handleInputChange}
+                autoComplete="family-name"
+                className="mt-1 bg-blue-900/30 border-blue-500/30 text-white focus:border-blue-400 focus:ring-blue-400"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="email" className="text-slate-300 text-sm font-medium">
+                Email Address
+              </Label>
+              <Input
+                id="email"
+                name="email"
+                value={userInfo?.email || ""}
+                onChange={handleInputChange}
+                autoComplete="email"
+                className="mt-1 bg-blue-900/30 border-blue-500/30 text-white focus:border-blue-400 focus:ring-blue-400"
+              />
+            </div>
           </div>
-          <div className="grid gap-2">
-            <Label htmlFor="nom" className="text-blue-100">
-              Nom
-            </Label>
-            <Input
-              id="nom"
-              name="nom"
-              value={userInfo?.nom || ""}
-              onChange={handleInputChange}
-              autoComplete="family-name"
-              className="border-blue-500/30 bg-blue-900/30 text-white focus:border-blue-400 focus:ring-blue-400"
-            />
+
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="age" className="text-slate-300 text-sm font-medium">
+                Age
+              </Label>
+              <Input
+                id="age"
+                name="age"
+                type="number"
+                value={userInfo?.age || ""}
+                onChange={handleInputChange}
+                autoComplete="age"
+                className="mt-1 bg-blue-900/30 border-blue-500/30 text-white focus:border-blue-400 focus:ring-blue-400"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="telephone" className="text-slate-300 text-sm font-medium">
+                Phone Number
+              </Label>
+              <Input
+                id="telephone"
+                name="telephone"
+                value={userInfo?.telephone || ""}
+                onChange={handleInputChange}
+                autoComplete="tel"
+                className="mt-1 bg-blue-900/30 border-blue-500/30 text-white focus:border-blue-400 focus:ring-blue-400"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="adresse" className="text-slate-300 text-sm font-medium">
+                Address
+              </Label>
+              <Input
+                id="adresse"
+                name="adresse"
+                value={userInfo?.adresse || ""}
+                onChange={handleInputChange}
+                autoComplete="street-address"
+                className="mt-1 bg-blue-900/30 border-blue-500/30 text-white focus:border-blue-400 focus:ring-blue-400"
+              />
+            </div>
           </div>
-          <div className="grid gap-2">
-            <Label htmlFor="prenom" className="text-blue-100">
-              Prénom
-            </Label>
-            <Input
-              id="prenom"
-              name="prenom"
-              value={userInfo?.prenom || ""}
-              onChange={handleInputChange}
-              autoComplete="given-name"
-              className="border-blue-500/30 bg-blue-900/30 text-white focus:border-blue-400 focus:ring-blue-400"
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="age" className="text-blue-100">
-              Age
-            </Label>
-            <Input
-              id="age"
-              name="age"
-              type="number"
-              value={userInfo?.age || ""}
-              onChange={handleInputChange}
-              autoComplete="age"
-              className="border-blue-500/30 bg-blue-900/30 text-white focus:border-blue-400 focus:ring-blue-400"
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="adresse" className="text-blue-100">
-              Adresse
-            </Label>
-            <Input
-              id="adresse"
-              name="adresse"
-              value={userInfo?.adresse || ""}
-              onChange={handleInputChange}
-              autoComplete="street-address"
-              className="border-blue-500/30 bg-blue-900/30 text-white focus:border-blue-400 focus:ring-blue-400"
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="telephone" className="text-blue-100">
-              Téléphone
-            </Label>
-            <Input
-              id="telephone"
-              name="telephone"
-              value={userInfo?.telephone || ""}
-              onChange={handleInputChange}
-              autoComplete="tel"
-              className="border-blue-500/30 bg-blue-900/30 text-white focus:border-blue-400 focus:ring-blue-400"
-            />
-          </div>
-          <div className="flex gap-3">
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="flex-1">
+        </div>
+
+        <div className="pt-4 border-t border-white/10">
+          <div className="flex gap-3 justify-end">
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Button
+                type="button"
+                variant="outline"
+                className="border-blue-500/30 text-blue-300 hover:bg-blue-800/30 hover:text-white"
+                onClick={resetForm}
+                disabled={!hasChanges}
+              >
+                <RotateCcw className="w-4 h-4 mr-2" />
+                Reset
+              </Button>
+            </motion.div>
+
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
               <Button
                 type="submit"
                 className="bg-blue-600 hover:bg-blue-500 text-white"
@@ -374,25 +494,15 @@ const UserInformation = ({ userInfo, onChange, refreshUserInfo, setActiveSection
                 {isSaving ? "Saving..." : "Save Changes"}
               </Button>
             </motion.div>
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button
-                type="button"
-                variant="outline"
-                className="border-blue-400 text-blue-300 hover:bg-blue-700/50 w-auto"
-                onClick={resetForm}
-                disabled={!hasChanges}
-              >
-                <RotateCcw className="w-4 h-4 mr-2" />
-                Reset
-              </Button>
-            </motion.div>
           </div>
+
           {!hasChanges && !saveSuccess && !saveError && (
-            <p className="text-sm text-blue-300 text-center">Make changes to enable saving</p>
+            <p className="text-sm text-slate-400 text-center mt-4">Make changes to enable saving</p>
           )}
+
           {saveError && (
             <motion.div
-              className="bg-red-900/30 text-red-300 border border-red-500/30 p-3 mt-3 rounded-md"
+              className="bg-red-500/10 text-red-200 border border-red-500/20 p-4 mt-4 rounded-lg"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
@@ -402,9 +512,10 @@ const UserInformation = ({ userInfo, onChange, refreshUserInfo, setActiveSection
               <p className="text-sm mt-2">If this problem persists, please contact support or try again later.</p>
             </motion.div>
           )}
+
           {saveSuccess && (
             <motion.div
-              className="bg-green-900/30 text-green-300 border border-green-500/30 p-3 mt-3 rounded-md"
+              className="bg-green-500/10 text-green-200 border border-green-500/20 p-4 mt-4 rounded-lg"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
@@ -526,22 +637,25 @@ const DocumentUpload = () => {
 
   return (
     <motion.div
-      className="bg-blue-800/30 backdrop-blur-sm p-6 rounded-lg shadow-md border border-blue-500/20"
+      className="bg-blue-800/30 backdrop-blur-sm p-8 rounded-xl shadow-xl border border-blue-500/20"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <h2 className="text-2xl font-bold mb-6 text-white">My Documents</h2>
+      <div className="mb-8">
+        <h3 className="text-xl font-semibold text-white mb-2">Identity Verification</h3>
+        <p className="text-blue-300">Please upload your identification documents for verification purposes.</p>
+      </div>
 
-      <div className="bg-blue-900/20 p-4 rounded-lg mb-6 border border-blue-500/20">
-        <h3 className="font-semibold mb-2 text-blue-100">Identity Documents</h3>
-
-        <div className="flex gap-4 flex-col md:flex-row">
+      <div className="bg-blue-900/30 p-6 rounded-xl mb-8 border border-blue-500/20">
+        <div className="flex gap-6 flex-col md:flex-row">
           {/* Front Document */}
           <div className="flex-1">
-            <p className="text-sm font-medium mb-2 text-blue-200">Front side of ID</p>
+            <p className="text-sm font-medium mb-3 text-slate-300">Front side of ID</p>
             <motion.div
-              className={`border-2 border-dashed ${frontPreview ? "border-blue-400" : "border-blue-500/30"} rounded-lg p-4 text-center relative overflow-hidden cursor-pointer bg-blue-900/20`}
+              className={`border-2 border-dashed ${
+                frontPreview ? "border-purple-500/50" : "border-white/20"
+              } rounded-xl p-6 text-center relative overflow-hidden cursor-pointer bg-blue-900/30 hover:bg-blue-800/30 transition-colors`}
               onClick={() => frontInputRef.current.click()}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -551,9 +665,9 @@ const DocumentUpload = () => {
                   <img
                     src={frontPreview || "/placeholder.svg"}
                     alt="ID Front Preview"
-                    className="mx-auto max-h-32 object-contain mb-2"
+                    className="mx-auto max-h-40 object-contain mb-3"
                   />
-                  <p className="text-sm text-blue-300">{frontDocument.name}</p>
+                  <p className="text-sm text-slate-300">{frontDocument.name}</p>
                 </>
               ) : (
                 <>
@@ -563,10 +677,10 @@ const DocumentUpload = () => {
                     animate={{ scale: 1 }}
                     transition={{ duration: 0.3 }}
                   >
-                    <Camera className="w-8 h-8 mx-auto text-blue-400" />
+                    <Camera className="w-12 h-12 mx-auto text-slate-400" />
                   </motion.div>
-                  <p className="text-sm text-blue-300 mb-2">Upload front side</p>
-                  <p className="text-xs text-blue-300">JPG, PNG or PDF accepted</p>
+                  <p className="text-sm text-slate-300 mb-2">Upload front side</p>
+                  <p className="text-xs text-slate-400">JPG, PNG or PDF accepted</p>
                 </>
               )}
               <input
@@ -581,9 +695,11 @@ const DocumentUpload = () => {
 
           {/* Back Document */}
           <div className="flex-1">
-            <p className="text-sm font-medium mb-2 text-blue-200">Back side of ID</p>
+            <p className="text-sm font-medium mb-3 text-slate-300">Back side of ID</p>
             <motion.div
-              className={`border-2 border-dashed ${backPreview ? "border-blue-400" : "border-blue-500/30"} rounded-lg p-4 text-center relative overflow-hidden cursor-pointer bg-blue-900/20`}
+              className={`border-2 border-dashed ${
+                backPreview ? "border-purple-500/50" : "border-white/20"
+              } rounded-xl p-6 text-center relative overflow-hidden cursor-pointer bg-blue-900/30 hover:bg-blue-800/30 transition-colors`}
               onClick={() => backInputRef.current.click()}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -593,9 +709,9 @@ const DocumentUpload = () => {
                   <img
                     src={backPreview || "/placeholder.svg"}
                     alt="ID Back Preview"
-                    className="mx-auto max-h-32 object-contain mb-2"
+                    className="mx-auto max-h-40 object-contain mb-3"
                   />
-                  <p className="text-sm text-blue-300">{backDocument.name}</p>
+                  <p className="text-sm text-slate-300">{backDocument.name}</p>
                 </>
               ) : (
                 <>
@@ -605,10 +721,10 @@ const DocumentUpload = () => {
                     animate={{ scale: 1 }}
                     transition={{ duration: 0.3 }}
                   >
-                    <Camera className="w-8 h-8 mx-auto text-blue-400" />
+                    <Camera className="w-12 h-12 mx-auto text-slate-400" />
                   </motion.div>
-                  <p className="text-sm text-blue-300 mb-2">Upload back side</p>
-                  <p className="text-xs text-blue-300">JPG, PNG or PDF accepted</p>
+                  <p className="text-sm text-slate-300 mb-2">Upload back side</p>
+                  <p className="text-xs text-slate-400">JPG, PNG or PDF accepted</p>
                 </>
               )}
               <input
@@ -627,17 +743,21 @@ const DocumentUpload = () => {
       <div>
         <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
           <Button
-            className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white"
+            className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white py-6 rounded-xl"
             onClick={handleUpload}
             disabled={uploading || (!frontDocument && !backDocument)}
           >
-            {uploading ? "Uploading..." : "Submit Documents"}
+            {uploading ? "Uploading..." : "Submit Documents for Verification"}
           </Button>
         </motion.div>
 
         {uploadStatus.message && (
           <motion.div
-            className={`mt-4 p-3 rounded-md ${uploadStatus.success ? "bg-green-900/30 text-green-300 border border-green-500/30" : "bg-red-900/30 text-red-300 border border-red-500/30"}`}
+            className={`mt-6 p-4 rounded-lg ${
+              uploadStatus.success
+                ? "bg-green-500/10 text-green-200 border border-green-500/20"
+                : "bg-red-500/10 text-red-200 border border-red-500/20"
+            }`}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
@@ -652,15 +772,15 @@ const DocumentUpload = () => {
 
 const BankDetails = ({ userInfo, onChange }) => (
   <motion.div
-    className="bg-blue-800/30 backdrop-blur-sm p-6 rounded-lg shadow-md border border-blue-500/20"
+    className="bg-blue-800/30 backdrop-blur-sm p-8 rounded-xl shadow-xl border border-blue-500/20"
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.5 }}
   >
     <h2 className="text-2xl font-bold mb-6 text-white">Bank Details</h2>
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="grid gap-2">
-        <Label htmlFor="bankHolder" className="text-blue-100">
+        <Label htmlFor="bankHolder" className="text-slate-300 text-sm font-medium">
           Account Holder Name
         </Label>
         <Input
@@ -669,11 +789,11 @@ const BankDetails = ({ userInfo, onChange }) => (
           value={userInfo?.bankHolder || ""}
           onChange={onChange}
           autoComplete="name"
-          className="border-blue-500/30 bg-blue-900/30 text-white focus:border-blue-400 focus:ring-blue-400"
+          className="bg-blue-900/30 border-blue-500/30 text-white focus:border-blue-400 focus:ring-blue-400"
         />
       </div>
       <div className="grid gap-2">
-        <Label htmlFor="bankName" className="text-blue-100">
+        <Label htmlFor="bankName" className="text-slate-300 text-sm font-medium">
           Bank Name
         </Label>
         <Input
@@ -682,11 +802,11 @@ const BankDetails = ({ userInfo, onChange }) => (
           value={userInfo?.bankName || ""}
           onChange={onChange}
           autoComplete="organization"
-          className="border-blue-500/30 bg-blue-900/30 text-white focus:border-blue-400 focus:ring-blue-400"
+          className="bg-blue-900/30 border-blue-500/30 text-white focus:border-blue-400 focus:ring-blue-400"
         />
       </div>
       <div className="grid gap-2">
-        <Label htmlFor="branchName" className="text-blue-100">
+        <Label htmlFor="branchName" className="text-slate-300 text-sm font-medium">
           Branch Name
         </Label>
         <Input
@@ -695,11 +815,11 @@ const BankDetails = ({ userInfo, onChange }) => (
           value={userInfo?.branchName || ""}
           onChange={onChange}
           autoComplete="off"
-          className="border-blue-500/30 bg-blue-900/30 text-white focus:border-blue-400 focus:ring-blue-400"
+          className="bg-blue-900/30 border-blue-500/30 text-white focus:border-blue-400 focus:ring-blue-400"
         />
       </div>
       <div className="grid gap-2">
-        <Label htmlFor="rib" className="text-blue-100">
+        <Label htmlFor="rib" className="text-slate-300 text-sm font-medium">
           RIB
         </Label>
         <Input
@@ -708,15 +828,15 @@ const BankDetails = ({ userInfo, onChange }) => (
           value={userInfo?.rib || ""}
           onChange={onChange}
           autoComplete="off"
-          className="border-blue-500/30 bg-blue-900/30 text-white focus:border-blue-400 focus:ring-blue-400"
+          className="bg-blue-900/30 border-blue-500/30 text-white focus:border-blue-400 focus:ring-blue-400"
         />
       </div>
       <div className="flex items-center space-x-2">
         <Checkbox
           id="terms"
-          className="text-blue-500 border-blue-300 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+          className="text-purple-500 border-white/20 data-[state=checked]:bg-purple-500 data-[state=checked]:border-purple-500"
         />
-        <label htmlFor="terms" className="text-sm text-blue-200">
+        <label htmlFor="terms" className="text-sm text-slate-300">
           I certify that I am the holder of this bank/postal account
         </label>
       </div>
@@ -729,20 +849,21 @@ const BankDetails = ({ userInfo, onChange }) => (
 
 const Donations = () => (
   <motion.div
-    className="bg-blue-800/30 backdrop-blur-sm p-6 rounded-lg shadow-md border border-blue-500/20"
+    className="bg-blue-800/30 backdrop-blur-sm p-8 rounded-xl shadow-xl border border-blue-500/20"
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.5 }}
   >
     <h2 className="text-2xl font-bold mb-6 text-white">My Donations</h2>
     <motion.div
-      className="text-center py-12"
+      className="text-center py-16"
       initial={{ scale: 0.9, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ delay: 0.2, duration: 0.4 }}
     >
-      <CreditCard className="w-12 h-12 mx-auto text-blue-400 mb-4" />
-      <p className="text-blue-300">No donation requests found</p>
+      <CreditCard className="w-16 h-16 mx-auto text-purple-400 mb-4" />
+      <p className="text-slate-300 text-lg">No donation requests found</p>
+      <p className="text-slate-400 mt-2">Your donation history will appear here</p>
     </motion.div>
   </motion.div>
 )
@@ -801,7 +922,7 @@ const Participations = ({ navigate }) => {
   const handleDonationClick = (donation) => {
     if (donation.cause && donation.cause._id) {
       // Navigate to the specific cause detail page
-      navigate(`/cause/share/${donation.cause._id}`)
+      navigate(`/cause/${donation.cause._id}`)
     } else {
       console.error("Cannot navigate: Missing cause ID", donation)
     }
@@ -819,20 +940,18 @@ const Participations = ({ navigate }) => {
 
   return (
     <motion.div
-      className="bg-blue-800/30 backdrop-blur-sm p-6 rounded-lg shadow-md border border-blue-500/20"
+      className="bg-blue-800/30 backdrop-blur-sm p-8 rounded-xl shadow-xl border border-blue-500/20"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <h2 className="text-2xl font-bold mb-6 text-white">My Participations</h2>
-
       {loading ? (
-        <div className="flex justify-center items-center h-40">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
         </div>
       ) : error ? (
         <motion.div
-          className="bg-red-900/30 text-red-300 border border-red-500/30 p-4 rounded-md"
+          className="bg-red-500/10 text-red-200 border border-red-500/20 p-6 rounded-lg"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
         >
@@ -841,20 +960,21 @@ const Participations = ({ navigate }) => {
         </motion.div>
       ) : donations.length === 0 ? (
         <motion.div
-          className="text-center py-12"
+          className="text-center py-16"
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.2, duration: 0.4 }}
         >
-          <HandHeart className="w-12 h-12 mx-auto text-blue-400 mb-4" />
-          <p className="text-blue-300">No participations found</p>
+          <HandHeart className="w-16 h-16 mx-auto text-purple-400 mb-4" />
+          <p className="text-slate-300 text-lg">No participations found</p>
+          <p className="text-slate-400 mt-2">Your participation history will appear here</p>
         </motion.div>
       ) : (
         <div className="space-y-4">
           {donations.map((donation) => (
             <motion.div
               key={donation._id}
-              className="bg-blue-900/30 rounded-lg p-4 border border-blue-500/30 cursor-pointer hover:bg-blue-800/40 transition-colors"
+              className="bg-blue-900/30 rounded-lg p-6 border border-blue-500/20 hover:bg-blue-800/30 transition-colors"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
@@ -863,24 +983,24 @@ const Participations = ({ navigate }) => {
               <div className="flex flex-col md:flex-row justify-between">
                 <div>
                   <div className="flex items-center">
-                    <h3 className="font-semibold text-blue-100">{donation.cause?.title || "Unknown Cause"}</h3>
+                    <h3 className="font-semibold text-white text-lg">{donation.cause?.title || "Unknown Cause"}</h3>
                     <ExternalLink
-                      className="w-4 h-4 ml-2 text-blue-300"
+                      className="w-4 h-4 ml-2 text-purple-400 cursor-pointer"
                       onClick={() => handleDonationClick(donation)}
                     />
                   </div>
-                  <p className="text-sm text-blue-300">Donation ID: {donation.transactionId}</p>
-                  <p className="text-sm text-blue-300">Date: {formatDate(donation.createdAt)}</p>
+                  <p className="text-sm text-slate-400 mt-1">Donation ID: {donation.transactionId}</p>
+                  <p className="text-sm text-slate-400">Date: {formatDate(donation.createdAt)}</p>
                 </div>
-                <div className="mt-2 md:mt-0 md:text-right">
-                  <p className="text-lg font-bold text-blue-100">{formatCurrency(donation.amount)}</p>
+                <div className="mt-4 md:mt-0 md:text-right">
+                  <p className="text-xl font-bold text-white">{formatCurrency(donation.amount)}</p>
                   <span
-                    className={`inline-block px-2 py-1 text-xs rounded-full ${
+                    className={`inline-block px-3 py-1 text-xs rounded-full mt-2 ${
                       donation.status === "completed"
-                        ? "bg-green-900/30 text-green-300"
+                        ? "bg-green-500/20 text-green-300"
                         : donation.status === "pending"
-                          ? "bg-yellow-900/30 text-yellow-300"
-                          : "bg-red-900/30 text-red-300"
+                          ? "bg-yellow-500/20 text-yellow-300"
+                          : "bg-red-500/20 text-red-300"
                     }`}
                   >
                     {donation.status.charAt(0).toUpperCase() + donation.status.slice(1)}
@@ -888,22 +1008,22 @@ const Participations = ({ navigate }) => {
                 </div>
               </div>
               {donation.message && (
-                <div className="mt-2 p-2 bg-blue-950/30 rounded border border-blue-800/30">
-                  <p className="text-sm text-blue-200 italic">"{donation.message}"</p>
+                <div className="mt-4 p-3 bg-blue-900/30 rounded-lg border border-blue-500/20">
+                  <p className="text-sm text-slate-300 italic">"{donation.message}"</p>
                 </div>
               )}
-              <div className="mt-3 flex justify-end">
+              <div className="mt-4 flex justify-end">
                 <motion.button
-                  className="p-1.5 bg-blue-700/50 hover:bg-blue-600/50 rounded-full flex items-center"
+                  className="px-4 py-2 bg-purple-600/50 hover:bg-purple-600 rounded-lg flex items-center transition-colors"
                   onClick={(e) => {
                     e.stopPropagation()
                     handleViewDetails(donation)
                   }}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  <Eye size={16} className="text-blue-200 mr-1" />
-                  <span className="text-xs text-blue-200 pr-1">View Details</span>
+                  <Eye size={16} className="text-white mr-2" />
+                  <span className="text-sm text-white">View Details</span>
                 </motion.button>
               </div>
             </motion.div>
@@ -913,55 +1033,55 @@ const Participations = ({ navigate }) => {
 
       {/* Donation Details Modal */}
       {selectedDonation && (
-        <div className="fixed inset-0 bg-blue-900/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-blue-900/90 backdrop-blur-md flex items-center justify-center z-50 p-4">
           <motion.div
-            className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+            className="bg-blue-800 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-blue-500/20"
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="flex justify-between items-center p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
-              <h2 className="text-2xl font-bold text-blue-900">Donation Details</h2>
-              <button onClick={handleCloseDetails} className="text-gray-500 hover:text-gray-700">
+            <div className="flex justify-between items-center p-6 border-b border-blue-700/30 bg-gradient-to-r from-blue-900/40 to-blue-800/40">
+              <h2 className="text-2xl font-bold text-white">Donation Details</h2>
+              <button onClick={handleCloseDetails} className="text-slate-400 hover:text-white transition-colors">
                 <X size={24} />
               </button>
             </div>
 
             <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
-                  <h3 className="text-lg font-semibold text-blue-900 mb-4">Donation Information</h3>
+                  <h3 className="text-lg font-semibold text-white mb-4">Donation Information</h3>
 
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     <div>
-                      <p className="text-sm text-gray-500">Donation ID</p>
-                      <p className="text-gray-800 font-mono text-sm">{selectedDonation._id}</p>
+                      <p className="text-sm text-slate-400">Donation ID</p>
+                      <p className="text-white font-mono text-sm">{selectedDonation._id}</p>
                     </div>
 
                     <div>
-                      <p className="text-sm text-gray-500">Amount</p>
-                      <p className="text-gray-800 font-bold text-xl">{formatCurrency(selectedDonation.amount)}</p>
+                      <p className="text-sm text-slate-400">Amount</p>
+                      <p className="text-white font-bold text-xl">{formatCurrency(selectedDonation.amount)}</p>
                     </div>
 
                     <div>
-                      <p className="text-sm text-gray-500">Date & Time</p>
-                      <p className="text-gray-800">
+                      <p className="text-sm text-slate-400">Date & Time</p>
+                      <p className="text-white">
                         {new Date(selectedDonation.createdAt).toLocaleDateString()} at{" "}
                         {new Date(selectedDonation.createdAt).toLocaleTimeString()}
                       </p>
                     </div>
 
                     <div>
-                      <p className="text-sm text-gray-500">Status</p>
+                      <p className="text-sm text-slate-400">Status</p>
                       <p
                         className={`font-medium ${
                           selectedDonation.status === "completed"
-                            ? "text-green-600"
+                            ? "text-green-400"
                             : selectedDonation.status === "pending"
-                              ? "text-yellow-600"
+                              ? "text-yellow-400"
                               : selectedDonation.status === "failed"
-                                ? "text-red-600"
-                                : "text-gray-600"
+                                ? "text-red-400"
+                                : "text-slate-400"
                         }`}
                       >
                         {selectedDonation.status.charAt(0).toUpperCase() + selectedDonation.status.slice(1)}
@@ -970,20 +1090,20 @@ const Participations = ({ navigate }) => {
 
                     {selectedDonation.transactionId && (
                       <div>
-                        <p className="text-sm text-gray-500">Transaction ID</p>
-                        <p className="text-gray-800 font-mono text-sm">{selectedDonation.transactionId}</p>
+                        <p className="text-sm text-slate-400">Transaction ID</p>
+                        <p className="text-white font-mono text-sm">{selectedDonation.transactionId}</p>
                       </div>
                     )}
 
                     <div>
-                      <p className="text-sm text-gray-500">Payment Method</p>
-                      <p className="text-gray-800 capitalize">{selectedDonation.paymentMethod || "Card"}</p>
+                      <p className="text-sm text-slate-400">Payment Method</p>
+                      <p className="text-white capitalize">{selectedDonation.paymentMethod || "Card"}</p>
                     </div>
 
                     {selectedDonation.paymentDetails && (
                       <div>
-                        <p className="text-sm text-gray-500">Card Details</p>
-                        <p className="text-gray-800">
+                        <p className="text-sm text-slate-400">Card Details</p>
+                        <p className="text-white">
                           {selectedDonation.paymentDetails.cardName || "N/A"} ••••
                           {selectedDonation.paymentDetails.last4 || "****"}
                         </p>
@@ -993,38 +1113,38 @@ const Participations = ({ navigate }) => {
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-semibold text-blue-900 mb-4">Donor Information</h3>
+                  <h3 className="text-lg font-semibold text-white mb-4">Donor Information</h3>
 
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     {selectedDonation.isAnonymous ? (
-                      <div className="bg-gray-100 p-4 rounded-lg">
-                        <p className="text-gray-800 italic">This donation was made anonymously</p>
+                      <div className="bg-blue-900/30 p-4 rounded-lg border border-blue-500/20">
+                        <p className="text-white italic">This donation was made anonymously</p>
                       </div>
                     ) : (
                       <>
                         <div>
-                          <p className="text-sm text-gray-500">Name</p>
-                          <p className="text-gray-800">
+                          <p className="text-sm text-slate-400">Name</p>
+                          <p className="text-white">
                             {selectedDonation.donor?.firstName || ""} {selectedDonation.donor?.lastName || ""}
                           </p>
                         </div>
 
                         <div>
-                          <p className="text-sm text-gray-500">Email</p>
-                          <p className="text-gray-800">{selectedDonation.donor?.email || "N/A"}</p>
+                          <p className="text-sm text-slate-400">Email</p>
+                          <p className="text-white">{selectedDonation.donor?.email || "N/A"}</p>
                         </div>
 
                         {selectedDonation.donor?.phone && (
                           <div>
-                            <p className="text-sm text-gray-500">Phone</p>
-                            <p className="text-gray-800">{selectedDonation.donor.phone}</p>
+                            <p className="text-sm text-slate-400">Phone</p>
+                            <p className="text-white">{selectedDonation.donor.phone}</p>
                           </div>
                         )}
 
                         {selectedDonation.donor?.address && (
                           <div>
-                            <p className="text-sm text-gray-500">Address</p>
-                            <p className="text-gray-800">
+                            <p className="text-sm text-slate-400">Address</p>
+                            <p className="text-white">
                               {selectedDonation.donor.address}
                               {selectedDonation.donor.city && `, ${selectedDonation.donor.city}`}
                               {selectedDonation.donor.country && `, ${selectedDonation.donor.country}`}
@@ -1036,9 +1156,9 @@ const Participations = ({ navigate }) => {
 
                     {selectedDonation.message && (
                       <div className="mt-4">
-                        <p className="text-sm text-gray-500">Message</p>
-                        <div className="bg-gray-100 p-3 rounded-lg mt-1">
-                          <p className="text-gray-800 italic">"{selectedDonation.message}"</p>
+                        <p className="text-sm text-slate-400">Message</p>
+                        <div className="bg-blue-900/30 p-4 rounded-lg mt-1 border border-blue-500/20">
+                          <p className="text-white italic">"{selectedDonation.message}"</p>
                         </div>
                       </div>
                     )}
@@ -1046,7 +1166,7 @@ const Participations = ({ navigate }) => {
                 </div>
               </div>
 
-              <div className="mt-6 pt-6 border-t border-gray-200 flex justify-between">
+              <div className="mt-8 pt-6 border-t border-blue-700/30 flex justify-between">
                 <Button
                   onClick={() => {
                     handleCloseDetails()
@@ -1054,14 +1174,14 @@ const Participations = ({ navigate }) => {
                       navigate(`/cause/${selectedDonation.cause._id}`)
                     }
                   }}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="bg-blue-600 hover:bg-blue-500 text-white"
                 >
                   View Cause
                 </Button>
                 <Button
                   onClick={handleCloseDetails}
                   variant="outline"
-                  className="px-4 py-2 border-blue-400 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors"
+                  className="border-blue-500/30 text-blue-300 hover:bg-blue-800/30 hover:text-white"
                 >
                   Close
                 </Button>
@@ -1076,48 +1196,58 @@ const Participations = ({ navigate }) => {
 
 const PasswordChange = () => (
   <motion.div
-    className="bg-blue-800/30 backdrop-blur-sm p-6 rounded-lg shadow-md border border-blue-500/20"
+    className="bg-blue-800/30 backdrop-blur-sm p-8 rounded-xl shadow-xl border border-blue-500/20"
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.5 }}
   >
-    <h2 className="text-2xl font-bold mb-6 text-white">Change Password</h2>
-    <div className="space-y-4">
+    <div className="mb-8">
+      <h3 className="text-xl font-semibold text-white mb-2">Change Password</h3>
+      <p className="text-blue-300">Update your password to keep your account secure.</p>
+    </div>
+
+    <div className="space-y-6">
       <div className="grid gap-2">
-        <Label htmlFor="currentPassword" className="text-blue-100">
+        <Label htmlFor="currentPassword" className="text-slate-300 text-sm font-medium">
           Current Password
         </Label>
         <Input
           id="currentPassword"
           type="password"
           autoComplete="current-password"
-          className="border-blue-500/30 bg-blue-900/30 text-white focus:border-blue-400 focus:ring-blue-400"
+          className="bg-blue-900/30 border-blue-500/30 text-white focus:border-blue-400 focus:ring-blue-400"
         />
       </div>
+
       <div className="grid gap-2">
-        <Label htmlFor="newPassword" className="text-blue-100">
+        <Label htmlFor="newPassword" className="text-slate-300 text-sm font-medium">
           New Password
         </Label>
         <Input
           id="newPassword"
           type="password"
           autoComplete="new-password"
-          className="border-blue-500/30 bg-blue-900/30 text-white focus:border-blue-400 focus:ring-blue-400"
+          className="bg-blue-900/30 border-blue-500/30 text-white focus:border-blue-400 focus:ring-blue-400"
         />
+        <p className="text-xs text-slate-400 mt-1">
+          Password must be at least 8 characters and include a number and special character.
+        </p>
       </div>
+
       <div className="grid gap-2">
-        <Label htmlFor="confirmPassword" className="text-blue-100">
+        <Label htmlFor="confirmPassword" className="text-slate-300 text-sm font-medium">
           Confirm New Password
         </Label>
         <Input
           id="confirmPassword"
           type="password"
           autoComplete="new-password"
-          className="border-blue-500/30 bg-blue-900/30 text-white focus:border-blue-400 focus:ring-blue-400"
+          className="bg-blue-900/30 border-blue-500/30 text-white focus:border-blue-400 focus:ring-blue-400"
         />
       </div>
+
       <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-        <Button className="w-full bg-blue-600 hover:bg-blue-500 text-white">Change Password</Button>
+        <Button className="w-full bg-blue-600 hover:bg-blue-500 text-white py-6">Change Password</Button>
       </motion.div>
     </div>
   </motion.div>
@@ -1127,181 +1257,203 @@ const DashboardOverview = ({ userInfo, setActiveSection }) => {
   const navigate = useNavigate()
 
   return (
-    <div className="grid gap-6">
+    <div className="grid gap-8">
       <motion.div
-        className="bg-blue-800/30 backdrop-blur-sm p-6 rounded-lg shadow-md border border-blue-500/20"
+        className="bg-blue-800/30 backdrop-blur-sm p-8 rounded-xl shadow-xl border border-blue-500/20"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <h2 className="text-2xl font-bold mb-6 text-white">Notifications</h2>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-white">Notifications</h2>
+          <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">2</span>
+        </div>
+
         <div className="space-y-4">
-          <div className="flex items-center text-red-600">
-            <span className="mr-2">•</span>
-            <p>Identity document: Missing</p>
+          <div className="flex items-start space-x-3 p-4 bg-red-500/10 rounded-lg border border-red-500/20">
+            <div className="mt-1 text-red-400">•</div>
+            <div>
+              <p className="text-red-300 font-medium">Identity document: Missing</p>
+              <p className="text-blue-300 text-sm mt-1">Please upload your identification document for verification.</p>
+            </div>
           </div>
-          <div className="flex items-center text-red-600">
-            <span className="mr-2">•</span>
-            <p>Identity document (back): Missing</p>
+
+          <div className="flex items-start space-x-3 p-4 bg-red-500/10 rounded-lg border border-red-500/20">
+            <div className="mt-1 text-red-400">•</div>
+            <div>
+              <p className="text-red-300 font-medium">Identity document (back): Missing</p>
+              <p className="text-blue-300 text-sm mt-1">Please upload the back side of your identification document.</p>
+            </div>
           </div>
         </div>
-        <div className="mt-4">
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <Button
-              onClick={() => setActiveSection("documents")}
-              variant="outline"
-              className="border-blue-400 text-blue-300 hover:bg-blue-700/50"
-            >
-              Modifier
+
+        <div className="mt-6">
+          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+            <Button onClick={() => setActiveSection("documents")} className="bg-blue-600 hover:bg-blue-500 text-white">
+              Upload Documents
             </Button>
           </motion.div>
         </div>
       </motion.div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <motion.div
-          className="bg-blue-800/30 backdrop-blur-sm p-6 rounded-lg shadow-md border border-blue-500/20"
+          className="bg-blue-800/30 backdrop-blur-sm p-8 rounded-xl shadow-xl border border-blue-500/20"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
         >
-          <h2 className="text-2xl font-bold mb-6 text-white">Mes Coordonnées</h2>
-          <div className="space-y-2">
-            <p className="text-blue-200">
-              <span className="font-semibold text-blue-100">Nom:</span> {userInfo?.nom || "Non renseigné"}
-            </p>
-            <p className="text-blue-200">
-              <span className="font-semibold text-blue-100">Prénom:</span> {userInfo?.prenom || "Non renseigné"}
-            </p>
-            <p className="text-blue-200">
-              <span className="font-semibold text-blue-100">Adresse:</span> {userInfo?.adresse || "Non renseignée"}
-            </p>
-            <p className="text-blue-200">
-              <span className="font-semibold text-blue-100">Téléphone:</span> {userInfo?.telephone || "Non renseigné"}
-            </p>
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+          <h2 className="text-xl font-bold mb-6 text-white">Personal Information</h2>
+          <div className="space-y-4">
+            <div className="flex justify-between border-b border-blue-700/30 pb-3">
+              <p className="text-slate-400">Name</p>
+              <p className="text-white font-medium">
+                {userInfo?.prenom || "Not set"} {userInfo?.nom || ""}
+              </p>
+            </div>
+
+            <div className="flex justify-between border-b border-blue-700/30 pb-3">
+              <p className="text-slate-400">Email</p>
+              <p className="text-white font-medium">{userInfo?.email || "Not set"}</p>
+            </div>
+
+            <div className="flex justify-between border-b border-blue-700/30 pb-3">
+              <p className="text-slate-400">Phone</p>
+              <p className="text-white font-medium">{userInfo?.telephone || "Not set"}</p>
+            </div>
+
+            <div className="flex justify-between">
+              <p className="text-slate-400">Address</p>
+              <p className="text-white font-medium">{userInfo?.adresse || "Not set"}</p>
+            </div>
+
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="mt-4">
               <Button
                 onClick={() => setActiveSection("my-info")}
                 variant="outline"
-                className="border-blue-400 text-blue-300 hover:bg-blue-700/50 w-full mt-4"
+                className="w-full border-blue-500/30 text-blue-300 hover:bg-blue-800/30 hover:text-white"
               >
-                Modifier
+                Edit Information
               </Button>
             </motion.div>
           </div>
         </motion.div>
 
         <motion.div
-          className="bg-blue-800/30 backdrop-blur-sm p-6 rounded-lg shadow-md border border-blue-500/20"
+          className="bg-blue-800/30 backdrop-blur-sm p-8 rounded-xl shadow-xl border border-blue-500/20"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <h2 className="text-2xl font-bold mb-6 text-white">Mes Infos de Connexion</h2>
-          <div className="space-y-2">
-            <p className="text-blue-200">
-              <span className="font-semibold text-blue-100">Email:</span> {userInfo?.email || "Non renseigné"}
-            </p>
-            <p className="text-blue-200">
-              <span className="font-semibold text-blue-100">Mot de passe:</span> ••••••••
-            </p>
-            <p className="text-blue-200">
-              <span className="font-semibold text-blue-100">Comptes associés:</span>
-            </p>
-            <div className="flex gap-2 mt-2">
-              <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                <Button variant="outline" size="icon" className="rounded-full w-8 h-8 border-blue-300 text-blue-500">
-                  <span className="sr-only">Facebook</span>f
-                </Button>
-              </motion.button>
-              <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                <Button variant="outline" size="icon" className="rounded-full w-8 h-8 border-blue-300 text-blue-500">
-                  <span className="sr-only">Google</span>g
-                </Button>
-              </motion.button>
-              <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                <Button variant="outline" size="icon" className="rounded-full w-8 h-8 border-blue-300 text-blue-500">
-                  <span className="sr-only">Twitter</span>t
-                </Button>
-              </motion.button>
+          <h2 className="text-xl font-bold mb-6 text-white">Account Security</h2>
+          <div className="space-y-4">
+            <div className="flex justify-between border-b border-blue-700/30 pb-3">
+              <p className="text-slate-400">Password</p>
+              <p className="text-white font-medium">••••••••</p>
             </div>
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+
+            <div className="flex justify-between border-b border-blue-700/30 pb-3">
+              <p className="text-slate-400">Two-Factor Authentication</p>
+              <p className="text-red-400 font-medium">Not Enabled</p>
+            </div>
+
+            <div className="flex justify-between">
+              <p className="text-slate-400">Connected Accounts</p>
+              <div className="flex space-x-2">
+                <div className="w-6 h-6 rounded-full bg-blue-900/30 flex items-center justify-center">
+                  <span className="text-xs text-slate-300">f</span>
+                </div>
+                <div className="w-6 h-6 rounded-full bg-blue-900/30 flex items-center justify-center">
+                  <span className="text-xs text-slate-300">g</span>
+                </div>
+              </div>
+            </div>
+
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="mt-4">
               <Button
-                onClick={() => setActiveSection("my-info")}
+                onClick={() => setActiveSection("password")}
                 variant="outline"
-                className="border-blue-400 text-blue-300 hover:bg-blue-700/50 w-full mt-4"
+                className="w-full border-blue-500/30 text-blue-300 hover:bg-blue-800/30 hover:text-white"
               >
-                Modifier
+                Manage Security
               </Button>
             </motion.div>
           </div>
         </motion.div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <motion.div
-          className="bg-blue-800/30 backdrop-blur-sm p-6 rounded-lg shadow-md border border-blue-500/20"
+          className="bg-blue-800/30 backdrop-blur-sm p-8 rounded-xl shadow-xl border border-blue-500/20"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.3 }}
         >
-          <h2 className="text-2xl font-bold mb-6 text-white">Nous contacter</h2>
-          <div className="flex justify-center gap-8">
+          <h2 className="text-xl font-bold mb-6 text-white">Contact Support</h2>
+          <div className="flex justify-between mb-6">
             <motion.div
-              className="text-center"
+              className="flex flex-col items-center p-4 bg-blue-900/30 rounded-lg border border-blue-500/20 flex-1 mr-4"
               whileHover={{ y: -5 }}
               transition={{ type: "spring", stiffness: 400, damping: 10 }}
             >
-              <Phone className="w-12 h-12 mx-auto text-blue-500 mb-2" />
-              <p className="text-sm text-blue-200">Par téléphone</p>
+              <Phone className="w-10 h-10 text-purple-400 mb-3" />
+              <p className="text-white font-medium">Phone Support</p>
+              <p className="text-slate-400 text-sm mt-1">+1 (123) 456-7890</p>
             </motion.div>
+
             <motion.div
-              className="text-center"
+              className="flex flex-col items-center p-4 bg-blue-900/30 rounded-lg border border-blue-500/20 flex-1"
               whileHover={{ y: -5 }}
               transition={{ type: "spring", stiffness: 400, damping: 10 }}
             >
-              <Mail className="w-12 h-12 mx-auto text-blue-500 mb-2" />
-              <p className="text-sm text-blue-200">Par email</p>
+              <Mail className="w-10 h-10 text-purple-400 mb-3" />
+              <p className="text-white font-medium">Email Support</p>
+              <p className="text-slate-400 text-sm mt-1">support@charityhub.org</p>
             </motion.div>
           </div>
-          <div className="mt-6 text-center">
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button
-                onClick={() => navigate("/contact")}
-                variant="outline"
-                className="border-blue-400 text-blue-300 hover:bg-blue-700/50"
-              >
-                Voir les moyens de contact
-              </Button>
-            </motion.div>
-          </div>
+
+          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+            <Button onClick={() => navigate("/contact")} className="w-full bg-blue-600 hover:bg-blue-500 text-white">
+              Contact Us
+            </Button>
+          </motion.div>
         </motion.div>
 
         <motion.div
-          className="bg-blue-800/30 backdrop-blur-sm p-6 rounded-lg shadow-md border border-blue-500/20"
+          className="bg-blue-800/30 backdrop-blur-sm p-8 rounded-xl shadow-xl border border-blue-500/20"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.4 }}
         >
-          <h2 className="text-2xl font-bold mb-6 text-white">Une question ?</h2>
+          <h2 className="text-xl font-bold mb-6 text-white">Help Center</h2>
           <motion.div
-            className="text-center"
+            className="text-center py-6 px-4 bg-blue-900/30 rounded-lg border border-blue-500/20 mb-6"
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.5, duration: 0.4 }}
           >
-            <HelpCircle className="w-12 h-12 mx-auto text-blue-500 mb-2" />
-            <p className="text-sm mb-6 text-blue-200">Consultez notre FAQ</p>
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <HelpCircle className="w-16 h-16 mx-auto text-purple-400 mb-4" />
+            <p className="text-white font-medium">Need assistance?</p>
+            <p className="text-slate-400 text-sm mt-2">Check our FAQ or browse help articles</p>
+          </motion.div>
+
+          <div className="flex space-x-4">
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex-1">
               <Button
-                onClick={() => navigate("/about")}
+                onClick={() => navigate("/faq")}
                 variant="outline"
-                className="border-blue-400 text-blue-300 hover:bg-blue-700/50"
+                className="w-full border-blue-500/30 text-blue-300 hover:bg-blue-800/30 hover:text-white"
               >
-                Consulter la FAQ
+                View FAQ
               </Button>
             </motion.div>
-          </motion.div>
+
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex-1">
+              <Button onClick={() => navigate("/help")} className="w-full bg-blue-600 hover:bg-blue-500 text-white">
+                Help Center
+              </Button>
+            </motion.div>
+          </div>
         </motion.div>
       </div>
     </div>
