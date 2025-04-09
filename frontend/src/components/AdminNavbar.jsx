@@ -70,12 +70,7 @@ const AdminNavbar = () => {
                   </Link>
                 </motion.div>
                 <motion.div whileHover={{ y: -2 }} transition={{ type: "spring", stiffness: 400, damping: 10 }}>
-                  <Link
-                    to="/faq"
-                    className="px-3 py-2 rounded-md text-sm font-medium text-blue-100 hover:bg-blue-800 hover:text-white transition-colors"
-                  >
-                    FAQ
-                  </Link>
+                 
                 </motion.div>
                 <motion.div
                   whileHover={{ y: -2, scale: 1.05 }}
@@ -190,12 +185,6 @@ const AdminNavbar = () => {
               className="block px-3 py-2 rounded-md text-base font-medium text-blue-100 hover:bg-blue-800 hover:text-white"
             >
               View Donations
-            </Link>
-            <Link
-              to="/faq"
-              className="block px-3 py-2 rounded-md text-base font-medium text-blue-100 hover:bg-blue-800 hover:text-white"
-            >
-              FAQ
             </Link>
             <button
               onClick={switchToUserMode}
