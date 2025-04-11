@@ -3,6 +3,7 @@ import User from "../models/user.model.js"
 import bcrypt from "bcryptjs"
 import util from "util"
 import { createNotification } from "./notification.controller.js"
+import { uploadToCloudinary } from '../config/cloudinary.js';
 
 export const getUsers = async (req, res) => {
   try {
@@ -222,4 +223,32 @@ export const deleteUser = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" })
   }
 }
+
+export const uploadDocuments = async (req, res) => {
+  try {
+    const urls = [];
+    
+    for (const file of [req.files.frontDocument, req.files.backDocument].filter(Boolean)) {
+      const cloudinaryUrl = await uploadToCloudinary(file);
+      urls.push(cloudinaryUrl);
+    }
+
+    // Update user with Cloudinary URLs
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      {
+        $set: {
+          'documents.front': urls[0],
+          'documents.back': urls[1] || null
+        }
+      },
+      { new: true }
+    );
+
+    res.json({ success: true, urls });
+  } catch (error) {
+    console.error('Document upload error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
 
