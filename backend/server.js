@@ -14,6 +14,8 @@ import multer from "multer"
 import donationsRoutes from "./routes/donations.js"
 // Add this import at the top with your other route imports
 import notificationRoutes from "./routes/notification.route.js"
+import verificationRoutes from './routes/verification.route.js';
+import documentsRoutes from './routes/documents.js';
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -75,6 +77,8 @@ app.use("/api/auth", authRoutes)
 app.use("/api/causes", causeRoutes)
 app.use("/api/dashboard", dashboardRoutes)
 app.use("/api/notifications", notificationRoutes)
+app.use('/api/verification', verificationRoutes);
+app.use('/api/documents', documentsRoutes);
 
 // Make sure your multer configuration is saving files to this directory
 const storage = multer.diskStorage({

@@ -226,29 +226,64 @@ export const deleteUser = async (req, res) => {
 
 export const uploadDocuments = async (req, res) => {
   try {
-    const urls = [];
-    
-    for (const file of [req.files.frontDocument, req.files.backDocument].filter(Boolean)) {
-      const cloudinaryUrl = await uploadToCloudinary(file);
-      urls.push(cloudinaryUrl);
+    if (!req.files) {
+      return res.status(400).json({ success: false, message: 'No files uploaded' });
     }
 
-    // Update user with Cloudinary URLs
+    const urls = [];
+    
+    // Handle front document
+    if (req.files.frontDocument) {
+      const frontUrl = await uploadToCloudinary(req.files.frontDocument[0]);
+      urls.push(frontUrl);
+    }
+
+    // Handle back document
+    if (req.files.backDocument) {
+      const backUrl = await uploadToCloudinary(req.files.backDocument[0]);
+      urls.push(backUrl);
+    }
+
+    // Update user with document URLs
     const user = await User.findByIdAndUpdate(
       req.user._id,
       {
         $set: {
-          'documents.front': urls[0],
-          'documents.back': urls[1] || null
+          'documents.front': urls[0] || null,
+          'documents.back': urls[1] || null,
+          'verificationStatus': 'pending'
         }
       },
       { new: true }
     );
 
-    res.json({ success: true, urls });
+    res.json({ 
+      success: true, 
+      message: 'Documents uploaded successfully',
+      documents: {
+        front: urls[0] || null,
+        back: urls[1] || null
+      }
+    });
   } catch (error) {
     console.error('Document upload error:', error);
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ 
+      success: false, 
+      message: error.message || 'Error uploading documents' 
+    });
+  }
+};
+
+export const getVerificationStatus = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select('verificationStatus documents');
+    res.json({
+      status: user.verificationStatus,
+      documents: user.documents
+    });
+  } catch (error) {
+    console.error('Error fetching verification status:', error);
+    res.status(500).json({ message: error.message });
   }
 };
 

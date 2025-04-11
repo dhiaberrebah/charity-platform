@@ -42,6 +42,21 @@ const userSchema = mongoose.Schema(
       default: "user",
       required: true,
     },
+    documents: {
+      front: { type: String },
+      back: { type: String }
+    },
+    verificationStatus: {
+      type: String,
+      enum: ['pending', 'verified', 'rejected'],
+      default: 'pending'
+    },
+    verificationDate: Date,
+    verifiedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    rejectionReason: String
   },
   {
     timestamps: true,

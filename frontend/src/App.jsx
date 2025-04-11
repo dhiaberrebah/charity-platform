@@ -5,6 +5,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom"
 import { AuthProvider } from "./context/AuthContext"
 import { ProtectedRoute, AdminRoute, PublicOnlyRoute } from "./components/ProtectedRoute"
 import Layout from "./components/Layout"
+import VerificationManager from "./components/admin/VerificationManager"
 
 // Public pages
 import Index from "./pages/Index"
@@ -80,6 +81,7 @@ const App = () => (
                   <Route path="/admin/users" element={<ManageUsers />} />
                   <Route path="/admin/causes" element={<ManageCauses />} />
                   <Route path="/admin/donations" element={<ViewDonations />} />
+                  <Route path="/admin/verifications" element={<VerificationManager />} />
                   <Route path="/admin/home" element={<AdminHome />} />
                   <Route path="/admin/notifications" element={<AdminNotificationsPage />} />
                 </Route>

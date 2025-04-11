@@ -20,6 +20,12 @@ import {
   Bell,
   LogOut,
   Settings,
+  Shield,
+  ShieldOff,
+  Clock,
+  FileCheck,
+  CheckCircle,
+  Lock,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -28,6 +34,9 @@ import { Checkbox } from "@/components/ui/checkbox"
 import MyCauses from "@/components/MyCauses"
 import NavigationBar from "@/components/UserNavigationBar"
 import { motion, AnimatePresence } from "framer-motion"
+import { useAuth } from "@/context/AuthContext"
+
+const API_BASE_URL = "http://localhost:5001"; // Adjust this to match your backend URL
 
 const Dashboard = () => {
   const [activeSection, setActiveSection] = useState("dashboard")
@@ -35,6 +44,7 @@ const Dashboard = () => {
   const [userInfo, setUserInfo] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [verificationStatus, setVerificationStatus] = useState('pending')
 
   // Create a function to refresh user info
   const refreshUserInfo = useCallback(async () => {
@@ -59,6 +69,24 @@ const Dashboard = () => {
   useEffect(() => {
     refreshUserInfo()
   }, [refreshUserInfo])
+
+  useEffect(() => {
+    const checkVerificationStatus = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/auth/verification-status`, {
+          credentials: 'include',
+        })
+        const data = await response.json()
+        console.log('Initial verification check:', data) // Add this to debug
+        setVerificationStatus(data.status)
+      } catch (error) {
+        console.error('Error checking verification status:', error)
+        setVerificationStatus('pending')
+      }
+    }
+
+    checkVerificationStatus()
+  }, [])
 
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -119,7 +147,11 @@ const Dashboard = () => {
         return <MyCauses />
       case "dashboard":
       default:
-        return <DashboardOverview userInfo={userInfo} setActiveSection={setActiveSection} />
+        return <DashboardOverview 
+          userInfo={userInfo} 
+          setActiveSection={setActiveSection} 
+          verificationStatus={verificationStatus}
+        />
     }
   }
 
@@ -537,8 +569,34 @@ const DocumentUpload = () => {
   const [backPreview, setBackPreview] = useState(null)
   const [uploading, setUploading] = useState(false)
   const [uploadStatus, setUploadStatus] = useState({ success: false, message: "" })
+  const [verificationStatus, setVerificationStatus] = useState("pending")
   const frontInputRef = useRef(null)
   const backInputRef = useRef(null)
+
+  // Fetch user's verification status on component mount
+  useEffect(() => {
+    fetchVerificationStatus()
+  }, [])
+
+  const fetchVerificationStatus = async () => {
+    try {
+      // Changed from "http://localhost:5001/api/auth/verification-status"
+      const response = await fetch(`${API_BASE_URL}/api/auth/verification-status`, {
+        credentials: "include",
+      })
+      const data = await response.json()
+      console.log('API Response:', data) // Add this to debug
+      setVerificationStatus(data.status)
+      
+      // If documents exist, set their previews
+      if (data.documents) {
+        setFrontPreview(data.documents.front)
+        setBackPreview(data.documents.back)
+      }
+    } catch (error) {
+      console.error("Error fetching verification status:", error)
+    }
+  }
 
   const handleFileChange = (e, type) => {
     const file = e.target.files[0]
@@ -574,64 +632,87 @@ const DocumentUpload = () => {
       // For PDFs, just store the file without preview
       if (type === "front") {
         setFrontDocument(file)
-        setFrontPreview("/placeholder.svg?height=100&width=150")
+        setFrontPreview("/placeholder.svg")
       } else {
         setBackDocument(file)
-        setBackPreview("/placeholder.svg?height=100&width=150")
+        setBackPreview("/placeholder.svg")
       }
     }
   }
 
   const handleUpload = async () => {
     if (!frontDocument && !backDocument) {
-      alert("Please upload at least one document")
-      return
+      alert("Please upload at least one document");
+      return;
     }
 
-    setUploading(true)
-    setUploadStatus({ success: false, message: "" })
+    setUploading(true);
+    setUploadStatus({ success: false, message: "" });
 
     try {
-      const formData = new FormData()
-
-      if (frontDocument) {
-        formData.append("frontDocument", frontDocument)
-      }
-
-      if (backDocument) {
-        formData.append("backDocument", backDocument)
-      }
+      const formData = new FormData();
+      if (frontDocument) formData.append("frontDocument", frontDocument);
+      if (backDocument) formData.append("backDocument", backDocument);
 
       const response = await fetch("http://localhost:5001/api/documents/upload", {
         method: "POST",
         credentials: "include",
         body: formData,
-      })
+      });
 
       if (!response.ok) {
-        throw new Error("Failed to upload documents")
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to upload documents");
       }
 
-      const data = await response.json()
-
+      const data = await response.json();
+      setVerificationStatus("pending");
       setUploadStatus({
         success: true,
-        message: "Documents uploaded successfully and pending approval",
-      })
+        message: "Documents uploaded successfully and pending verification",
+      });
 
       // Clear the form
-      setFrontDocument(null)
-      setBackDocument(null)
-      setFrontPreview(null)
-      setBackPreview(null)
+      setFrontDocument(null);
+      setBackDocument(null);
+      setFrontPreview(null);
+      setBackPreview(null);
     } catch (error) {
-      console.error("Upload error:", error)
+      console.error("Upload error:", error);
       setUploadStatus({
         success: false,
         message: error.message || "Error uploading documents",
-      })
+      });
     } finally {
-      setUploading(false)
+      setUploading(false);
+    }
+  }
+
+  const getStatusBadge = () => {
+    switch (verificationStatus) {
+      case "verified":
+        return (
+          <div className="flex items-center space-x-2 bg-green-500/10 text-green-400 px-4 py-2 rounded-lg">
+            <Shield size={20} />
+            <span>Verified Account</span>
+          </div>
+        )
+      case "rejected":
+        return (
+          <div className="flex items-center space-x-2 bg-red-500/10 text-red-400 px-4 py-2 rounded-lg">
+            <ShieldOff size={20} />
+            <span>Verification Rejected</span>
+          </div>
+        )
+      case "pending":
+        return (
+          <div className="flex items-center space-x-2 bg-yellow-500/10 text-yellow-400 px-4 py-2 rounded-lg">
+            <Clock size={20} />
+            <span>Verification Pending</span>
+          </div>
+        )
+      default:
+        return null
     }
   }
 
@@ -643,13 +724,22 @@ const DocumentUpload = () => {
       transition={{ duration: 0.5 }}
     >
       <div className="mb-8">
-        <h3 className="text-xl font-semibold text-white mb-2">Identity Verification</h3>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-xl font-semibold text-white">Identity Verification</h3>
+          {getStatusBadge()}
+        </div>
         <p className="text-blue-300">Please upload your identification documents for verification purposes.</p>
       </div>
 
+      {verificationStatus === "rejected" && (
+        <div className="mb-8 bg-red-500/10 border border-red-500/20 rounded-lg p-4">
+          <p className="text-red-300">Your verification was rejected. Please upload new documents.</p>
+        </div>
+      )}
+
       <div className="bg-blue-900/30 p-6 rounded-xl mb-8 border border-blue-500/20">
         <div className="flex gap-6 flex-col md:flex-row">
-          {/* Front Document */}
+          {/* Front Document Upload */}
           <div className="flex-1">
             <p className="text-sm font-medium mb-3 text-slate-300">Front side of ID</p>
             <motion.div
@@ -663,11 +753,13 @@ const DocumentUpload = () => {
               {frontPreview ? (
                 <>
                   <img
-                    src={frontPreview || "/placeholder.svg"}
+                    src={frontPreview}
                     alt="ID Front Preview"
                     className="mx-auto max-h-40 object-contain mb-3"
                   />
-                  <p className="text-sm text-slate-300">{frontDocument.name}</p>
+                  <p className="text-sm text-slate-300">
+                    {frontDocument ? frontDocument.name : "Uploaded document"}
+                  </p>
                 </>
               ) : (
                 <>
@@ -693,7 +785,7 @@ const DocumentUpload = () => {
             </motion.div>
           </div>
 
-          {/* Back Document */}
+          {/* Back Document Upload */}
           <div className="flex-1">
             <p className="text-sm font-medium mb-3 text-slate-300">Back side of ID</p>
             <motion.div
@@ -707,11 +799,13 @@ const DocumentUpload = () => {
               {backPreview ? (
                 <>
                   <img
-                    src={backPreview || "/placeholder.svg"}
+                    src={backPreview}
                     alt="ID Back Preview"
                     className="mx-auto max-h-40 object-contain mb-3"
                   />
-                  <p className="text-sm text-slate-300">{backDocument.name}</p>
+                  <p className="text-sm text-slate-300">
+                    {backDocument ? backDocument.name : "Uploaded document"}
+                  </p>
                 </>
               ) : (
                 <>
@@ -745,9 +839,15 @@ const DocumentUpload = () => {
           <Button
             className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white py-6 rounded-xl"
             onClick={handleUpload}
-            disabled={uploading || (!frontDocument && !backDocument)}
+            disabled={uploading || (!frontDocument && !backDocument) || verificationStatus === "verified"}
           >
-            {uploading ? "Uploading..." : "Submit Documents for Verification"}
+            {uploading ? (
+              "Uploading..."
+            ) : verificationStatus === "verified" ? (
+              "Already Verified"
+            ) : (
+              "Submit Documents for Verification"
+            )}
           </Button>
         </motion.div>
 
@@ -1253,48 +1353,93 @@ const PasswordChange = () => (
   </motion.div>
 )
 
-const DashboardOverview = ({ userInfo, setActiveSection }) => {
+const DashboardOverview = ({ userInfo, setActiveSection, verificationStatus }) => {
   const navigate = useNavigate()
 
   return (
     <div className="grid gap-8">
-      <motion.div
-        className="bg-blue-800/30 backdrop-blur-sm p-8 rounded-xl shadow-xl border border-blue-500/20"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-white">Notifications</h2>
-          <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">2</span>
-        </div>
-
-        <div className="space-y-4">
-          <div className="flex items-start space-x-3 p-4 bg-red-500/10 rounded-lg border border-red-500/20">
-            <div className="mt-1 text-red-400">•</div>
+      {verificationStatus !== 'verified' && (
+        <motion.div
+          className="bg-blue-800/30 backdrop-blur-sm p-8 rounded-xl shadow-xl border border-blue-500/20"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="flex items-center justify-between mb-6">
             <div>
-              <p className="text-red-300 font-medium">Identity document: Missing</p>
-              <p className="text-blue-300 text-sm mt-1">Please upload your identification document for verification.</p>
+              <h2 className="text-xl font-bold text-white">Account Verification Required</h2>
+              <p className="text-blue-300 mt-2">
+                To ensure platform security and comply with regulations, we need to verify your identity.
+              </p>
+            </div>
+            <div className="flex items-center space-x-2 bg-yellow-500/10 text-yellow-400 px-4 py-2 rounded-lg">
+              <Clock size={20} />
+              <span>Verification Needed</span>
             </div>
           </div>
-
-          <div className="flex items-start space-x-3 p-4 bg-red-500/10 rounded-lg border border-red-500/20">
-            <div className="mt-1 text-red-400">•</div>
-            <div>
-              <p className="text-red-300 font-medium">Identity document (back): Missing</p>
-              <p className="text-blue-300 text-sm mt-1">Please upload the back side of your identification document.</p>
+          
+          <div className="space-y-6">
+            <div className="bg-blue-900/30 p-6 rounded-lg border border-blue-500/20">
+              <h3 className="text-lg font-semibold text-white mb-4">Required Documents</h3>
+              <div className="space-y-4">
+                <div className="flex items-start space-x-3">
+                  <div className="mt-1">
+                    <FileCheck size={20} className="text-blue-400" />
+                  </div>
+                  <div>
+                    <p className="text-white font-medium">Front of ID Document</p>
+                    <p className="text-sm text-blue-300">Upload a clear photo of your government-issued ID (passport, driver's license, or national ID)</p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <div className="mt-1">
+                    <FileCheck size={20} className="text-blue-400" />
+                  </div>
+                  <div>
+                    <p className="text-white font-medium">Back of ID Document</p>
+                    <p className="text-sm text-blue-300">Upload a clear photo of the back side of your ID</p>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
 
-        <div className="mt-6">
-          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-            <Button onClick={() => setActiveSection("documents")} className="bg-blue-600 hover:bg-blue-500 text-white">
-              Upload Documents
-            </Button>
-          </motion.div>
-        </div>
-      </motion.div>
+            <div className="bg-blue-900/30 p-6 rounded-lg border border-blue-500/20">
+              <h3 className="text-lg font-semibold text-white mb-2">Why verify your account?</h3>
+              <ul className="space-y-2 text-blue-300">
+                <li className="flex items-center space-x-2">
+                  <Shield size={16} />
+                  <span>Ensure platform security and trust</span>
+                </li>
+                <li className="flex items-center space-x-2">
+                  <CheckCircle size={16} />
+                  <span>Access all platform features</span>
+                </li>
+                <li className="flex items-center space-x-2">
+                  <Lock size={16} />
+                  <span>Protect against fraud</span>
+                </li>
+              </ul>
+            </div>
+
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <Button
+                variant="primary"
+                className="w-full bg-blue-600 hover:bg-blue-500 text-white py-4 text-lg font-semibold"
+                onClick={() => setActiveSection("documents")}
+              >
+                Start Verification Process
+              </Button>
+            </motion.div>
+            
+            <p className="text-sm text-center text-blue-300">
+              Verification usually takes 1-2 business days after document submission
+            </p>
+          </div>
+        </motion.div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <motion.div
@@ -1303,6 +1448,7 @@ const DashboardOverview = ({ userInfo, setActiveSection }) => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
         >
+          {/* Personal Information section - unchanged */}
           <h2 className="text-xl font-bold mb-6 text-white">Personal Information</h2>
           <div className="space-y-4">
             <div className="flex justify-between border-b border-blue-700/30 pb-3">
@@ -1345,6 +1491,7 @@ const DashboardOverview = ({ userInfo, setActiveSection }) => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
+          {/* Account Security section - unchanged */}
           <h2 className="text-xl font-bold mb-6 text-white">Account Security</h2>
           <div className="space-y-4">
             <div className="flex justify-between border-b border-blue-700/30 pb-3">
@@ -1376,81 +1523,6 @@ const DashboardOverview = ({ userInfo, setActiveSection }) => {
                 className="w-full border-blue-500/30 text-blue-300 hover:bg-blue-800/30 hover:text-white"
               >
                 Manage Security
-              </Button>
-            </motion.div>
-          </div>
-        </motion.div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <motion.div
-          className="bg-blue-800/30 backdrop-blur-sm p-8 rounded-xl shadow-xl border border-blue-500/20"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-        >
-          <h2 className="text-xl font-bold mb-6 text-white">Contact Support</h2>
-          <div className="flex justify-between mb-6">
-            <motion.div
-              className="flex flex-col items-center p-4 bg-blue-900/30 rounded-lg border border-blue-500/20 flex-1 mr-4"
-              whileHover={{ y: -5 }}
-              transition={{ type: "spring", stiffness: 400, damping: 10 }}
-            >
-              <Phone className="w-10 h-10 text-purple-400 mb-3" />
-              <p className="text-white font-medium">Phone Support</p>
-              <p className="text-slate-400 text-sm mt-1">+1 (123) 456-7890</p>
-            </motion.div>
-
-            <motion.div
-              className="flex flex-col items-center p-4 bg-blue-900/30 rounded-lg border border-blue-500/20 flex-1"
-              whileHover={{ y: -5 }}
-              transition={{ type: "spring", stiffness: 400, damping: 10 }}
-            >
-              <Mail className="w-10 h-10 text-purple-400 mb-3" />
-              <p className="text-white font-medium">Email Support</p>
-              <p className="text-slate-400 text-sm mt-1">support@charityhub.org</p>
-            </motion.div>
-          </div>
-
-          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-            <Button onClick={() => navigate("/contact")} className="w-full bg-blue-600 hover:bg-blue-500 text-white">
-              Contact Us
-            </Button>
-          </motion.div>
-        </motion.div>
-
-        <motion.div
-          className="bg-blue-800/30 backdrop-blur-sm p-8 rounded-xl shadow-xl border border-blue-500/20"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-        >
-          <h2 className="text-xl font-bold mb-6 text-white">Help Center</h2>
-          <motion.div
-            className="text-center py-6 px-4 bg-blue-900/30 rounded-lg border border-blue-500/20 mb-6"
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.5, duration: 0.4 }}
-          >
-            <HelpCircle className="w-16 h-16 mx-auto text-purple-400 mb-4" />
-            <p className="text-white font-medium">Need assistance?</p>
-            <p className="text-slate-400 text-sm mt-2">Check our FAQ or browse help articles</p>
-          </motion.div>
-
-          <div className="flex space-x-4">
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex-1">
-              <Button
-                onClick={() => navigate("/faq")}
-                variant="outline"
-                className="w-full border-blue-500/30 text-blue-300 hover:bg-blue-800/30 hover:text-white"
-              >
-                View FAQ
-              </Button>
-            </motion.div>
-
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex-1">
-              <Button onClick={() => navigate("/help")} className="w-full bg-blue-600 hover:bg-blue-500 text-white">
-                Help Center
               </Button>
             </motion.div>
           </div>
