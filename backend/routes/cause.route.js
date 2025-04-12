@@ -19,7 +19,7 @@ router.get("/public/:shareUrl", getShareableCause)
 router.post("/", protectRoute, createCause)
 router.get("/", getCauses)
 router.get("/user", protectRoute, getUserCauses)
-router.get("/:id", protectRoute, getCause)
+router.get("/:id", getCause)
 router.put("/:id", protectRoute, updateCause)
 router.delete("/:id", protectRoute, adminRoute, deleteCause)
 
