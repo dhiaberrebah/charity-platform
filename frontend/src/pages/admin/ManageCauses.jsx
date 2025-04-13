@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { ArrowLeft, Edit, Trash2, PlusCircle, X, Upload, ImageIcon, LinkIcon } from "lucide-react"
+import { ArrowLeft, Edit, Trash2, PlusCircle, X, Upload, ImageIcon, LinkIcon, Search, Filter, FileDown, RefreshCw } from "lucide-react"
 import { toast } from "sonner"
 import { motion, AnimatePresence } from "framer-motion"
 import { Link } from "react-router-dom"
@@ -421,6 +421,103 @@ const ManageCauses = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [selectedCause, setSelectedCause] = useState(null)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
+  const [exportAttempts, setExportAttempts] = useState(0)
+
+  const handleExportWithRetry = async (exportFunction, maxAttempts = 3) => {
+    setIsExporting(true)
+    setExportAttempts(prev => prev + 1)
+
+    try {
+      await exportFunction()
+      setExportAttempts(0) // Reset attempts on success
+    } catch (error) {
+      console.error('Export error:', error)
+      
+      if (exportAttempts < maxAttempts) {
+        toast.error(`Export failed. Retrying... (Attempt ${exportAttempts + 1}/${maxAttempts})`)
+        setTimeout(() => handleExportWithRetry(exportFunction, maxAttempts), 1500)
+      } else {
+        toast.error('Export failed after multiple attempts. Please try again later.')
+        setExportAttempts(0)
+      }
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
+  const exportToCSV = () => {
+    return new Promise((resolve, reject) => {
+      try {
+        const headers = ['Title', 'Description', 'Target Amount', 'Current Amount', 'Category', 'Status', 'Created At']
+        const csvContent = [
+          headers.join(','),
+          ...causes.map(cause => [
+            cause.title,
+            cause.description,
+            cause.targetAmount,
+            cause.currentAmount,
+            cause.category,
+            cause.status,
+            new Date(cause.createdAt).toLocaleDateString()
+          ].map(field => `"${field}"`).join(','))
+        ].join('\n')
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+        const link = document.createElement('a')
+        link.href = URL.createObjectURL(blob)
+        link.download = `causes_export_${new Date().toISOString().slice(0, 10)}.csv`
+        link.click()
+        toast.success('Causes exported to CSV successfully')
+        resolve()
+      } catch (error) {
+        reject(error)
+      }
+    })
+  }
+
+  const exportToPDF = async () => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const { jsPDF } = await import('jspdf')
+        const { autoTable } = await import('jspdf-autotable')
+        
+        const doc = new jsPDF()
+        
+        doc.setTextColor(91, 168, 144)
+        doc.setFontSize(16)
+        doc.text('Causes Report', 14, 15)
+        doc.setFontSize(10)
+        doc.text(`Generated on ${new Date().toLocaleDateString()}`, 14, 22)
+
+        const data = causes.map(cause => [
+          cause.title,
+          cause.description.substring(0, 50) + '...',
+          `$${cause.targetAmount.toLocaleString()}`,
+          `$${cause.currentAmount.toLocaleString()}`,
+          cause.category,
+          cause.status,
+          new Date(cause.createdAt).toLocaleDateString()
+        ])
+
+        autoTable(doc, {
+          head: [['Title', 'Description', 'Target Amount', 'Current Amount', 'Category', 'Status', 'Created At']],
+          body: data,
+          startY: 30,
+          styles: { fontSize: 8, textColor: [31, 41, 55] },
+          headStyles: { fillColor: [91, 168, 144], textColor: [255, 255, 255] },
+          alternateRowStyles: { fillColor: [243, 244, 246] },
+          margin: { top: 30 }
+        })
+
+        doc.save(`causes_report_${new Date().toISOString().slice(0, 10)}.pdf`)
+        toast.success('Causes exported to PDF successfully')
+        resolve()
+      } catch (error) {
+        reject(error)
+      }
+    })
+  }
 
   useEffect(() => {
     const fetchCauses = async () => {
@@ -686,19 +783,38 @@ const ManageCauses = () => {
         >
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-semibold text-white">Cause List</h2>
-            <motion.button
-              type="button"
-              onClick={() => {
-                console.log("Button clicked")
-                handleOpenAddModal()
-              }}
-              className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-300 flex items-center"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <PlusCircle size={20} className="mr-2" />
-              Add New Cause
-            </motion.button>
+            <div className="flex gap-2">
+              {/* Export buttons */}
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => handleExportWithRetry(exportToCSV)}
+                disabled={isExporting}
+                className="px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 rounded-lg flex items-center gap-2 border border-blue-500/30 transition-colors duration-200"
+              >
+                {isExporting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
+                Export CSV
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => handleExportWithRetry(exportToPDF)}
+                disabled={isExporting}
+                className="px-4 py-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 rounded-lg flex items-center gap-2 border border-purple-500/30 transition-colors duration-200"
+              >
+                {isExporting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
+                Export PDF
+              </motion.button>
+              {/* Add New Cause button */}
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleOpenAddModal}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg flex items-center gap-2"
+              >
+                Add New Cause
+              </motion.button>
+            </div>
           </div>
           <div className="overflow-x-auto rounded-lg">
             <table className="w-full text-left">

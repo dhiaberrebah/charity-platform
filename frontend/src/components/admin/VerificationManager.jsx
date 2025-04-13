@@ -1,13 +1,109 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Clock, ShieldOff, Check, X, CheckCircle, XCircle, ArrowLeft } from 'lucide-react';
+import { Shield, Clock, ShieldOff, Check, X, CheckCircle, XCircle, ArrowLeft, FileDown, RefreshCw } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { toast } from "sonner";
 
 const VerificationManager = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState(null);
   const [rejectionReason, setRejectionReason] = useState('');
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportAttempts, setExportAttempts] = useState(0);
+
+  const handleExportWithRetry = async (exportFunction, maxAttempts = 3) => {
+    setIsExporting(true);
+    setExportAttempts(prev => prev + 1);
+
+    try {
+      await exportFunction();
+      setExportAttempts(0); // Reset attempts on success
+    } catch (error) {
+      console.error('Export error:', error);
+      
+      if (exportAttempts < maxAttempts) {
+        toast.error(`Export failed. Retrying... (Attempt ${exportAttempts + 1}/${maxAttempts})`);
+        setTimeout(() => handleExportWithRetry(exportFunction, maxAttempts), 1500);
+      } else {
+        toast.error('Export failed after multiple attempts. Please try again later.');
+        setExportAttempts(0);
+      }
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const exportToCSV = () => {
+    return new Promise((resolve, reject) => {
+      try {
+        const headers = ['Name', 'Email', 'Phone', 'Verification Status', 'Submission Date', 'Document Type'];
+        const csvContent = [
+          headers.join(','),
+          ...users.map(user => [
+            `${user.prenom} ${user.nom}`,
+            user.email,
+            user.telephone,
+            user.verificationStatus,
+            new Date(user.verificationDate).toLocaleDateString(),
+            user.documents?.type || 'N/A'
+          ].map(field => `"${field}"`).join(','))
+        ].join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `verifications_export_${new Date().toISOString().slice(0, 10)}.csv`;
+        link.click();
+        toast.success('Verifications exported to CSV successfully');
+        resolve();
+      } catch (error) {
+        reject(error);
+      }
+    });
+  };
+
+  const exportToPDF = async () => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const { jsPDF } = await import('jspdf');
+        const { autoTable } = await import('jspdf-autotable');
+        
+        const doc = new jsPDF();
+        
+        doc.setTextColor(91, 168, 144);
+        doc.setFontSize(16);
+        doc.text('Verification Requests Report', 14, 15);
+        doc.setFontSize(10);
+        doc.text(`Generated on ${new Date().toLocaleDateString()}`, 14, 22);
+
+        const data = users.map(user => [
+          `${user.prenom} ${user.nom}`,
+          user.email,
+          user.telephone,
+          user.verificationStatus,
+          new Date(user.verificationDate).toLocaleDateString(),
+          user.documents?.type || 'N/A'
+        ]);
+
+        autoTable(doc, {
+          head: [['Name', 'Email', 'Phone', 'Status', 'Submission Date', 'Document Type']],
+          body: data,
+          startY: 30,
+          styles: { fontSize: 8, textColor: [31, 41, 55] },
+          headStyles: { fillColor: [91, 168, 144], textColor: [255, 255, 255] },
+          alternateRowStyles: { fillColor: [243, 244, 246] },
+          margin: { top: 30 }
+        });
+
+        doc.save(`verifications_report_${new Date().toISOString().slice(0, 10)}.pdf`);
+        toast.success('Verifications exported to PDF successfully');
+        resolve();
+      } catch (error) {
+        reject(error);
+      }
+    });
+  };
 
   useEffect(() => {
     fetchAllVerifications();

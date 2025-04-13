@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { ArrowLeft, Download, Search, Filter, ChevronDown, ChevronUp, Eye, X } from 'lucide-react'
+import { ArrowLeft, Download, Search, Filter, ChevronDown, ChevronUp, Eye, X, RefreshCw, FileDown } from 'lucide-react'
 import { Link } from "react-router-dom"
 import { toast } from "sonner"
 
@@ -15,6 +15,8 @@ const ViewDonations = () => {
   const [sortDirection, setSortDirection] = useState("desc")
   const [filterStatus, setFilterStatus] = useState("all")
   const [selectedDonation, setSelectedDonation] = useState(null)
+  const [isExporting, setIsExporting] = useState(false)
+  const [exportAttempts, setExportAttempts] = useState(0)
 
   useEffect(() => {
     fetchDonations()
@@ -69,16 +71,76 @@ const ViewDonations = () => {
     setSelectedDonation(null)
   }
 
-  const exportToCSV = () => {
+  const handleExportWithRetry = async (exportFunction, maxAttempts = 3) => {
+    setIsExporting(true)
+    setExportAttempts(prev => prev + 1)
+
     try {
-      // Filter and sort the data first
-      const dataToExport = getFilteredAndSortedDonations()
+      await exportFunction()
+      setExportAttempts(0) // Reset attempts on success
+    } catch (error) {
+      console.error('Export error:', error)
       
-      // Convert to CSV
-      const headers = ["Donation ID", "Cause", "Amount", "Donor", "Email", "Date", "Status"]
-      const csvContent = [
-        headers.join(","),
-        ...dataToExport.map(donation => [
+      if (exportAttempts < maxAttempts) {
+        toast.error(`Export failed. Retrying... (Attempt ${exportAttempts + 1}/${maxAttempts})`)
+        setTimeout(() => handleExportWithRetry(exportFunction, maxAttempts), 1500)
+      } else {
+        toast.error('Export failed after multiple attempts. Please try again later.')
+        setExportAttempts(0)
+      }
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
+  const exportToCSV = () => {
+    return new Promise((resolve, reject) => {
+      try {
+        const dataToExport = getFilteredAndSortedDonations()
+        const headers = ["Donation ID", "Cause", "Amount", "Donor", "Email", "Date", "Status"]
+        const csvContent = [
+          headers.join(","),
+          ...dataToExport.map(donation => [
+            donation._id,
+            donation.cause?.title || donation.cause || "Unknown",
+            `$${donation.amount.toFixed(2)}`,
+            donation.isAnonymous ? "Anonymous" : `${donation.donor?.firstName || ""} ${donation.donor?.lastName || ""}`,
+            donation.donor?.email || "",
+            new Date(donation.createdAt).toLocaleDateString(),
+            donation.status
+          ].map(field => `"${field}"`).join(","))
+        ].join("\n")
+        
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+        const link = document.createElement("a")
+        link.href = URL.createObjectURL(blob)
+        link.download = `donations_export_${new Date().toISOString().slice(0, 10)}.csv`
+        link.click()
+        
+        toast.success("Donations exported to CSV successfully")
+        resolve()
+      } catch (error) {
+        reject(error)
+      }
+    })
+  }
+
+  const exportToPDF = async () => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const { jsPDF } = await import('jspdf')
+        const { autoTable } = await import('jspdf-autotable')
+        
+        const doc = new jsPDF()
+        const dataToExport = getFilteredAndSortedDonations()
+        
+        doc.setTextColor(91, 168, 144)
+        doc.setFontSize(16)
+        doc.text('Donations Report', 14, 15)
+        doc.setFontSize(10)
+        doc.text(`Generated on ${new Date().toLocaleDateString()}`, 14, 22)
+
+        const data = dataToExport.map(donation => [
           donation._id,
           donation.cause?.title || donation.cause || "Unknown",
           `$${donation.amount.toFixed(2)}`,
@@ -86,25 +148,25 @@ const ViewDonations = () => {
           donation.donor?.email || "",
           new Date(donation.createdAt).toLocaleDateString(),
           donation.status
-        ].join(","))
-      ].join("\n")
-      
-      // Create download link
-      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement("a")
-      link.setAttribute("href", url)
-      link.setAttribute("download", `donations_export_${new Date().toISOString().slice(0, 10)}.csv`)
-      link.style.visibility = "hidden"
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      
-      toast.success("Donations exported successfully")
-    } catch (error) {
-      console.error("Error exporting donations:", error)
-      toast.error("Failed to export donations")
-    }
+        ])
+
+        autoTable(doc, {
+          head: [['ID', 'Cause', 'Amount', 'Donor', 'Email', 'Date', 'Status']],
+          body: data,
+          startY: 30,
+          styles: { fontSize: 8, textColor: [31, 41, 55] },
+          headStyles: { fillColor: [91, 168, 144], textColor: [255, 255, 255] },
+          alternateRowStyles: { fillColor: [243, 244, 246] },
+          margin: { top: 30 }
+        })
+
+        doc.save(`donations_report_${new Date().toISOString().slice(0, 10)}.pdf`)
+        toast.success('Donations exported to PDF successfully')
+        resolve()
+      } catch (error) {
+        reject(error)
+      }
+    })
   }
 
   const getFilteredAndSortedDonations = () => {
@@ -299,15 +361,28 @@ const ViewDonations = () => {
                 <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-300" size={18} />
               </div>
               
-              <motion.button
-                onClick={exportToCSV}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Download size={18} />
-                Export CSV
-              </motion.button>
+              <div className="flex gap-2">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => handleExportWithRetry(exportToCSV)}
+                  disabled={isExporting}
+                  className="px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 rounded-lg flex items-center gap-2 border border-blue-500/30 transition-colors duration-200"
+                >
+                  {isExporting ? <RefreshCw className="animate-spin" /> : <FileDown size={20} />}
+                  CSV
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => handleExportWithRetry(exportToPDF)}
+                  disabled={isExporting}
+                  className="px-4 py-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 rounded-lg flex items-center gap-2 border border-purple-500/30 transition-colors duration-200"
+                >
+                  {isExporting ? <RefreshCw className="animate-spin" /> : <FileDown size={20} />}
+                  PDF
+                </motion.button>
+              </div>
             </div>
           </div>
 
