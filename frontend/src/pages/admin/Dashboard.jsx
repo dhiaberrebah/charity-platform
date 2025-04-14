@@ -9,7 +9,16 @@ import {
 } from "lucide-react"
 import AdminNavbar from "../../components/AdminNavbar"
 import { motion, AnimatePresence } from "framer-motion"
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer, 
+  Legend 
+} from 'recharts';
 import {
   Select,
   SelectContent,
@@ -37,6 +46,9 @@ const Dashboard = () => {
   const [topDonorsPeriod, setTopDonorsPeriod] = useState('week')
   const [topDonorsLoading, setTopDonorsLoading] = useState(false)
   const [topDonorsError, setTopDonorsError] = useState(null)
+  const [categoryStats, setCategoryStats] = useState([])
+  const [categoryStatsLoading, setCategoryStatsLoading] = useState(true)
+  const [categoryStatsError, setCategoryStatsError] = useState(null)
   const navigate = useNavigate()
 
   // Format currency
@@ -48,16 +60,6 @@ const Dashboard = () => {
       maximumFractionDigits: 0,
     }).format(amount)
   }
-
-  // Mock data for the chart
-  const chartData = [
-    { name: 'Jan', donations: 4000 },
-    { name: 'Feb', donations: 3000 },
-    { name: 'Mar', donations: 5000 },
-    { name: 'Apr', donations: 4500 },
-    { name: 'May', donations: 6000 },
-    { name: 'Jun', donations: 5500 },
-  ]
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -106,10 +108,87 @@ const Dashboard = () => {
     return () => clearInterval(interval)
   }, [])
 
-  // Add a debug log to verify the stats
   useEffect(() => {
-    console.log("Current stats:", stats)
-  }, [stats])
+    const fetchCategoryStats = async () => {
+      try {
+        setCategoryStatsLoading(true);
+        const response = await fetch(`${API_BASE_URL}/api/dashboard/category-stats`, {
+          credentials: 'include'
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch category stats');
+        }
+        
+        const data = await response.json();
+        
+        if (Array.isArray(data)) {
+          // Define all possible categories
+          const allCategories = [
+            'medical',
+            'education',
+            'emergency',
+            'community',
+            'environment'
+          ];
+
+          // Create a map of existing data
+          const dataMap = data.reduce((acc, item) => {
+            acc[item.category] = item;
+            return acc;
+          }, {});
+
+          // Ensure all categories exist with default values
+          const completeData = allCategories.map(category => ({
+            category,
+            totalAmount: 0,
+            count: 0,
+            activeCausesCount: 0,
+            percentage: 0,
+            formattedAmount: '$0',
+            ...dataMap[category]
+          }));
+
+          // Calculate percentages if there are any donations
+          const totalDonations = completeData.reduce((sum, item) => sum + item.totalAmount, 0);
+          const transformedData = completeData.map(item => ({
+            ...item,
+            percentage: totalDonations > 0 
+              ? ((item.totalAmount / totalDonations) * 100).toFixed(1)
+              : 0,
+            formattedAmount: new Intl.NumberFormat('en-US', {
+              style: 'currency',
+              currency: 'USD',
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 0,
+            }).format(item.totalAmount)
+          }));
+          
+          console.log('Transformed category stats:', transformedData);
+          setCategoryStats(transformedData);
+          setCategoryStatsError(null);
+        } else {
+          throw new Error('Invalid data format received');
+        }
+      } catch (error) {
+        console.error('Error fetching category stats:', error);
+        setCategoryStatsError(error.message);
+      } finally {
+        setCategoryStatsLoading(false);
+      }
+    };
+
+    fetchCategoryStats();
+    const interval = setInterval(fetchCategoryStats, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Add this debug log
+  useEffect(() => {
+    console.log('Current categoryStats:', categoryStats);
+    console.log('Loading state:', categoryStatsLoading);
+    console.log('Error state:', categoryStatsError);
+  }, [categoryStats, categoryStatsLoading, categoryStatsError]);
 
   // Animated floating hearts for background
   const renderFloatingHearts = () => {
@@ -206,15 +285,7 @@ const Dashboard = () => {
           transition={{ duration: 15, repeat: Number.POSITIVE_INFINITY, repeatType: "mirror", delay: 2 }}
         />
 
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage: `url('/assets/world-map-dots.png')`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            opacity: 0.1,
-          }}
-        ></div>
+        {/* Remove or update the world map background div */}
       </div>
 
       <AdminNavbar />
@@ -286,37 +357,116 @@ const Dashboard = () => {
 
         {/* Charts and Analytics Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          {/* Donation Trends Chart */}
+          {/* Category Statistics Chart */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="col-span-2 bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-blue-500/20"
           >
-            <h2 className="text-xl font-semibold text-white mb-4">Donation Trends</h2>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                  <XAxis dataKey="name" stroke="#9CA3AF" />
-                  <YAxis stroke="#9CA3AF" />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#1F2937',
-                      border: 'none',
-                      borderRadius: '8px',
-                      color: '#F3F4F6'
-                    }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="donations"
-                    stroke="#60A5FA"
-                    strokeWidth={2}
-                    dot={{ fill: '#60A5FA' }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-white">Donations by Category</h2>
+              {categoryStatsLoading && (
+                <div className="text-blue-300 text-sm">Updating...</div>
+              )}
             </div>
+            
+            {categoryStatsError ? (
+              <div className="h-[400px] flex items-center justify-center">
+                <div className="text-center">
+                  <p className="text-red-400 mb-2">{categoryStatsError}</p>
+                  <button 
+                    onClick={() => fetchCategoryStats()}
+                    className="px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 rounded-lg text-blue-300 transition-colors"
+                  >
+                    Retry
+                  </button>
+                </div>
+              </div>
+            ) : categoryStatsLoading && categoryStats.length === 0 ? (
+              <div className="h-[400px] flex items-center justify-center">
+                <div className="w-16 h-16 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
+              </div>
+            ) : (
+              <div className="w-full h-[400px]">
+                {categoryStats.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart 
+                      data={categoryStats}
+                      margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                      <XAxis 
+                        dataKey="category" 
+                        stroke="#9CA3AF"
+                        tick={{ fill: '#9CA3AF', fontSize: 12 }}
+                        angle={-45}
+                        textAnchor="end"
+                        height={60}
+                        interval={0}
+                      />
+                      <YAxis 
+                        yAxisId="left"
+                        stroke="#9CA3AF"
+                        tick={{ fill: '#9CA3AF' }}
+                        tickFormatter={(value) => `$${value.toLocaleString()}`}
+                        allowZero={true}
+                        domain={[0, 'auto']}
+                      />
+                      <YAxis 
+                        yAxisId="right"
+                        orientation="right"
+                        stroke="#9CA3AF"
+                        tick={{ fill: '#9CA3AF' }}
+                        tickFormatter={(value) => `${value}`}
+                        allowZero={true}
+                        domain={[0, 'auto']}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: '#1F2937',
+                          border: '1px solid #374151',
+                          borderRadius: '8px',
+                          color: '#F3F4F6'
+                        }}
+                        formatter={(value, name) => {
+                          if (name === "Total Donations") {
+                            return [`$${value.toLocaleString()}`, name];
+                          } else if (name === "Active Causes") {
+                            return [value, name];
+                          }
+                          return [value, name];
+                        }}
+                      />
+                      <Legend 
+                        wrapperStyle={{ color: '#9CA3AF' }}
+                        verticalAlign="top"
+                        height={36}
+                      />
+                      <Bar 
+                        name="Total Donations" 
+                        dataKey="totalAmount" 
+                        fill="#60A5FA"
+                        radius={[4, 4, 0, 0]}
+                        yAxisId="left"
+                        minPointSize={5}
+                      />
+                      <Bar 
+                        name="Active Causes" 
+                        dataKey="activeCausesCount" 
+                        fill="#34D399"
+                        radius={[4, 4, 0, 0]}
+                        yAxisId="right"
+                        minPointSize={5}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-full flex items-center justify-center">
+                    <p className="text-blue-300">No categories available</p>
+                  </div>
+                )}
+              </div>
+            )}
           </motion.div>
 
           {/* Top Donors */}

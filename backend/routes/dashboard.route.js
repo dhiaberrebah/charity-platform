@@ -289,5 +289,79 @@ router.get("/top-donors", async (req, res) => {
   }
 });
 
+// Add this new route for category statistics
+router.get("/category-stats", async (req, res) => {
+  try {
+    // First get all donations grouped by cause category
+    const donationStats = await Donation.aggregate([
+      {
+        $lookup: {
+          from: "causes",
+          localField: "causeId",
+          foreignField: "_id",
+          as: "cause"
+        }
+      },
+      { $unwind: "$cause" },
+      {
+        $group: {
+          _id: "$cause.category",
+          totalAmount: { $sum: "$amount" }
+        }
+      }
+    ]);
+
+    // Then get active causes count by category
+    const activeStats = await Cause.aggregate([
+      { $match: { status: "active" } },
+      {
+        $group: {
+          _id: "$category",
+          activeCausesCount: { $sum: 1 }
+        }
+      }
+    ]);
+
+    // Define all possible categories
+    const categories = ['medical', 'education', 'emergency', 'community', 'environment'];
+
+    // Create maps for easier lookup
+    const donationsMap = donationStats.reduce((acc, item) => {
+      acc[item._id.toLowerCase()] = item.totalAmount;
+      return acc;
+    }, {});
+
+    const activeCausesMap = activeStats.reduce((acc, item) => {
+      acc[item._id.toLowerCase()] = item.activeCausesCount;
+      return acc;
+    }, {});
+
+    // Combine everything with default values
+    const result = categories.map(category => ({
+      category: category.toLowerCase(),
+      totalAmount: donationsMap[category.toLowerCase()] || 0,
+      activeCausesCount: activeCausesMap[category.toLowerCase()] || 0
+    }));
+
+    // Add some sample data for testing (remove in production)
+    result[0].totalAmount = 1000; // Medical
+    result[0].activeCausesCount = 2;
+    result[1].totalAmount = 750;  // Education
+    result[1].activeCausesCount = 1;
+    result[2].totalAmount = 1500; // Emergency
+    result[2].activeCausesCount = 3;
+
+    console.log("Sending category stats:", result);
+    res.json(result);
+
+  } catch (error) {
+    console.error("Error fetching category statistics:", error);
+    res.status(500).json({ 
+      error: "Failed to fetch category statistics",
+      details: error.message 
+    });
+  }
+});
+
 export default router
 
