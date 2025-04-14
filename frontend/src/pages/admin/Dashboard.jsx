@@ -10,6 +10,15 @@ import {
 import AdminNavbar from "../../components/AdminNavbar"
 import { motion, AnimatePresence } from "framer-motion"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+
+const API_BASE_URL = "http://localhost:5001";
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
@@ -20,10 +29,14 @@ const Dashboard = () => {
     monthlyGrowth: 0,
     recentDonations: [],
     pendingVerifications: 0,
-    totalVerifications: 0
+    totalVerifications: 0,
+    topDonors: []
   })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [topDonorsPeriod, setTopDonorsPeriod] = useState('week')
+  const [topDonorsLoading, setTopDonorsLoading] = useState(false)
+  const [topDonorsError, setTopDonorsError] = useState(null)
   const navigate = useNavigate()
 
   // Format currency
@@ -50,40 +63,47 @@ const Dashboard = () => {
     const fetchStats = async () => {
       try {
         setLoading(true)
+        const baseUrl = `${API_BASE_URL}/api/dashboard`
 
-        const baseUrl = "http://localhost:5001/api/dashboard"
+        const [statsResponse, monthlyGrowthResponse, topDonorsResponse] = await Promise.all([
+          fetch(`${baseUrl}/stats`, {
+            credentials: "include",
+          }),
+          fetch(`${baseUrl}/monthly-growth`, {
+            credentials: "include",
+          }),
+          fetch(`${baseUrl}/top-donors`, {
+            credentials: "include",
+          })
+        ])
 
-        const response = await fetch(`${baseUrl}/stats`, {
-          credentials: "include",
-        })
-
-        if (!response.ok) {
-          throw new Error(`API error: ${response.status}`)
-        }
-
-        const data = await response.json()
-        console.log("Dashboard data received:", data)
+        // Check responses and update state accordingly
+        const [statsData, monthlyGrowthData, topDonorsData] = await Promise.all([
+          statsResponse.json(),
+          monthlyGrowthResponse.json(),
+          topDonorsResponse.json()
+        ])
 
         setStats({
-          totalUsers: data.totalUsers,
-          totalDonationsAmount: data.totalDonationsAmount,
-          totalDonationsCount: data.totalDonationsCount,
-          activeCauses: data.activeCauses,
-          pendingVerifications: data.pendingVerifications,
-          totalVerifications: data.totalVerifications,
-          monthlyGrowth: data.monthlyGrowth || 0,
+          ...statsData,
+          monthlyGrowth: monthlyGrowthData.percentage,
+          topDonors: topDonorsData
         })
-
-        setError(null)
       } catch (error) {
         console.error("Error fetching dashboard stats:", error)
-        setError("Failed to load dashboard data. Please try again later.")
+        setError("Failed to load dashboard data")
       } finally {
         setLoading(false)
       }
     }
 
     fetchStats()
+
+    // Set up polling interval to refresh data every 30 seconds
+    const interval = setInterval(fetchStats, 30000)
+
+    // Cleanup interval on component unmount
+    return () => clearInterval(interval)
   }, [])
 
   // Add a debug log to verify the stats
@@ -133,6 +153,39 @@ const Dashboard = () => {
     ))
   }
 
+  const fetchTopDonors = async (period) => {
+    try {
+      setTopDonorsLoading(true);
+      console.log(`Fetching top donors for period: ${period}`);
+      const response = await fetch(`${API_BASE_URL}/api/dashboard/top-donors?period=${period}&limit=5`, {
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch top donors');
+      }
+      
+      const data = await response.json();
+      console.log('Top donors data:', data);
+      
+      // Add error checking for empty or invalid data
+      if (!Array.isArray(data) || data.length === 0) {
+        console.warn(`No donors found for period: ${period}`);
+      }
+      
+      setStats(prev => ({ ...prev, topDonors: data }));
+    } catch (error) {
+      console.error('Error fetching top donors:', error);
+      setTopDonorsError(error.message);
+    } finally {
+      setTopDonorsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    fetchTopDonors(topDonorsPeriod)
+  }, [topDonorsPeriod])
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 relative overflow-hidden">
       {/* Background elements */}
@@ -156,7 +209,7 @@ const Dashboard = () => {
         <div
           className="absolute inset-0"
           style={{
-            backgroundImage: `url('/src/assets/img/world-map-dots.png')`,
+            backgroundImage: `url('/assets/world-map-dots.png')`,
             backgroundSize: "cover",
             backgroundPosition: "center",
             opacity: 0.1,
@@ -266,29 +319,90 @@ const Dashboard = () => {
             </div>
           </motion.div>
 
-          {/* Recent Activity */}
+          {/* Top Donors */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-blue-500/20"
           >
-            <h2 className="text-xl font-semibold text-white mb-4">Recent Activity</h2>
-            <div className="space-y-4">
-              {[1, 2, 3].map((_, index) => (
-                <div
-                  key={index}
-                  className="flex items-center gap-4 p-3 rounded-lg bg-blue-800/30 hover:bg-blue-700/30 transition-colors cursor-pointer"
-                >
-                  <div className="p-2 rounded-full bg-blue-500/20">
-                    <Calendar className="w-4 h-4 text-blue-300" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-white">New donation received</p>
-                    <p className="text-xs text-blue-300">2 minutes ago</p>
-                  </div>
-                </div>
-              ))}
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-semibold text-white">Top Donors</h2>
+              <select 
+                value={topDonorsPeriod}
+                onChange={(e) => setTopDonorsPeriod(e.target.value)}
+                className="bg-blue-800/30 border-none text-white w-24 rounded-md p-2 outline-none"
+              >
+                <option value="week">Week</option>
+                <option value="month">Month</option>
+                <option value="year">Year</option>
+              </select>
             </div>
+            
+            {topDonorsLoading ? (
+              <div className="space-y-4">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="animate-pulse flex items-center justify-between p-4 rounded-lg bg-blue-800/30">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-blue-500/20"></div>
+                      <div>
+                        <div className="h-4 w-24 bg-blue-500/20 rounded"></div>
+                        <div className="h-3 w-16 bg-blue-500/20 rounded mt-2"></div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="h-4 w-20 bg-blue-500/20 rounded"></div>
+                      <div className="h-3 w-16 bg-blue-500/20 rounded mt-2"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : topDonorsError ? (
+              <div className="text-center py-8">
+                <p className="text-red-400">Failed to load top donors</p>
+                <button 
+                  onClick={() => fetchTopDonors(topDonorsPeriod)}
+                  className="mt-2 text-blue-400 hover:text-blue-300"
+                >
+                  Try again
+                </button>
+              </div>
+            ) : !stats.topDonors?.length ? (
+              <div className="text-center py-8">
+                <p className="text-blue-200">No donors found for this period</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {stats.topDonors?.map((donor, index) => (
+                  <div
+                    key={donor.id || index}
+                    className="flex items-center justify-between p-4 rounded-lg bg-blue-800/30 hover:bg-blue-700/30 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
+                        index === 0 ? 'bg-yellow-500/20 text-yellow-300' :
+                        index === 1 ? 'bg-gray-400/20 text-gray-300' :
+                        index === 2 ? 'bg-amber-600/20 text-amber-300' :
+                        'bg-blue-500/20 text-blue-300'
+                      } font-semibold`}>
+                        {index + 1}
+                      </div>
+                      <div>
+                        <p className="text-white font-medium">
+                          {donor.name || 'Anonymous Donor'}
+                        </p>
+                        <p className="text-sm text-blue-300">
+                          {donor.donationsCount} donation{donor.donationsCount !== 1 ? 's' : ''}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-white font-semibold">{formatCurrency(donor.totalAmount)}</p>
+                      <p className="text-sm text-blue-300">total donated</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </motion.div>
         </div>
 
