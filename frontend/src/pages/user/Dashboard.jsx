@@ -26,6 +26,7 @@ import {
   FileCheck,
   CheckCircle,
   Lock,
+  Loader2,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -1277,64 +1278,178 @@ const Participations = ({ navigate }) => {
   )
 }
 
-const PasswordChange = () => (
-  <motion.div
-    className="bg-blue-800/30 backdrop-blur-sm p-8 rounded-xl shadow-xl border border-blue-500/20"
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.5 }}
-  >
-    <div className="mb-8">
-      <h3 className="text-xl font-semibold text-white mb-2">Change Password</h3>
-      <p className="text-blue-300">Update your password to keep your account secure.</p>
-    </div>
+const PasswordChange = () => {
+  const [formData, setFormData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  })
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const [success, setSuccess] = useState(false)
 
-    <div className="space-y-6">
-      <div className="grid gap-2">
-        <Label htmlFor="currentPassword" className="text-slate-300 text-sm font-medium">
-          Current Password
-        </Label>
-        <Input
-          id="currentPassword"
-          type="password"
-          autoComplete="current-password"
-          className="bg-blue-900/30 border-blue-500/30 text-white focus:border-blue-400 focus:ring-blue-400"
-        />
+  const handleChange = (e) => {
+    const { name, value } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }))
+    // Clear messages when user starts typing
+    setError(null)
+    setSuccess(false)
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setIsLoading(true)
+    setError(null)
+    setSuccess(false)
+
+    // Validate passwords
+    if (formData.newPassword !== formData.confirmPassword) {
+      setError("New passwords don't match")
+      setIsLoading(false)
+      return
+    }
+
+    if (formData.newPassword.length < 6) {
+      setError("New password must be at least 6 characters long")
+      setIsLoading(false)
+      return
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/change-password`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          currentPassword: formData.currentPassword,
+          newPassword: formData.newPassword,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to change password")
+      }
+
+      // Clear form and show success message
+      setFormData({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      })
+      setSuccess(true)
+    } catch (err) {
+      setError(err.message || "An error occurred while changing the password")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  return (
+    <motion.div
+      className="bg-blue-800/30 backdrop-blur-sm p-8 rounded-xl shadow-xl border border-blue-500/20"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <div className="mb-8">
+        <h3 className="text-xl font-semibold text-white mb-2">Change Password</h3>
+        <p className="text-blue-300">Update your password to keep your account secure.</p>
       </div>
 
-      <div className="grid gap-2">
-        <Label htmlFor="newPassword" className="text-slate-300 text-sm font-medium">
-          New Password
-        </Label>
-        <Input
-          id="newPassword"
-          type="password"
-          autoComplete="new-password"
-          className="bg-blue-900/30 border-blue-500/30 text-white focus:border-blue-400 focus:ring-blue-400"
-        />
-        <p className="text-xs text-slate-400 mt-1">
-          Password must be at least 8 characters and include a number and special character.
-        </p>
-      </div>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div>
+          <Label htmlFor="currentPassword" className="text-slate-300">
+            Current Password
+          </Label>
+          <Input
+            id="currentPassword"
+            name="currentPassword"
+            type="password"
+            value={formData.currentPassword}
+            onChange={handleChange}
+            className="mt-1 bg-blue-900/30 border-blue-500/30 text-white"
+            required
+          />
+        </div>
 
-      <div className="grid gap-2">
-        <Label htmlFor="confirmPassword" className="text-slate-300 text-sm font-medium">
-          Confirm New Password
-        </Label>
-        <Input
-          id="confirmPassword"
-          type="password"
-          autoComplete="new-password"
-          className="bg-blue-900/30 border-blue-500/30 text-white focus:border-blue-400 focus:ring-blue-400"
-        />
-      </div>
+        <div>
+          <Label htmlFor="newPassword" className="text-slate-300">
+            New Password
+          </Label>
+          <Input
+            id="newPassword"
+            name="newPassword"
+            type="password"
+            value={formData.newPassword}
+            onChange={handleChange}
+            className="mt-1 bg-blue-900/30 border-blue-500/30 text-white"
+            required
+          />
+          <p className="text-xs text-slate-400 mt-1">
+            Password must be at least 6 characters long
+          </p>
+        </div>
 
-      <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-        <Button className="w-full bg-blue-600 hover:bg-blue-500 text-white py-6">Change Password</Button>
-      </motion.div>
-    </div>
-  </motion.div>
-)
+        <div>
+          <Label htmlFor="confirmPassword" className="text-slate-300">
+            Confirm New Password
+          </Label>
+          <Input
+            id="confirmPassword"
+            name="confirmPassword"
+            type="password"
+            value={formData.confirmPassword}
+            onChange={handleChange}
+            className="mt-1 bg-blue-900/30 border-blue-500/30 text-white"
+            required
+          />
+        </div>
+
+        {error && (
+          <motion.div
+            className="bg-red-500/10 text-red-200 border border-red-500/20 p-4 rounded-lg"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            {error}
+          </motion.div>
+        )}
+
+        {success && (
+          <motion.div
+            className="bg-green-500/10 text-green-200 border border-green-500/20 p-4 rounded-lg"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            Password changed successfully!
+          </motion.div>
+        )}
+
+        <Button
+          type="submit"
+          className="w-full bg-blue-600 hover:bg-blue-500 text-white"
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <div className="flex items-center justify-center">
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Changing Password...
+            </div>
+          ) : (
+            "Change Password"
+          )}
+        </Button>
+      </form>
+    </motion.div>
+  )
+}
 
 const DashboardOverview = ({ userInfo, setActiveSection, verificationStatus }) => {
   const navigate = useNavigate()

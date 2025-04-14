@@ -1,5 +1,5 @@
 import express from "express"
-import { login, logout, signup, checkAuth, updateUser, getUsers, deleteUser, getVerificationStatus } from "../controllers/auth.controller.js"
+import { login, logout, signup, checkAuth, updateUser, getUsers, deleteUser, getVerificationStatus, changePassword } from "../controllers/auth.controller.js"
 import { protectRoute, adminRoute } from "../middleware/auth.middleware.js"
 const router = express.Router()
 
@@ -11,6 +11,7 @@ router.get("/check", protectRoute, checkAuth)
 router.put("/users/:id", protectRoute, updateUser)
 router.delete("/users/:id", protectRoute, adminRoute, deleteUser)
 router.get('/verification-status', protectRoute, getVerificationStatus)
+router.post("/change-password", protectRoute, changePassword)
 
 export default router
 
