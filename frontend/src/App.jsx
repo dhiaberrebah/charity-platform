@@ -20,6 +20,8 @@ import FAQ from "./pages/FAQ"
 import PrivacyPolicy from "./pages/PrivacyPolicy"
 import TermsOfService from "./pages/TermsOfService"
 import CookiePolicy from "./pages/CookiePolicy"
+import Blog from "./pages/Blog"
+import BlogPost from "./pages/BlogPost"
 
 // Admin pages
 import AdminDashboard from "./pages/admin/Dashboard"
@@ -89,6 +91,10 @@ const App = () => (
 
               {/* Cause Share Route */}
               <Route path="/causes/share/:shareUrl" element={<CauseShare />} />
+
+              {/* Blog Routes */}
+              <Route path="/blog" element={<Blog />} />
+              <Route path="/blog/:id" element={<BlogPost />} />
 
               {/* Catch-all route */}
               <Route path="*" element={<NotFound />} />
