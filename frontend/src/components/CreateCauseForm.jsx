@@ -1,15 +1,16 @@
 "use client"
 
 import { useState, useCallback, useRef } from "react"
-import { X } from "lucide-react"
+import { X, Upload, AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Separator } from "@/components/ui/separator"
 import { toast } from "sonner"
-import { AnimatePresence } from "framer-motion"
+import { AnimatePresence, motion } from "framer-motion"
 
 const CreateCauseForm = ({ onClose, onSubmit }) => {
   const [formData, setFormData] = useState({
@@ -54,7 +55,9 @@ const CreateCauseForm = ({ onClose, onSubmit }) => {
     const newErrors = {}
     if (!formData.title.trim()) newErrors.title = "Le titre est requis"
     if (!formData.category) newErrors.category = "La catégorie est requise"
-    if (!formData.targetAmount || isNaN(formData.targetAmount)) newErrors.targetAmount = "Montant invalide"
+    if (!formData.targetAmount || isNaN(formData.targetAmount) || formData.targetAmount <= 0) {
+      newErrors.targetAmount = "Montant invalide"
+    }
     if (!formData.description.trim()) newErrors.description = "La description est requise"
     if (!formData.acceptTerms) newErrors.acceptTerms = "Vous devez accepter les conditions"
 
@@ -62,232 +65,258 @@ const CreateCauseForm = ({ onClose, onSubmit }) => {
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = useCallback(
-    async (e) => {
-      e.preventDefault()
+  const handleSubmit = async (e) => {
+    e.preventDefault()
 
-      if (!validateForm() || isSubmitting || hasSubmittedRef.current) return
+    if (!validateForm()) {
+      return
+    }
 
-      setIsSubmitting(true)
+    try {
+      const formDataToSend = new FormData()
+      
+      // Add all required fields
+      formDataToSend.append("title", formData.title.trim())
+      formDataToSend.append("description", formData.description.trim())
+      formDataToSend.append("category", formData.category)
+      formDataToSend.append("targetAmount", formData.targetAmount)
 
-      try {
-        const formDataToSend = new FormData()
-        formDataToSend.append("title", formData.title)
-        formDataToSend.append("description", formData.description)
-        formDataToSend.append("category", formData.category)
-        formDataToSend.append("targetAmount", formData.targetAmount)
-
-        // Make sure to include the submissionId
-        const submissionId = Date.now().toString() + "-" + Math.random().toString(36).substring(2, 9)
-        formDataToSend.append("submissionId", submissionId)
-
-        // Add custom share URL if provided
-        if (formData.customShareUrl) {
-          formDataToSend.append("customShareUrl", formData.customShareUrl)
-        }
-
-        // Add image if provided
-        if (formData.image) {
-          formDataToSend.append("image", formData.image, formData.image.name)
-        }
-
-        console.log("Submitting cause with ID:", submissionId)
-
-        hasSubmittedRef.current = true
-        onSubmit(formDataToSend)
-      } catch (error) {
-        console.error("Error preparing form data:", error)
-        toast.error("Une erreur s'est produite lors de la préparation des données.")
-        setErrors((prev) => ({ ...prev, submit: error.message }))
-        setIsSubmitting(false)
+      // Add image if it exists
+      if (formData.image instanceof File) {
+        formDataToSend.append("image", formData.image)
       }
-    },
-    [formData, isSubmitting, onSubmit],
-  )
+
+      // Log what we're sending
+      console.log("Submitting form with data:", {
+        title: formData.title,
+        category: formData.category,
+        targetAmount: formData.targetAmount,
+        hasImage: !!formData.image
+      })
+
+      await onSubmit(formDataToSend)
+      
+      // Reset form
+      setFormData({
+        title: "",
+        description: "",
+        category: "",
+        targetAmount: "",
+        image: null,
+        acceptTerms: false
+      })
+      
+    } catch (error) {
+      console.error("Form submission error:", error)
+      setErrors(prev => ({
+        ...prev,
+        submit: error.message
+      }))
+    }
+  }
 
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-50">
-        {/* Background overlay - updated to match the blue theme */}
-        <div className="absolute inset-0 bg-blue-900/80 backdrop-blur-sm" onClick={onClose} />
+        {/* Backdrop */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/90 via-indigo-900/90 to-purple-900/90 backdrop-blur-sm" 
+             onClick={onClose} />
 
-        {/* Content container */}
-        <div className="fixed inset-0 flex items-start justify-center pt-20 p-4">
-          <div className="relative bg-blue-800/30 backdrop-blur-sm border border-blue-500/20 w-full max-w-4xl mx-auto rounded-lg shadow-xl max-h-[90vh] overflow-y-auto text-white">
+        {/* Modal Container */}
+        <div className="fixed inset-0 flex items-start justify-center pt-16 px-4">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="relative w-full max-w-4xl bg-white/10 backdrop-blur-md rounded-xl shadow-2xl border border-blue-500/20 overflow-hidden"
+          >
             {/* Header */}
-            <div className="sticky top-0 z-10 flex justify-between items-center p-6 bg-gradient-to-r from-blue-900/80 to-indigo-900/80 backdrop-blur-sm border-b border-blue-500/20">
-              <h2 className="text-2xl font-bold text-white">Créer une Cha9a9a</h2>
-              <button
-                type="button"
-                onClick={onClose}
-                className="text-blue-300 hover:text-blue-100 hover:bg-blue-700/50 p-2 rounded-full"
-              >
-                <X className="h-5 w-5" />
-              </button>
+            <div className="px-6 py-4 bg-gradient-to-r from-blue-900/80 to-indigo-900/80 border-b border-blue-500/20">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-semibold text-white">Créer une Nouvelle Cause</h2>
+                <button
+                  onClick={onClose}
+                  className="p-2 hover:bg-blue-800/50 rounded-full transition-colors"
+                >
+                  <X className="h-5 w-5 text-blue-200" />
+                </button>
+              </div>
             </div>
 
-            {/* Content */}
+            {/* Form Content */}
             <div className="p-6">
               <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="title" className="text-blue-100">
-                      Titre de votre Cha9a9a
-                    </Label>
-                    <Input
-                      id="title"
-                      name="title"
-                      value={formData.title}
-                      onChange={handleChange}
-                      className={`border-blue-500/30 bg-blue-900/30 text-white focus:border-blue-400 focus:ring-blue-400 ${errors.title ? "border-red-500" : ""}`}
-                    />
-                    {errors.title && <p className="text-red-400 text-sm mt-1">{errors.title}</p>}
-                  </div>
+                {/* Title Section */}
+                <div className="space-y-2">
+                  <Label htmlFor="title" className="text-blue-100">Titre de la Cause</Label>
+                  <Input
+                    id="title"
+                    name="title"
+                    value={formData.title}
+                    onChange={handleChange}
+                    className={`bg-blue-900/20 border-blue-500/30 text-white placeholder-blue-300/50 focus:border-blue-400 ${
+                      errors.title ? "border-red-500" : ""
+                    }`}
+                    placeholder="Entrez le titre de votre cause"
+                  />
+                  {errors.title && (
+                    <div className="flex items-center gap-2 text-red-400 text-sm mt-1">
+                      <AlertCircle className="h-4 w-4" />
+                      <span>{errors.title}</span>
+                    </div>
+                  )}
+                </div>
 
-                  <div>
-                    <Label htmlFor="category" className="text-blue-100">
-                      Catégorie
-                    </Label>
+                {/* Category and Target Amount Row */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="category" className="text-blue-100">Catégorie</Label>
                     <Select onValueChange={(value) => handleSelectChange("category", value)} value={formData.category}>
                       <SelectTrigger
                         id="category"
-                        className={`border-blue-500/30 bg-blue-900/30 text-white ${errors.category ? "border-red-500" : ""}`}
+                        className={`bg-blue-900/20 border-blue-500/30 text-white ${
+                          errors.category ? "border-red-500" : ""
+                        }`}
                       >
                         <SelectValue placeholder="Sélectionner une catégorie" />
                       </SelectTrigger>
-                      <SelectContent className="bg-blue-800 border border-blue-500/20 text-white">
-                        <SelectItem value="medical" className="text-blue-100 hover:bg-blue-700/50">
-                          Médical
-                        </SelectItem>
-                        <SelectItem value="education" className="text-blue-100 hover:bg-blue-700/50">
-                          Éducation
-                        </SelectItem>
-                        <SelectItem value="emergency" className="text-blue-100 hover:bg-blue-700/50">
-                          Urgence
-                        </SelectItem>
-                        <SelectItem value="community" className="text-blue-100 hover:bg-blue-700/50">
-                          Communauté
-                        </SelectItem>
-                        <SelectItem value="other" className="text-blue-100 hover:bg-blue-700/50">
-                          Autre
-                        </SelectItem>
+                      <SelectContent className="bg-blue-800 border border-blue-500/20">
+                        <SelectItem value="medical" className="text-blue-100 hover:bg-blue-700/50">Médical</SelectItem>
+                        <SelectItem value="education" className="text-blue-100 hover:bg-blue-700/50">Éducation</SelectItem>
+                        <SelectItem value="emergency" className="text-blue-100 hover:bg-blue-700/50">Urgence</SelectItem>
+                        <SelectItem value="community" className="text-blue-100 hover:bg-blue-700/50">Communauté</SelectItem>
                       </SelectContent>
                     </Select>
-                    {errors.category && <p className="text-red-400 text-sm mt-1">{errors.category}</p>}
+                    {errors.category && (
+                      <div className="flex items-center gap-2 text-red-400 text-sm mt-1">
+                        <AlertCircle className="h-4 w-4" />
+                        <span>{errors.category}</span>
+                      </div>
+                    )}
                   </div>
 
-                  <div>
-                    <Label htmlFor="targetAmount" className="text-blue-100">
-                      Montant cible (DH)
-                    </Label>
+                  <div className="space-y-2">
+                    <Label htmlFor="targetAmount" className="text-blue-100">Montant Cible (DH)</Label>
                     <Input
                       id="targetAmount"
                       name="targetAmount"
                       type="number"
                       value={formData.targetAmount}
                       onChange={handleChange}
-                      className={`border-blue-500/30 bg-blue-900/30 text-white focus:border-blue-400 focus:ring-blue-400 ${errors.targetAmount ? "border-red-500" : ""}`}
+                      className={`bg-blue-900/20 border-blue-500/30 text-white placeholder-blue-300/50 ${
+                        errors.targetAmount ? "border-red-500" : ""
+                      }`}
+                      placeholder="0.00"
                     />
-                    {errors.targetAmount && <p className="text-red-400 text-sm mt-1">{errors.targetAmount}</p>}
+                    {errors.targetAmount && (
+                      <div className="flex items-center gap-2 text-red-400 text-sm mt-1">
+                        <AlertCircle className="h-4 w-4" />
+                        <span>{errors.targetAmount}</span>
+                      </div>
+                    )}
                   </div>
+                </div>
 
-                  <div>
-                    <Label htmlFor="description" className="text-blue-100">
-                      Description
-                    </Label>
-                    <Textarea
-                      id="description"
-                      name="description"
-                      value={formData.description}
-                      onChange={handleChange}
-                      rows={5}
-                      className={`border-blue-500/30 bg-blue-900/30 text-white focus:border-blue-400 focus:ring-blue-400 ${errors.description ? "border-red-500" : ""}`}
-                    />
-                    {errors.description && <p className="text-red-400 text-sm mt-1">{errors.description}</p>}
-                  </div>
-
-                  <div>
-                    <Label htmlFor="image" className="text-blue-100">
-                      Image (optionnel)
-                    </Label>
-                    <Input
-                      id="image"
-                      name="image"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      className="border-blue-500/30 bg-blue-900/30 text-white focus:border-blue-400 focus:ring-blue-400"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="customShareUrl" className="block text-sm font-medium text-blue-100 mb-1">
-                      Custom Share URL (optional)
-                    </Label>
-                    <div className="flex items-center">
-                      <span className="bg-blue-900/50 text-blue-200 px-3 py-2 rounded-l-lg border border-r-0 border-blue-500/30">
-                        {window.location.origin}/causes/share/
-                      </span>
-                      <Input
-                        id="customShareUrl"
-                        name="customShareUrl"
-                        value={formData.customShareUrl || ""}
-                        onChange={handleChange}
-                        className="rounded-l-none border-blue-500/30 bg-blue-900/30 text-white focus:border-blue-400 focus:ring-blue-400"
-                        placeholder="my-awesome-cause"
-                      />
+                {/* Description */}
+                <div className="space-y-2">
+                  <Label htmlFor="description" className="text-blue-100">Description</Label>
+                  <Textarea
+                    id="description"
+                    name="description"
+                    value={formData.description}
+                    onChange={handleChange}
+                    className={`min-h-[120px] bg-blue-900/20 border-blue-500/30 text-white placeholder-blue-300/50 ${
+                      errors.description ? "border-red-500" : ""
+                    }`}
+                    placeholder="Décrivez votre cause..."
+                  />
+                  {errors.description && (
+                    <div className="flex items-center gap-2 text-red-400 text-sm mt-1">
+                      <AlertCircle className="h-4 w-4" />
+                      <span>{errors.description}</span>
                     </div>
-                    <p className="text-xs text-blue-300 mt-1">
-                      Leave empty to generate automatically. Use only letters, numbers, and hyphens.
-                    </p>
-                  </div>
+                  )}
+                </div>
 
+                {/* Image Upload */}
+                <div className="space-y-2">
+                  <Label htmlFor="image" className="text-blue-100">Image</Label>
+                  <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-blue-500/30 border-dashed rounded-lg bg-blue-900/20">
+                    <div className="space-y-1 text-center">
+                      <Upload className="mx-auto h-12 w-12 text-blue-300" />
+                      <div className="flex text-sm text-blue-200">
+                        <label
+                          htmlFor="image"
+                          className="relative cursor-pointer rounded-md font-medium text-blue-300 hover:text-blue-200"
+                        >
+                          <span>Upload a file</span>
+                          <Input
+                            id="image"
+                            name="image"
+                            type="file"
+                            className="sr-only"
+                            onChange={handleImageChange}
+                            accept="image/*"
+                          />
+                        </label>
+                        <p className="pl-1">or drag and drop</p>
+                      </div>
+                      <p className="text-xs text-blue-300">PNG, JPG, GIF up to 10MB</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Terms and Conditions */}
+                <div className="space-y-4">
+                  <Separator className="bg-blue-500/20" />
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="acceptTerms"
                       name="acceptTerms"
                       checked={formData.acceptTerms}
-                      onCheckedChange={(checked) => {
-                        setFormData((prev) => ({
-                          ...prev,
-                          acceptTerms: checked,
-                        }))
-                      }}
-                      className="text-blue-500 border-blue-300 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+                      onCheckedChange={(checked) =>
+                        handleChange({
+                          target: { name: "acceptTerms", type: "checkbox", checked },
+                        })
+                      }
+                      className="border-blue-500/30 data-[state=checked]:bg-blue-500"
                     />
-                    <label
+                    <Label
                       htmlFor="acceptTerms"
-                      className={`text-sm ${errors.acceptTerms ? "text-red-400" : "text-blue-200"}`}
+                      className="text-sm text-blue-200"
                     >
-                      J'accepte les conditions générales et je certifie que toutes les informations fournies sont
-                      exactes
-                    </label>
+                      J'accepte les termes et conditions
+                    </Label>
                   </div>
-                  {errors.acceptTerms && <p className="text-red-400 text-sm">{errors.acceptTerms}</p>}
+                  {errors.acceptTerms && (
+                    <div className="flex items-center gap-2 text-red-400 text-sm">
+                      <AlertCircle className="h-4 w-4" />
+                      <span>{errors.acceptTerms}</span>
+                    </div>
+                  )}
+                </div>
 
-                  {errors.submit && <p className="text-red-400 text-sm">{errors.submit}</p>}
-
-                  <div className="flex justify-end space-x-4 pt-4 border-t border-blue-500/20">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={onClose}
-                      className="border-blue-400 text-blue-300 hover:bg-blue-700/50"
-                    >
-                      Annuler
-                    </Button>
-                    <Button
-                      type="submit"
-                      disabled={isSubmitting || hasSubmittedRef.current}
-                      className="bg-blue-600 hover:bg-blue-500 text-white"
-                    >
-                      {isSubmitting ? "Création en cours..." : "Créer ma Cha9a9a"}
-                    </Button>
-                  </div>
+                {/* Form Actions */}
+                <div className="flex items-center justify-end space-x-4 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={onClose}
+                    className="border-blue-500/30 text-blue-200 hover:bg-blue-800/30"
+                  >
+                    Annuler
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="bg-blue-500 hover:bg-blue-600 text-white"
+                  >
+                    {isSubmitting ? "Création..." : "Créer la Cause"}
+                  </Button>
                 </div>
               </form>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
     </AnimatePresence>

@@ -4,8 +4,7 @@ import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { Progress } from "@/components/ui/progress"
 import { motion } from "framer-motion"
-import { Share2 } from "lucide-react"
-import { toast } from "sonner"
+import { Share2, Target, DollarSign } from "lucide-react"
 
 const CauseCard = ({ 
   image, 
@@ -20,72 +19,98 @@ const CauseCard = ({
   ...props 
 }) => {
   const [imageSrc, setImageSrc] = useState("")
-  const [hasImageError, setHasImageError] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
-    if (!image) {
-      setImageSrc("https://placehold.co/600x400/e2e8f0/64748b?text=No+Image")
-      return
-    }
-    setImageSrc(image)
+    setImageSrc(image || "https://placehold.co/600x400/1e3a8a/ffffff?text=No+Image")
   }, [image])
 
-  // Handle image loading errors
   const handleImageError = () => {
-    console.error(`Image failed to load for cause "${title}":`, image)
-    console.log("Processed URL was:", imageSrc)
-    setHasImageError(true)
-    // Set a fallback image
-    setImageSrc("https://placehold.co/600x400/e2e8f0/64748b?text=Image+Not+Available")
+    setImageSrc("https://placehold.co/600x400/1e3a8a/ffffff?text=Image+Not+Available")
   }
 
   return (
     <motion.div
-      className="bg-white/10 backdrop-blur-sm rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-blue-500/20"
-      whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(59, 130, 246, 0.1)" }}
+      className="bg-gradient-to-br from-blue-900/40 via-indigo-900/40 to-purple-900/40 backdrop-blur-sm 
+                 rounded-xl overflow-hidden border border-blue-500/20 hover:border-blue-400/30 
+                 shadow-lg shadow-blue-500/10 hover:shadow-blue-500/20
+                 transition-all duration-300"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -5, scale: 1.02 }}
     >
-      <div className="aspect-[4/3] relative bg-blue-900/20">
+      {/* Image Container */}
+      <div className="relative h-48 overflow-hidden">
         <img
           src={imageSrc}
           alt={title}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover transform transition-transform duration-500 hover:scale-110"
           onError={handleImageError}
         />
+        <div className="absolute inset-0 bg-gradient-to-t from-blue-900/80 via-transparent to-transparent" />
+        
+        {/* Category Tag */}
         {category && (
-          <div className="absolute top-4 left-4 bg-blue-500/90 backdrop-blur-sm text-white text-xs px-3 py-1.5 rounded-full">
+          <span className="absolute top-4 left-4 bg-blue-500/80 backdrop-blur-sm px-3 py-1 
+                         rounded-full text-xs font-medium text-white border border-blue-400/30">
             {category}
-          </div>
+          </span>
         )}
       </div>
-      <div className="p-6">
-        <h3 className="text-xl font-semibold text-white mb-2 line-clamp-1">{title}</h3>
-        <p className="text-blue-100 mb-6 line-clamp-2">{description || 'No description available'}</p>
 
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Progress value={progress || 0} className="h-2 bg-blue-900/30" />
-            <div className="flex justify-between items-center text-sm">
-              <div className="space-y-1">
-                <p className="text-blue-200">Raised</p>
-                <p className="font-medium text-white">${(raised || 0).toLocaleString()}</p>
-              </div>
-              <div className="text-right space-y-1">
-                <p className="text-blue-200">Goal</p>
-                <p className="font-medium text-white">${(goal || 0).toLocaleString()}</p>
-              </div>
+      {/* Content */}
+      <div className="p-6 space-y-4">
+        {/* Title */}
+        <h3 className="text-xl font-semibold text-white line-clamp-1 group-hover:text-blue-300 
+                     transition-colors">
+          {title}
+        </h3>
+
+        {/* Description */}
+        {description && (
+          <p className="text-sm text-blue-200/80 line-clamp-2">
+            {description}
+          </p>
+        )}
+
+        {/* Progress Stats */}
+        <div className="space-y-3">
+          <div className="flex justify-between items-center text-sm text-blue-200">
+            <div className="flex items-center gap-2">
+              <DollarSign className="w-4 h-4 text-blue-400" />
+              <span>Raised: ${(raised || 0).toLocaleString()}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Target className="w-4 h-4 text-blue-400" />
+              <span>Goal: ${(goal || 0).toLocaleString()}</span>
             </div>
           </div>
 
-          <motion.button
-            className="w-full py-3 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors font-medium"
-            onClick={() => navigate(`/causes/share/${shareUrl || id}`)}
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-          >
-            Donate Now
-          </motion.button>
+          {/* Progress Bar */}
+          <div className="relative pt-2">
+            <Progress 
+              value={progress || 0} 
+              className="h-2 bg-blue-950/50" 
+            />
+            <span className="absolute right-0 -top-1 text-xs text-blue-300">
+              {(progress || 0).toFixed(1)}%
+            </span>
+          </div>
         </div>
+
+        {/* Donate Button */}
+        <motion.button
+          onClick={() => navigate(`/causes/share/${shareUrl || id}`)}
+          className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 
+                   text-white py-3 px-4 rounded-lg font-medium 
+                   shadow-lg shadow-blue-500/20 
+                   flex items-center justify-center gap-2 group"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+        >
+          <span>Donate Now</span>
+          <Share2 className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+        </motion.button>
       </div>
     </motion.div>
   )

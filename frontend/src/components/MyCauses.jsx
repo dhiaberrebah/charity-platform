@@ -49,37 +49,42 @@ const MyCauses = () => {
   const handleSubmitForm = useCallback(
     async (formData) => {
       try {
-        // Add a console log to see what's being sent
-        console.log("Submitting form data:", formData)
+        // Generate a unique submission ID
+        const submissionId = Date.now().toString() + "-" + Math.random().toString(36).substring(2, 9);
+        formData.append("submissionId", submissionId);
+
+        // Log the FormData contents for debugging
+        for (let pair of formData.entries()) {
+          console.log(pair[0] + ': ' + pair[1]);
+        }
 
         const response = await fetch("http://localhost:5001/api/causes", {
           method: "POST",
-          body: formData,
+          body: formData, // Send FormData directly
           credentials: "include",
-        })
+        });
 
         if (!response.ok) {
-          const errorData = await response.json()
-          throw new Error(errorData.message || "Failed to create cause")
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Failed to create cause");
         }
 
-        const data = await response.json()
-        console.log("Cause created successfully:", data)
+        const data = await response.json();
+        console.log("Cause created successfully:", data);
 
-        // Refresh the causes list
-        await fetchCauses()
-        toast.success("Your cause has been created successfully!")
-        setShowCreateForm(false)
+        // Update local state immediately with the new cause
+        setCauses(prevCauses => [...prevCauses, data]);
+        
+        // Then refresh the causes list
+        await fetchCauses();
+        toast.success("Your cause has been created successfully!");
+        setShowCreateForm(false);
       } catch (error) {
-        console.error("Error creating cause:", error)
-        if (error.message.includes("duplicate key error")) {
-          toast.error("A cause with this title already exists.")
-        } else {
-          toast.error("Failed to create cause: " + error.message)
-        }
+        console.error("Error creating cause:", error);
+        toast.error(error.message || "Failed to create cause");
       }
     },
-    [fetchCauses],
+    [fetchCauses]
   )
 
   const handleViewDetails = (cause) => {

@@ -392,24 +392,7 @@ const UserInformation = ({ userInfo, onChange, refreshUserInfo, setActiveSection
       transition={{ duration: 0.5 }}
     >
       <form onSubmit={handleSaveChanges} className="space-y-8">
-        <motion.div
-          className="flex items-center justify-center"
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.2, duration: 0.4 }}
-        >
-          <div className="relative">
-            <div className="w-28 h-28 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center shadow-lg">
-              <UserCircle className="w-14 h-14 text-white" />
-            </div>
-            <Button
-              size="sm"
-              className="absolute bottom-0 right-0 rounded-full bg-purple-600 hover:bg-purple-700 shadow-lg"
-            >
-              <Camera size={14} />
-            </Button>
-          </div>
-        </motion.div>
+      
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">

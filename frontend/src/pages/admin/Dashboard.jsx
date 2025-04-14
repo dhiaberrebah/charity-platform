@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { 
   Users, DollarSign, Heart, BarChart2, UserPlus, 
-  Briefcase, PieChart, Shield, Bell, Settings, 
+  Briefcase, CreditCard, Shield, Bell, Settings, 
   TrendingUp, Calendar 
 } from "lucide-react"
 import AdminNavbar from "../../components/AdminNavbar"
@@ -14,15 +14,27 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 const Dashboard = () => {
   const [stats, setStats] = useState({
     totalUsers: 0,
-    totalDonations: 0,
+    totalDonationsAmount: 0,
+    totalDonationsCount: 0,
     activeCauses: 0,
     monthlyGrowth: 0,
     recentDonations: [],
     pendingVerifications: 0,
+    totalVerifications: 0
   })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const navigate = useNavigate()
+
+  // Format currency
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount)
+  }
 
   // Mock data for the chart
   const chartData = [
@@ -54,10 +66,12 @@ const Dashboard = () => {
 
         setStats({
           totalUsers: data.totalUsers,
+          totalDonationsAmount: data.totalDonationsAmount,
+          totalDonationsCount: data.totalDonationsCount,
           activeCauses: data.activeCauses,
-          // Use placeholder values for these metrics for now
-          totalDonations: 0,
-          monthlyGrowth: 0,
+          pendingVerifications: data.pendingVerifications,
+          totalVerifications: data.totalVerifications,
+          monthlyGrowth: data.monthlyGrowth || 0,
         })
 
         setError(null)
@@ -71,6 +85,11 @@ const Dashboard = () => {
 
     fetchStats()
   }, [])
+
+  // Add a debug log to verify the stats
+  useEffect(() => {
+    console.log("Current stats:", stats)
+  }, [stats])
 
   // Animated floating hearts for background
   const renderFloatingHearts = () => {
@@ -189,7 +208,7 @@ const Dashboard = () => {
           <StatCard
             icon={<DollarSign className="text-green-300" size={28} />}
             title="Total Donations"
-            value={`$${stats.totalDonations || '0'}`}
+            value={formatCurrency(stats.totalDonationsAmount)}
             trend="+8.2%"
             loading={loading}
             color="from-green-600/20 to-green-400/20"
@@ -276,32 +295,40 @@ const Dashboard = () => {
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <QuickActionCard
-            icon={<UserPlus size={24} />}
+            icon={<UserPlus className="text-white" size={24} />}
             title="Manage Users"
             description="View and manage user accounts"
             action={() => navigate("/admin/users")}
-            color="bg-blue-500"
+            color="from-blue-600 to-blue-400"
+            count={stats.totalUsers}
+            metric="Total Users"
           />
           <QuickActionCard
-            icon={<Briefcase size={24} />}
+            icon={<Briefcase className="text-white" size={24} />}
             title="Manage Causes"
             description="Handle charity campaigns"
             action={() => navigate("/admin/causes")}
-            color="bg-green-500"
+            color="from-green-600 to-green-400"
+            count={stats.activeCauses}
+            metric="Active Causes"
           />
           <QuickActionCard
-            icon={<Shield size={24} />}
+            icon={<Shield className="text-white" size={24} />}
             title="Verifications"
             description={`${stats.pendingVerifications || 0} pending requests`}
             action={() => navigate("/admin/verifications")}
-            color="bg-yellow-500"
+            color="from-yellow-600 to-yellow-400"
+            count={stats.totalVerifications || 0}
+            metric="Total Verifications"
           />
           <QuickActionCard
-            icon={<PieChart size={24} />}
-            title="Analytics"
-            description="View detailed reports"
-            action={() => navigate("/admin/analytics")}
-            color="bg-purple-500"
+            icon={<CreditCard className="text-white" size={24} />}
+            title="Manage Donations"
+            description="View and track donations"
+            action={() => navigate("/admin/donations")}
+            color="from-purple-600 to-purple-400"
+            count={stats.totalDonationsCount}
+            metric="Total Donations"
           />
         </div>
       </div>
@@ -337,20 +364,44 @@ const StatCard = ({ icon, title, value, trend, loading, color }) => (
   </motion.div>
 )
 
-const QuickActionCard = ({ icon, title, description, action, color }) => (
-  <motion.div
-    whileHover={{ scale: 1.02 }}
-    whileTap={{ scale: 0.98 }}
-    onClick={action}
-    className="bg-white/10 backdrop-blur-sm rounded-xl p-6 cursor-pointer border border-blue-500/20 transition-all hover:shadow-lg"
-  >
-    <div className={`${color} w-12 h-12 rounded-lg flex items-center justify-center text-white mb-4`}>
-      {icon}
-    </div>
-    <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
-    <p className="text-sm text-blue-200">{description}</p>
-  </motion.div>
-)
+const QuickActionCard = ({ icon, title, description, action, color, count, metric }) => {
+  return (
+    <motion.div
+      whileHover={{ scale: 1.02, translateY: -5 }}
+      whileTap={{ scale: 0.98 }}
+      onClick={action}
+      className={`bg-gradient-to-br ${color} rounded-xl p-6 cursor-pointer shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden`}
+    >
+      <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full transform translate-x-8 -translate-y-8" />
+      
+      <div className="flex items-start justify-between">
+        <div className="p-3 rounded-lg bg-white/20 backdrop-blur-sm w-fit">
+          {icon}
+        </div>
+      </div>
+
+      <div className="mt-4">
+        <h3 className="text-2xl font-bold text-white mb-1">{count}</h3>
+        <p className="text-sm text-white/80">{metric}</p>
+      </div>
+
+      <div className="mt-4">
+        <h3 className="text-lg font-semibold text-white mb-1">{title}</h3>
+        <p className="text-sm text-white/80">{description}</p>
+      </div>
+
+      <div className="absolute bottom-0 right-0 p-4">
+        <motion.div
+          className="text-white/30"
+          animate={{ x: [0, 5, 0] }}
+          transition={{ duration: 2, repeat: Infinity }}
+        >
+          →
+        </motion.div>
+      </div>
+    </motion.div>
+  )
+}
 
 export default Dashboard
 

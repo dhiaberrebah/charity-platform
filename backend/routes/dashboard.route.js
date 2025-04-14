@@ -1,35 +1,56 @@
 import express from "express"
 import User from "../models/user.model.js"
 import Cause from "../models/cause.model.js"
+import Donation from "../models/Donation.js"
 
 const router = express.Router()
 
 // Get all dashboard stats in one request
 router.get("/stats", async (req, res) => {
   try {
-    console.log("Fetching user and cause counts from database...")
+    console.log("Fetching dashboard stats from database...")
 
-    // Get total users - real database query
+    // Get total users
     const totalUsers = await User.countDocuments()
-    console.log("Total users from database:", totalUsers)
 
-    // Get total causes (without any filter) - real database query
+    // Get total causes
     const totalCauses = await Cause.countDocuments()
-    console.log("Total causes from database:", totalCauses)
 
-    // Debug: Log a sample cause to see its structure
-    const sampleCause = await Cause.findOne()
-    console.log("Sample cause from database:", sampleCause)
+    // Get total donations amount (sum of all donations)
+    const donationsAggregation = await Donation.aggregate([
+      {
+        $group: {
+          _id: null,
+          totalAmount: { $sum: "$amount" },
+          totalCount: { $sum: 1 }
+        }
+      }
+    ])
 
-    // For now, use placeholder values for donations and growth
-    const totalDonations = 0
-    const monthlyGrowth = 0
+    const totalDonationsAmount = donationsAggregation[0]?.totalAmount || 0
+    const totalDonationsCount = donationsAggregation[0]?.totalCount || 0
+
+    // Get total verifications
+    const totalVerifications = await User.countDocuments({
+      'documents.front': { $exists: true },
+      'documents.back': { $exists: true }
+    })
+
+    // Get pending verifications count
+    const pendingVerifications = await User.countDocuments({
+      'documents.front': { $exists: true },
+      'documents.back': { $exists: true },
+      verificationStatus: 'pending'
+    })
 
     res.json({
       totalUsers,
-      totalDonations,
-      activeCauses: totalCauses, // Use total causes instead of active causes for now
-      monthlyGrowth,
+      totalDonationsAmount,
+      totalDonationsCount,
+      activeCauses: totalCauses,
+      monthlyGrowth: 0,
+      totalVerifications,
+      pendingVerifications
     })
   } catch (error) {
     console.error("Error fetching dashboard stats:", error)
@@ -37,6 +58,28 @@ router.get("/stats", async (req, res) => {
       error: "Failed to fetch dashboard stats",
       message: error.message,
     })
+  }
+})
+
+// Get pending verifications count
+router.get("/verifications/pending/count", async (req, res) => {
+  try {
+    const count = await User.countDocuments({ verificationStatus: 'pending' })
+    res.json({ count })
+  } catch (error) {
+    console.error("Error fetching pending verifications count:", error)
+    res.status(500).json({ error: "Failed to fetch verification count" })
+  }
+})
+
+// Get total donations count
+router.get("/donations/count", async (req, res) => {
+  try {
+    const count = await Donation.countDocuments()
+    res.json({ count })
+  } catch (error) {
+    console.error("Error fetching donations count:", error)
+    res.status(500).json({ error: "Failed to fetch donations count" })
   }
 })
 
@@ -54,7 +97,6 @@ router.get("/users/count", async (req, res) => {
 
 router.get("/causes/active/count", async (req, res) => {
   try {
-    // Get total causes without filtering by status
     const count = await Cause.countDocuments()
     console.log("Total causes count API called, result:", count)
     res.json({ count })
