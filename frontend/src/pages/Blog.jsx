@@ -1,27 +1,40 @@
+"use client"
+
 import { useState } from "react"
 import { motion } from "framer-motion"
 import { useNavigate } from "react-router-dom"
 import { Search } from "lucide-react"
+import { useAuth } from "../context/AuthContext"
+import NavigationBar from "../components/NavigationBar"
+import UserNavigationBar from "../components/UserNavigationBar"
+import AdminNavbar from "../components/AdminNavbar"
 import BlogCard from "../components/BlogCard"
 import { blogPosts } from "../data/blogPosts"
 
 const Blog = () => {
   const navigate = useNavigate()
   const [searchTerm, setSearchTerm] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState("all")
+  const { isAuthenticated, isAdmin, isAdminInUserMode } = useAuth()
 
-  const categories = ["all", ...new Set(blogPosts.map(post => post.category))]
+  // Determine which navbar to show based on auth state
+  let NavbarComponent = NavigationBar
+  if (isAdmin) {
+    NavbarComponent = AdminNavbar
+  } else if (isAuthenticated || isAdminInUserMode) {
+    NavbarComponent = UserNavigationBar
+  }
 
-  const filteredPosts = blogPosts.filter(post => {
-    const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         post.excerpt.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesCategory = selectedCategory === "all" || post.category === selectedCategory
-    return matchesSearch && matchesCategory
-  })
+  // Filter posts based on search term
+  const filteredPosts = blogPosts.filter(post =>
+    post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    post.excerpt.toLowerCase().includes(searchTerm.toLowerCase())
+  )
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <NavbarComponent />
+      
+      <div className="container mx-auto px-4 pt-24 pb-16">
         <motion.div
           className="text-center mb-12"
           initial={{ opacity: 0, y: 20 }}
@@ -29,8 +42,8 @@ const Blog = () => {
           transition={{ duration: 0.6 }}
         >
           <h1 className="text-4xl font-bold text-white mb-4">Our Blog</h1>
-          <p className="text-xl text-blue-100 max-w-2xl mx-auto">
-            Discover stories of impact, innovation, and inspiration from our global community.
+          <p className="text-xl text-blue-200">
+            Stay updated with our latest news and insights
           </p>
         </motion.div>
 
@@ -48,39 +61,23 @@ const Blog = () => {
                          text-white placeholder-blue-300 focus:outline-none focus:border-blue-400"
               />
             </div>
-
-            <div className="flex gap-2 overflow-x-auto pb-2 w-full sm:w-auto">
-              {categories.map(category => (
-                <button
-                  key={category}
-                  onClick={() => setSelectedCategory(category)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors
-                    ${selectedCategory === category
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-blue-900/30 text-blue-200 hover:bg-blue-800/50'
-                    }`}
-                >
-                  {category.charAt(0).toUpperCase() + category.slice(1)}
-                </button>
-              ))}
-            </div>
           </div>
-
-          {/* Results count */}
-          <p className="text-blue-200">
-            Showing {filteredPosts.length} article{filteredPosts.length !== 1 ? 's' : ''}
-          </p>
         </div>
 
         {/* Blog posts grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredPosts.map((post, index) => (
-            <BlogCard
+            <motion.div
               key={post.id}
-              post={post}
-              onClick={() => navigate(`/blog/${post.id}`)}
-              delay={index * 0.1}
-            />
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: index * 0.1 }}
+            >
+              <BlogCard
+                post={post}
+                onClick={() => navigate(`/blog/${post.id}`)}
+              />
+            </motion.div>
           ))}
         </div>
 
