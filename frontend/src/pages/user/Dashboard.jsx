@@ -158,12 +158,14 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 text-white">
-      {/* Navigation Bar */}
-      <NavigationBar />
+      {/* Navigation Bar - Make it fixed and add z-index */}
+      <div className="fixed top-0 left-0 right-0 z-50">
+        <NavigationBar />
+      </div>
 
       <div className="flex pt-16">
-        {/* Left Sidebar - professional design */}
-        <aside className="fixed top-16 left-0 w-72 bg-blue-950/80 backdrop-blur-xl border-r border-blue-500/20 shadow-xl z-10 h-[calc(100vh-4rem)] overflow-y-auto">
+        {/* Left Sidebar - adjust z-index and add border-t */}
+        <aside className="fixed top-16 left-0 w-72 bg-blue-950/80 backdrop-blur-xl border-r border-t border-blue-500/20 shadow-xl z-40 h-[calc(100vh-4rem)] overflow-y-auto">
           {/* User profile section */}
           <div className="p-6 border-b border-blue-700/30 bg-gradient-to-r from-blue-900/30 to-indigo-900/30">
             <div className="flex items-center space-x-3">
@@ -246,7 +248,7 @@ const Dashboard = () => {
           </div>
         </aside>
 
-        {/* Main Content */}
+        {/* Main Content - adjust margin-left to match sidebar width */}
         <main className="flex-1 p-8 pb-24 overflow-y-auto h-[calc(100vh-4rem)] ml-72">
           <div className="max-w-5xl mx-auto">
             {/* Page header */}
@@ -972,7 +974,11 @@ const Participations = ({ navigate }) => {
         }
 
         const data = await response.json()
-        setDonations(data)
+        // Sort donations by date (most recent first)
+        const sortedDonations = data.sort((a, b) => 
+          new Date(b.createdAt) - new Date(a.createdAt)
+        )
+        setDonations(sortedDonations)
       } catch (err) {
         console.error("Error fetching donations:", err)
         setError(err.message || "Failed to load donations")
@@ -1004,11 +1010,15 @@ const Participations = ({ navigate }) => {
 
   // Handle click on a donation to navigate to the cause page
   const handleDonationClick = (donation) => {
-    if (donation.cause && donation.cause._id) {
-      // Navigate to the specific cause detail page
-      navigate(`/cause/${donation.cause._id}`)
+    if (donation.cause && donation.cause.shareUrl) {
+      // Navigate to the shareable cause URL
+      navigate(`/cause/share/${donation.cause.shareUrl}`)
+    } else if (donation.cause && donation.cause._id) {
+      // Fallback: construct shareUrl from cause title and ID
+      const shareUrl = `${donation.cause.title.toLowerCase().replace(/\s+/g, '-')}-${donation.cause._id}`
+      navigate(`/cause/share/${shareUrl}`)
     } else {
-      console.error("Cannot navigate: Missing cause ID", donation)
+      toast.error("Cannot find the cause details")
     }
   }
 
@@ -1029,6 +1039,8 @@ const Participations = ({ navigate }) => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
+      <h2 className="text-2xl font-bold mb-6 text-white">My Participations</h2>
+      
       {loading ? (
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
@@ -1058,57 +1070,52 @@ const Participations = ({ navigate }) => {
           {donations.map((donation) => (
             <motion.div
               key={donation._id}
-              className="bg-blue-900/30 rounded-lg p-6 border border-blue-500/20 hover:bg-blue-800/30 transition-colors"
-              initial={{ opacity: 0, y: 10 }}
+              className="bg-blue-900/30 border border-blue-500/20 rounded-lg p-6 hover:bg-blue-800/30 transition-colors"
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
               whileHover={{ scale: 1.01 }}
             >
-              <div className="flex flex-col md:flex-row justify-between">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
                 <div>
                   <div className="flex items-center">
-                    <h3 className="font-semibold text-white text-lg">{donation.cause?.title || "Unknown Cause"}</h3>
-                    <ExternalLink
-                      className="w-4 h-4 ml-2 text-purple-400 cursor-pointer"
-                      onClick={() => handleDonationClick(donation)}
-                    />
+                    <h3 className="font-semibold text-white text-lg">
+                      {donation.cause ? donation.cause.title : "Deleted Cause"}
+                    </h3>
+                    {donation.cause && (
+                      <ExternalLink
+                        className="w-4 h-4 ml-2 text-purple-400 cursor-pointer"
+                        onClick={() => handleDonationClick(donation)}
+                      />
+                    )}
                   </div>
-                  <p className="text-sm text-slate-400 mt-1">Donation ID: {donation.transactionId}</p>
-                  <p className="text-sm text-slate-400">Date: {formatDate(donation.createdAt)}</p>
+                  {donation.cause && (
+                    <p className="text-sm text-slate-400 mt-1">
+                      {donation.cause.category}
+                    </p>
+                  )}
+                  <p className="text-sm text-slate-400">
+                    Transaction ID: {donation.transactionId}
+                  </p>
+                  <p className="text-sm text-slate-400">
+                    Date: {formatDate(donation.createdAt)}
+                  </p>
                 </div>
                 <div className="mt-4 md:mt-0 md:text-right">
-                  <p className="text-xl font-bold text-white">{formatCurrency(donation.amount)}</p>
+                  <p className="text-xl font-bold text-white">
+                    {formatCurrency(donation.amount)}
+                  </p>
                   <span
                     className={`inline-block px-3 py-1 text-xs rounded-full mt-2 ${
                       donation.status === "completed"
                         ? "bg-green-500/20 text-green-300"
                         : donation.status === "pending"
-                          ? "bg-yellow-500/20 text-yellow-300"
-                          : "bg-red-500/20 text-red-300"
+                        ? "bg-yellow-500/20 text-yellow-300"
+                        : "bg-red-500/20 text-red-300"
                     }`}
                   >
                     {donation.status.charAt(0).toUpperCase() + donation.status.slice(1)}
                   </span>
                 </div>
-              </div>
-              {donation.message && (
-                <div className="mt-4 p-3 bg-blue-900/30 rounded-lg border border-blue-500/20">
-                  <p className="text-sm text-slate-300 italic">"{donation.message}"</p>
-                </div>
-              )}
-              <div className="mt-4 flex justify-end">
-                <motion.button
-                  className="px-4 py-2 bg-purple-600/50 hover:bg-purple-600 rounded-lg flex items-center transition-colors"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    handleViewDetails(donation)
-                  }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Eye size={16} className="text-white mr-2" />
-                  <span className="text-sm text-white">View Details</span>
-                </motion.button>
               </div>
             </motion.div>
           ))}

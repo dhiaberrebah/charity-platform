@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { ArrowLeft, Edit, Trash2, PlusCircle, X, Upload, ImageIcon, LinkIcon, Search, Filter, FileDown, RefreshCw } from "lucide-react"
+import { ArrowLeft, Edit, Trash2, PlusCircle, X, Upload, ImageIcon, LinkIcon, Search, Filter, FileDown, RefreshCw, Copy } from "lucide-react"
 import { toast } from "sonner"
 import { motion, AnimatePresence } from "framer-motion"
 import { Link } from "react-router-dom"
@@ -819,11 +819,12 @@ const ManageCauses = () => {
           <div className="overflow-x-auto rounded-lg">
             <table className="w-full text-left">
               <thead>
-                <tr className="bg-blue-800/50">
+                <tr className="bg-blue-900/50">
                   <th className="p-3 text-blue-100">Title</th>
                   <th className="p-3 text-blue-100">Description</th>
                   <th className="p-3 text-blue-100">Target Amount</th>
                   <th className="p-3 text-blue-100">Current Amount</th>
+                  <th className="p-3 text-blue-100">RIB</th>
                   <th className="p-3 text-blue-100">Status</th>
                   <th className="p-3 text-blue-100">Actions</th>
                 </tr>
@@ -841,6 +842,21 @@ const ManageCauses = () => {
                     <td className="p-3">{cause.description.substring(0, 50)}...</td>
                     <td className="p-3">${cause.targetAmount.toLocaleString()}</td>
                     <td className="p-3">${cause.currentAmount.toLocaleString()}</td>
+                    <td className="p-3">
+                      <div className="flex items-center gap-2">
+                        <code className="text-sm font-mono">{cause.RIB}</code>
+                        <motion.button
+                          onClick={() => {
+                            navigator.clipboard.writeText(cause.RIB);
+                            toast.success("RIB copied!");
+                          }}
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                        >
+                          <Copy className="w-4 h-4 text-blue-400" />
+                        </motion.button>
+                      </div>
+                    </td>
                     <td className="p-3">
                       <select
                         value={cause.status}

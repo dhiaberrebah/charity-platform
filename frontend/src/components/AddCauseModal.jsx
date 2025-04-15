@@ -12,6 +12,7 @@ const AddCauseModal = ({ onClose, onAdd }) => {
     currentAmount: 0,
     category: "education",
     status: "pending",
+    RIB: "", // Add this line
   })
   const [imageFile, setImageFile] = useState(null)
   const [imagePreview, setImagePreview] = useState(null)
@@ -88,6 +89,7 @@ const AddCauseModal = ({ onClose, onAdd }) => {
       formDataObj.append("category", formData.category)
       formDataObj.append("targetAmount", formData.targetAmount)
       formDataObj.append("submissionId", submissionId)
+      formDataObj.append("RIB", formData.RIB) // Add this line
 
       // If there's an image file, add it
       if (imageFile) {
@@ -262,6 +264,18 @@ const AddCauseModal = ({ onClose, onAdd }) => {
                 </div>
               )}
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-blue-800 mb-1">RIB</label>
+            <input
+              type="text"
+              name="RIB"
+              value={formData.RIB}
+              onChange={handleChange}
+              className="w-full p-2 border border-blue-200 rounded-lg bg-blue-50/50 focus:border-blue-400 focus:ring-blue-400"
+              placeholder="Enter your RIB"
+            />
           </div>
 
           <div>

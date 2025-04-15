@@ -90,7 +90,7 @@ const App = () => (
               </Route>
 
               {/* Cause Share Route */}
-              <Route path="/causes/share/:shareUrl" element={<CauseShare />} />
+              <Route path="/cause/share/:shareUrl" element={<CauseShare />} />
 
               {/* Blog Routes */}
               <Route path="/blog" element={<Blog />} />

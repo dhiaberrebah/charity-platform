@@ -21,7 +21,9 @@ const CreateCauseForm = ({ onClose, onSubmit }) => {
     image: null,
     acceptTerms: false,
     customShareUrl: "",
+    RIB: "", // Add this line
   })
+  const [imagePreview, setImagePreview] = useState(null) // Add this line
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState({})
   const submissionIdRef = useRef(Date.now().toString())
@@ -43,12 +45,44 @@ const CreateCauseForm = ({ onClose, onSubmit }) => {
   }
 
   const handleImageChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      setFormData((prev) => ({
+    const file = e.target.files[0]
+    if (file) {
+      // Validate file type
+      const validTypes = ['image/jpeg', 'image/png', 'image/gif']
+      if (!validTypes.includes(file.type)) {
+        toast.error('Please select a valid image file (JPG, PNG, or GIF)')
+        return
+      }
+
+      // Check file size (10MB = 10 * 1024 * 1024 bytes)
+      const maxSize = 10 * 1024 * 1024 // 10MB in bytes
+      if (file.size > maxSize) {
+        toast.error('Image size must be less than 10MB')
+        // Reset the input
+        e.target.value = ''
+        return
+      }
+
+      // Create preview URL
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setImagePreview(reader.result)
+      }
+      reader.readAsDataURL(file)
+
+      setFormData(prev => ({
         ...prev,
-        image: e.target.files[0],
+        image: file
       }))
     }
+  }
+
+  const handleRemoveImage = () => {
+    setImagePreview(null)
+    setFormData(prev => ({
+      ...prev,
+      image: null
+    }))
   }
 
   const validateForm = () => {
@@ -61,57 +95,44 @@ const CreateCauseForm = ({ onClose, onSubmit }) => {
     if (!formData.description.trim()) newErrors.description = "La description est requise"
     if (!formData.acceptTerms) newErrors.acceptTerms = "Vous devez accepter les conditions"
 
+    // Removed image validation since it's now optional
+
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (!validateForm()) {
-      return
+      return;
     }
 
     try {
-      const formDataToSend = new FormData()
+      const formDataToSend = new FormData();
       
       // Add all required fields
-      formDataToSend.append("title", formData.title.trim())
-      formDataToSend.append("description", formData.description.trim())
-      formDataToSend.append("category", formData.category)
-      formDataToSend.append("targetAmount", formData.targetAmount)
+      formDataToSend.append("title", formData.title.trim());
+      formDataToSend.append("description", formData.description.trim());
+      formDataToSend.append("category", formData.category);
+      formDataToSend.append("targetAmount", formData.targetAmount);
+      formDataToSend.append("RIB", formData.RIB.trim());
 
-      // Add image if it exists
+      // Only append image if one was selected (now optional)
       if (formData.image instanceof File) {
-        formDataToSend.append("image", formData.image)
+        formDataToSend.append("image", formData.image);
       }
 
-      // Log what we're sending
-      console.log("Submitting form with data:", {
-        title: formData.title,
-        category: formData.category,
-        targetAmount: formData.targetAmount,
-        hasImage: !!formData.image
-      })
-
-      await onSubmit(formDataToSend)
+      await onSubmit(formDataToSend);
       
-      // Reset form
-      setFormData({
-        title: "",
-        description: "",
-        category: "",
-        targetAmount: "",
-        image: null,
-        acceptTerms: false
-      })
-      
+      // The form will be closed by the parent component after successful submission
     } catch (error) {
-      console.error("Form submission error:", error)
+      console.error("Form submission error:", error);
       setErrors(prev => ({
         ...prev,
         submit: error.message
-      }))
+      }));
+      toast.error(error.message || "Failed to create cause");
     }
   }
 
@@ -241,29 +262,61 @@ const CreateCauseForm = ({ onClose, onSubmit }) => {
                 {/* Image Upload */}
                 <div className="space-y-2">
                   <Label htmlFor="image" className="text-blue-100">Image</Label>
-                  <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-blue-500/30 border-dashed rounded-lg bg-blue-900/20">
-                    <div className="space-y-1 text-center">
-                      <Upload className="mx-auto h-12 w-12 text-blue-300" />
-                      <div className="flex text-sm text-blue-200">
-                        <label
-                          htmlFor="image"
-                          className="relative cursor-pointer rounded-md font-medium text-blue-300 hover:text-blue-200"
+                  <div className="mt-1 flex flex-col items-center space-y-4">
+                    {imagePreview ? (
+                      <div className="relative w-full max-w-md">
+                        <img
+                          src={imagePreview}
+                          alt="Preview"
+                          className="w-full h-48 object-cover rounded-lg border-2 border-blue-500/30"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleRemoveImage}
+                          className="absolute top-2 right-2 bg-red-500/80 text-white p-2 rounded-full hover:bg-red-600/80 transition-colors"
                         >
-                          <span>Upload a file</span>
-                          <Input
-                            id="image"
-                            name="image"
-                            type="file"
-                            className="sr-only"
-                            onChange={handleImageChange}
-                            accept="image/*"
-                          />
-                        </label>
-                        <p className="pl-1">or drag and drop</p>
+                          <X size={16} />
+                        </button>
                       </div>
-                      <p className="text-xs text-blue-300">PNG, JPG, GIF up to 10MB</p>
-                    </div>
+                    ) : (
+                      <div
+                        className="w-full flex flex-col items-center justify-center px-6 pt-5 pb-6 border-2 border-blue-500/30 border-dashed rounded-lg bg-blue-900/20 cursor-pointer hover:bg-blue-900/30 transition-colors"
+                        onClick={() => document.getElementById('image-upload').click()}
+                      >
+                        <div className="space-y-1 text-center">
+                          <Upload className="mx-auto h-12 w-12 text-blue-300" />
+                          <div className="flex text-sm text-blue-200">
+                            <label className="relative cursor-pointer rounded-md font-medium text-blue-300 hover:text-blue-200">
+                              <span>Upload a file</span>
+                              <input
+                                id="image-upload"
+                                name="image"
+                                type="file"
+                                className="sr-only"
+                                onChange={handleImageChange}
+                                accept="image/*"
+                              />
+                            </label>
+                            <p className="pl-1">or drag and drop</p>
+                          </div>
+                          <p className="text-xs text-blue-300">PNG, JPG, GIF (Max 10MB)</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
+                </div>
+
+                {/* RIB (Relevé d'Identité Bancaire) */}
+                <div className="space-y-2">
+                  <Label htmlFor="RIB" className="text-blue-100">RIB (Relevé d'Identité Bancaire)</Label>
+                  <Input
+                    id="RIB"
+                    name="RIB"
+                    value={formData.RIB}
+                    onChange={handleChange}
+                    className="bg-blue-900/20 border-blue-500/30 text-white placeholder-blue-300/50"
+                    placeholder="Entrez votre RIB"
+                  />
                 </div>
 
                 {/* Terms and Conditions */}

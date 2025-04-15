@@ -53,14 +53,9 @@ const MyCauses = () => {
         const submissionId = Date.now().toString() + "-" + Math.random().toString(36).substring(2, 9);
         formData.append("submissionId", submissionId);
 
-        // Log the FormData contents for debugging
-        for (let pair of formData.entries()) {
-          console.log(pair[0] + ': ' + pair[1]);
-        }
-
         const response = await fetch("http://localhost:5001/api/causes", {
           method: "POST",
-          body: formData, // Send FormData directly
+          body: formData,
           credentials: "include",
         });
 
@@ -75,10 +70,14 @@ const MyCauses = () => {
         // Update local state immediately with the new cause
         setCauses(prevCauses => [...prevCauses, data]);
         
+        // Close the form first
+        setShowCreateForm(false);
+        
         // Then refresh the causes list
         await fetchCauses();
+        
+        // Show success message
         toast.success("Your cause has been created successfully!");
-        setShowCreateForm(false);
       } catch (error) {
         console.error("Error creating cause:", error);
         toast.error(error.message || "Failed to create cause");

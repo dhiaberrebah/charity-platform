@@ -263,6 +263,34 @@ const CauseShare = () => {
                 <p className="text-blue-100 whitespace-pre-line">{cause.description}</p>
               </div>
 
+              {cause.RIB && (
+                <div className="mb-8 bg-blue-900/30 p-6 rounded-xl border border-blue-500/20">
+                  <h3 className="text-lg font-semibold text-white mb-4">Banking Information</h3>
+                  <div className="flex flex-col space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-blue-200">RIB:</span>
+                      <div className="flex items-center gap-3">
+                        <code className="text-blue-300 font-mono bg-blue-900/40 px-3 py-1 rounded">{cause.RIB}</code>
+                        <motion.button
+                          className="p-2 bg-blue-800/50 hover:bg-blue-700/50 rounded-full"
+                          onClick={() => {
+                            navigator.clipboard.writeText(cause.RIB);
+                            toast.success("RIB copied to clipboard!");
+                          }}
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                        >
+                          <Copy className="h-4 w-4" />
+                        </motion.button>
+                      </div>
+                    </div>
+                    <p className="text-sm text-blue-200/70 mt-2">
+                      Use this RIB to make a direct bank transfer to support this cause.
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {/* Display URL if available */}
               {cause.url && (
                 <div className="bg-blue-900/30 p-4 rounded-lg mb-6">

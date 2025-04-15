@@ -32,18 +32,25 @@ export const createCause = async (req, res) => {
     }
 
     const submissionId = req.body.submissionId;
-
     if (processedSubmissions.has(submissionId)) {
       return res.status(400).json({ message: "This submission has already been processed" });
     }
 
     try {
-      const { title, description, category, targetAmount } = req.body;
+      const { title, description, category, targetAmount, RIB } = req.body;
       let imageUrl;
 
       if (req.file) {
-        // Upload to Cloudinary instead of saving locally
-        imageUrl = await uploadToCloudinary(req.file);
+        try {
+          imageUrl = await uploadToCloudinary(req.file);
+          // Clean up the temporary file after successful upload
+          fs.unlink(req.file.path, (err) => {
+            if (err) console.error('Error deleting temporary file:', err);
+          });
+        } catch (uploadError) {
+          console.error('Cloudinary upload error:', uploadError);
+          return res.status(500).json({ message: 'Error uploading image' });
+        }
       }
 
       const newCause = new Cause({
@@ -51,54 +58,48 @@ export const createCause = async (req, res) => {
         description,
         category,
         targetAmount,
-        image: imageUrl, // Store Cloudinary URL
+        image: imageUrl,
         createdBy: req.user._id,
+        RIB,
       });
 
       await newCause.save();
+      processedSubmissions.add(submissionId);
 
-      // Create notification for new cause
-      await createNotification("cause", `New cause created: ${title}`, {
-        causeId: newCause._id,
-        title: newCause.title,
-        category: newCause.category,
-        targetAmount: newCause.targetAmount,
-        createdBy: req.user._id,
-      })
-
-      // Mark this submission as processed
-      processedSubmissions.add(submissionId)
-
-      // Clean up old submission IDs (optional, prevents unlimited growth of the Set)
+      // Clean up old submission IDs
       if (processedSubmissions.size > 1000) {
-        const oldestSubmission = processedSubmissions.values().next().value
-        processedSubmissions.delete(oldestSubmission)
+        const oldestSubmission = processedSubmissions.values().next().value;
+        processedSubmissions.delete(oldestSubmission);
       }
 
-      res.status(201).json(newCause)
+      res.status(201).json(newCause);
     } catch (error) {
       if (req.file) {
-        fs.unlink(req.file.path, (unlinkError) => {
-          if (unlinkError) {
-            console.error("Error deleting file:", unlinkError)
-          }
-        })
+        fs.unlink(req.file.path, (err) => {
+          if (err) console.error('Error deleting temporary file:', err);
+        });
       }
-      res.status(400).json({ message: error.message })
+      res.status(400).json({ message: error.message });
     }
-  })
+  });
 }
 
 export const getCauses = async (req, res) => {
   try {
-    const causes = await Cause.find().populate("createdBy", "nom prenom")
-    console.log("Sending causes:", causes.length)
-    res.json(causes)
+    const causes = await Cause.find().populate("createdBy", "nom prenom");
+    
+    // Ensure each cause has a shareUrl
+    const causesWithShareUrl = causes.map(cause => {
+      const causeObj = cause.toObject();
+      causeObj.shareUrl = cause.shareUrl || `${cause.title.toLowerCase().replace(/\s+/g, '-')}-${cause._id}`;
+      return causeObj;
+    });
+
+    res.json(causesWithShareUrl);
   } catch (error) {
-    console.error("Error in getCauses:", error)
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-}
+};
 
 export const getCause = async (req, res) => {
   try {
@@ -166,27 +167,30 @@ export const deleteCause = async (req, res) => {
 
 export const getShareableCause = async (req, res) => {
   try {
-    const shareUrl = req.params.shareUrl
+    const shareUrl = req.params.shareUrl;
 
     // Extract the ID from the shareUrl (it's the part after the last dash)
-    const parts = shareUrl.split("-")
-    const causeId = parts[parts.length - 1]
+    const parts = shareUrl.split("-");
+    const causeId = parts[parts.length - 1];
 
     // Find the cause by ID
-    const cause = await Cause.findById(causeId).populate("createdBy", "nom prenom")
+    const cause = await Cause.findById(causeId).populate("createdBy", "nom prenom");
 
     if (!cause) {
-      return res.status(404).json({ message: "Cause not found" })
+      return res.status(404).json({ message: "Cause not found" });
     }
 
     // Only return approved causes for public sharing
     if (cause.status !== "approved") {
-      return res.status(403).json({ message: "This cause is not available for public viewing" })
+      return res.status(403).json({ message: "This cause is not available for public viewing" });
     }
 
-    res.json(cause)
+    // Ensure the cause has a shareUrl
+    cause.shareUrl = cause.shareUrl || `${cause.title.toLowerCase().replace(/\s+/g, '-')}-${cause._id}`;
+
+    res.json(cause);
   } catch (error) {
-    console.error("Error in getShareableCause:", error)
-    res.status(500).json({ message: error.message })
+    console.error("Error in getShareableCause:", error);
+    res.status(500).json({ message: error.message });
   }
-}
+};

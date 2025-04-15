@@ -26,14 +26,20 @@ const CausesSection = () => {
         const data = await response.json()
         console.log("Fetched causes:", data)
 
-        // Filter to only show approved causes
-        const approvedCauses = data.filter((cause) => cause.status === "approved")
+        // Filter to only show approved causes and ensure shareUrl
+        const approvedCauses = data
+          .filter((cause) => cause.status === "approved")
+          .map(cause => ({
+            ...cause,
+            shareUrl: cause.shareUrl || `${cause.title.toLowerCase().replace(/\s+/g, '-')}-${cause._id}`
+          }));
+
         setCauses(approvedCauses)
 
         // Extract unique categories from causes
         const uniqueCategories = [...new Set(approvedCauses.map((cause) => cause.category))]
-          .filter((category) => category) // Remove any undefined or empty categories
-          .sort() // Sort alphabetically
+          .filter((category) => category)
+          .sort()
 
         setCategories(uniqueCategories)
         setError(null)
@@ -209,6 +215,9 @@ const CausesSection = () => {
                   raised={cause.currentAmount || 0}
                   goal={cause.targetAmount}
                   category={cause.category}
+                  RIB={cause.RIB}
+                  progress={((cause.currentAmount || 0) / cause.targetAmount) * 100}
+                  shareUrl={cause.shareUrl}
                 />
               </motion.div>
             ))}

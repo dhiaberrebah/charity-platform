@@ -40,6 +40,10 @@ const causeSchema = new mongoose.Schema(
       type: String,
       default: "", // New field for sharing URL
     },
+    RIB: {
+      type: String,
+      default: "", // New field for RIB
+    },
   },
   {
     timestamps: true,

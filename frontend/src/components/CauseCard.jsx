@@ -4,7 +4,8 @@ import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { Progress } from "@/components/ui/progress"
 import { motion } from "framer-motion"
-import { Share2, Target, DollarSign } from "lucide-react"
+import { Share2, Target, DollarSign, Copy } from "lucide-react"
+import { toast } from "sonner"
 
 const CauseCard = ({ 
   image, 
@@ -15,11 +16,21 @@ const CauseCard = ({
   raised, 
   goal, 
   shareUrl, 
-  id, 
+  id,
+  RIB,
   ...props 
 }) => {
   const [imageSrc, setImageSrc] = useState("")
   const navigate = useNavigate()
+
+  const getShareUrl = () => {
+    if (shareUrl) return shareUrl;
+    return `${title.toLowerCase().replace(/\s+/g, '-')}-${id}`;
+  };
+
+  const handleClick = () => {
+    navigate(`/cause/share/${getShareUrl()}`);
+  };
 
   useEffect(() => {
     setImageSrc(image || "https://placehold.co/600x400/1e3a8a/ffffff?text=No+Image")
@@ -31,13 +42,14 @@ const CauseCard = ({
 
   return (
     <motion.div
-      className="bg-gradient-to-br from-blue-900/40 via-indigo-900/40 to-purple-900/40 backdrop-blur-sm 
-                 rounded-xl overflow-hidden border border-blue-500/20 hover:border-blue-400/30 
-                 shadow-lg shadow-blue-500/10 hover:shadow-blue-500/20
-                 transition-all duration-300"
+      className="bg-white/10 backdrop-blur-sm rounded-xl overflow-hidden border border-blue-500/20 hover:border-blue-400/40 transition-all duration-300"
+      onClick={handleClick}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -5, scale: 1.02 }}
+      whileHover={{ 
+        y: -5, 
+        scale: 1.02,
+      }}
     >
       {/* Image Container */}
       <div className="relative h-48 overflow-hidden">
@@ -97,6 +109,29 @@ const CauseCard = ({
             </span>
           </div>
         </div>
+
+        {/* RIB Information */}
+        {RIB && (
+          <div className="mt-4 p-3 bg-blue-900/30 rounded-lg border border-blue-500/20">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-blue-200">RIB:</span>
+              <div className="flex items-center gap-2">
+                <code className="text-sm text-blue-300 font-mono">{RIB}</code>
+                <motion.button
+                  onClick={() => {
+                    navigator.clipboard.writeText(RIB);
+                    toast.success("RIB copied to clipboard!");
+                  }}
+                  className="p-1 hover:bg-blue-800/50 rounded-md"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <Copy className="w-4 h-4 text-blue-400" />
+                </motion.button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Donate Button */}
         <motion.button
