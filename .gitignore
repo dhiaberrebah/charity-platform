@@ -1,3 +1,46 @@
+# Dependencies
 backend/node_modules
 frontend/node_modules
+
+# Environment variables
 CHARITY-PLATFORM/backend/.env
+backend/.env
+frontend/.env
+.env
+.env.local
+.env.*.local
+.env.development
+.env.test
+.env.production
+
+# Build outputs
+dist
+dist-ssr
+*.local
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Uploads directory
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# Cache
+.cache
