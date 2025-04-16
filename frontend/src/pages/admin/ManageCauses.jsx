@@ -1,11 +1,12 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { ArrowLeft, Edit, Trash2, PlusCircle, X, Upload, ImageIcon, LinkIcon, Search, Filter, FileDown, RefreshCw, Copy } from "lucide-react"
 import { toast } from "sonner"
 import { motion, AnimatePresence } from "framer-motion"
 import { Link } from "react-router-dom"
 import CauseDetails from "@/components/CauseDetails"
+import { useCauseProgress } from '../../hooks/useCauseProgress';
 
 // Inline AddCauseModal component with file upload functionality
 const AddCauseModal = ({ onClose, onAdd }) => {
@@ -416,6 +417,68 @@ const AddCauseModal = ({ onClose, onAdd }) => {
   )
 }
 
+const CauseRow = ({ cause, handleDeleteCause, handleUpdateStatus, handleViewDetails }) => {
+  const { data: progressData } = useCauseProgress(cause._id);
+  const currentAmount = progressData?.currentAmount || cause.currentAmount;
+
+  return (
+    <motion.tr
+      className="border-b border-blue-700/30 hover:bg-blue-800/30 text-white"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+    >
+      <td className="p-3">{cause.title}</td>
+      <td className="p-3">{cause.description.substring(0, 50)}...</td>
+      <td className="p-3">${cause.targetAmount.toLocaleString()}</td>
+      <td className="p-3">${currentAmount.toLocaleString()}</td>
+      <td className="p-3">
+        <div className="flex items-center gap-2">
+          <code className="text-sm font-mono">{cause.RIB}</code>
+          <motion.button
+            onClick={() => {
+              navigator.clipboard.writeText(cause.RIB);
+              toast.success("RIB copied!");
+            }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+          >
+            <Copy className="w-4 h-4 text-blue-400" />
+          </motion.button>
+        </div>
+      </td>
+      <td className="p-3">
+        <select
+          value={cause.status}
+          onChange={(e) => handleUpdateStatus(cause._id, e.target.value)}
+          className="bg-white/10 border border-blue-500/30 rounded p-1 text-white focus:outline-none focus:border-blue-400"
+        >
+          <option value="pending">Pending</option>
+          <option value="approved">Approved</option>
+          <option value="rejected">Rejected</option>
+        </select>
+      </td>
+      <td className="p-3 flex">
+        <motion.button
+          className="text-blue-300 hover:text-blue-100 mr-3"
+          onClick={() => handleViewDetails(cause)}
+          whileHover={{ scale: 1.2 }}
+          whileTap={{ scale: 0.9 }}
+        >
+          <Edit size={18} />
+        </motion.button>
+        <motion.button
+          className="text-red-400 hover:text-red-300"
+          onClick={() => handleDeleteCause(cause._id)}
+          whileHover={{ scale: 1.2 }}
+          whileTap={{ scale: 0.9 }}
+        >
+          <Trash2 size={18} />
+        </motion.button>
+      </td>
+    </motion.tr>
+  );
+};
+
 const ManageCauses = () => {
   const [causes, setCauses] = useState([])
   const [isLoading, setIsLoading] = useState(true)
@@ -423,6 +486,7 @@ const ManageCauses = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
   const [exportAttempts, setExportAttempts] = useState(0)
+  const [pollingInterval, setPollingInterval] = useState(null)
 
   const handleExportWithRetry = async (exportFunction, maxAttempts = 3) => {
     setIsExporting(true)
@@ -519,7 +583,44 @@ const ManageCauses = () => {
     })
   }
 
+  // Separate function to fetch a single cause's current amount
+  const fetchCauseAmount = useCallback(async (causeId) => {
+    try {
+      const response = await fetch(`http://localhost:5001/api/causes/${causeId}/progress`, {
+        credentials: "include",
+      })
+      if (!response.ok) throw new Error("Failed to fetch cause progress")
+      const data = await response.json()
+      return data.currentAmount
+    } catch (error) {
+      console.error("Error fetching cause amount:", error)
+      return null
+    }
+  }, [])
+
+  // Function to update all causes' current amounts
+  const updateCausesAmounts = useCallback(async () => {
+    const updatedCauses = await Promise.all(
+      causes.map(async (cause) => {
+        const currentAmount = await fetchCauseAmount(cause._id)
+        return currentAmount !== null
+          ? { ...cause, currentAmount }
+          : cause
+      })
+    )
+
+    // Only update state if there are actual changes
+    const hasChanges = updatedCauses.some(
+      (updatedCause, index) => updatedCause.currentAmount !== causes[index].currentAmount
+    )
+
+    if (hasChanges) {
+      setCauses(updatedCauses)
+    }
+  }, [causes, fetchCauseAmount])
+
   useEffect(() => {
+    // Initial fetch
     const fetchCauses = async () => {
       setIsLoading(true)
       try {
@@ -530,7 +631,6 @@ const ManageCauses = () => {
           throw new Error("Failed to fetch causes")
         }
         const data = await response.json()
-        console.log("Fetched causes:", data)
         setCauses(data)
       } catch (error) {
         console.error("Error fetching causes:", error)
@@ -541,7 +641,32 @@ const ManageCauses = () => {
     }
 
     fetchCauses()
+
+    // Set up polling for real-time updates
+    const interval = setInterval(updateCausesAmounts, 5000) // Poll every 5 seconds
+    setPollingInterval(interval)
+
+    return () => {
+      if (pollingInterval) {
+        clearInterval(pollingInterval)
+      }
+    }
   }, [])
+
+  // Update polling when causes change
+  useEffect(() => {
+    if (pollingInterval) {
+      clearInterval(pollingInterval)
+    }
+    const interval = setInterval(updateCausesAmounts, 5000)
+    setPollingInterval(interval)
+
+    return () => {
+      if (pollingInterval) {
+        clearInterval(pollingInterval)
+      }
+    }
+  }, [causes, updateCausesAmounts])
 
   const handleDeleteCause = async (causeId) => {
     if (window.confirm("Are you sure you want to delete this cause?")) {
@@ -726,6 +851,22 @@ const ManageCauses = () => {
     )
   }
 
+  // Modify the table row to add animation when amount changes
+  const renderAmount = (amount, previousAmount) => {
+    const hasIncreased = amount > previousAmount
+    const hasDecreased = amount < previousAmount
+    
+    return (
+      <motion.div
+        initial={{ scale: 1 }}
+        animate={hasIncreased || hasDecreased ? { scale: [1, 1.1, 1] } : {}}
+        className={`${hasIncreased ? 'text-green-400' : ''} ${hasDecreased ? 'text-red-400' : ''}`}
+      >
+        ${amount.toLocaleString()}
+      </motion.div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 p-8 relative overflow-hidden">
       {/* Background elements */}
@@ -830,63 +971,14 @@ const ManageCauses = () => {
                 </tr>
               </thead>
               <tbody>
-                {causes.map((cause, index) => (
-                  <motion.tr
-                    key={cause._id}
-                    className="border-b border-blue-700/30 hover:bg-blue-800/30 text-white"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: 0.1 + index * 0.05 }}
-                  >
-                    <td className="p-3">{cause.title}</td>
-                    <td className="p-3">{cause.description.substring(0, 50)}...</td>
-                    <td className="p-3">${cause.targetAmount.toLocaleString()}</td>
-                    <td className="p-3">${cause.currentAmount.toLocaleString()}</td>
-                    <td className="p-3">
-                      <div className="flex items-center gap-2">
-                        <code className="text-sm font-mono">{cause.RIB}</code>
-                        <motion.button
-                          onClick={() => {
-                            navigator.clipboard.writeText(cause.RIB);
-                            toast.success("RIB copied!");
-                          }}
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                        >
-                          <Copy className="w-4 h-4 text-blue-400" />
-                        </motion.button>
-                      </div>
-                    </td>
-                    <td className="p-3">
-                      <select
-                        value={cause.status}
-                        onChange={(e) => handleUpdateStatus(cause._id, e.target.value)}
-                        className="bg-white/10 border border-blue-500/30 rounded p-1 text-white focus:outline-none focus:border-blue-400"
-                      >
-                        <option value="pending">Pending</option>
-                        <option value="approved">Approved</option>
-                        <option value="rejected">Rejected</option>
-                      </select>
-                    </td>
-                    <td className="p-3 flex">
-                      <motion.button
-                        className="text-blue-300 hover:text-blue-100 mr-3"
-                        onClick={() => handleViewDetails(cause)}
-                        whileHover={{ scale: 1.2 }}
-                        whileTap={{ scale: 0.9 }}
-                      >
-                        <Edit size={18} />
-                      </motion.button>
-                      <motion.button
-                        className="text-red-400 hover:text-red-300"
-                        onClick={() => handleDeleteCause(cause._id)}
-                        whileHover={{ scale: 1.2 }}
-                        whileTap={{ scale: 0.9 }}
-                      >
-                        <Trash2 size={18} />
-                      </motion.button>
-                    </td>
-                  </motion.tr>
+                {causes.map((cause) => (
+                  <CauseRow 
+                    key={cause._id} 
+                    cause={cause} 
+                    handleDeleteCause={handleDeleteCause}
+                    handleUpdateStatus={handleUpdateStatus}
+                    handleViewDetails={handleViewDetails}
+                  />
                 ))}
               </tbody>
             </table>

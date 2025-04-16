@@ -13,149 +13,107 @@ import { Progress } from "@/components/ui/progress"
 import { toast } from "sonner"
 import DonationModal from "@/components/DonationModal"
 import DonationList from "@/components/DonationList"
+import { useCauseProgress } from '@/hooks/useCauseProgress';
 
 // Define the API base URL
 const API_BASE_URL = "http://localhost:5001"
 
 const CauseShare = () => {
-  const { shareUrl } = useParams()
-  const [cause, setCause] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [copied, setCopied] = useState(false)
-  const [imageError, setImageError] = useState(false)
-  const [isDonationModalOpen, setIsDonationModalOpen] = useState(false)
+  const { shareUrl } = useParams();
+  const [cause, setCause] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [copied, setCopied] = useState(false);
+  const [imageError, setImageError] = useState(false);
+  const [isDonationModalOpen, setIsDonationModalOpen] = useState(false);
+  
+  const openDonationModal = () => {
+    setIsDonationModalOpen(true);
+  };
 
-  const { isAuthenticated, isAdmin } = useAuth()
-  let NavbarComponent = NavigationBar
+  const closeDonationModal = () => {
+    setIsDonationModalOpen(false);
+  };
 
+  const handleImageError = () => {
+    setImageError(true);
+    console.log("Image load error occurred");
+  };
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      toast.success("Link copied to clipboard!");
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy:", err);
+      toast.error("Failed to copy link");
+    }
+  };
+
+  // Add getImageUrl function
+  const getImageUrl = (image) => {
+    // If the image is a full URL (like from Cloudinary), use it directly
+    if (image && (image.startsWith("http://") || image.startsWith("https://"))) {
+      return image;
+    }
+
+    // If it's a relative path (like from local uploads), prepend the server URL
+    if (image) {
+      return `${API_BASE_URL}/${image}`;
+    }
+
+    // Fallback image
+    return "https://placehold.co/600x400/1e3a8a/ffffff?text=No+Image";
+  };
+
+  // Always call hooks at the top level, before any conditional logic
+  const { isAuthenticated, isAdmin } = useAuth();
+  const { data: progressData } = useCauseProgress(cause?._id);
+
+  let NavbarComponent = NavigationBar;
   if (isAdmin) {
-    NavbarComponent = AdminNavbar
+    NavbarComponent = AdminNavbar;
   } else if (isAuthenticated) {
-    NavbarComponent = UserNavigationBar
-  } else {
-    NavbarComponent = NavigationBar
+    NavbarComponent = UserNavigationBar;
   }
 
   useEffect(() => {
     const fetchCause = async () => {
       try {
-        setLoading(true)
-        console.log("Fetching cause with shareUrl:", shareUrl)
-        const response = await fetch(`${API_BASE_URL}/api/causes/public/${shareUrl}`)
+        setLoading(true);
+        const response = await fetch(`${API_BASE_URL}/api/causes/public/${shareUrl}`);
         if (!response.ok) {
-          throw new Error(`Failed to fetch cause: ${response.status}`)
+          throw new Error(`Failed to fetch cause: ${response.status}`);
         }
-
-        const data = await response.json()
-        console.log("Fetched cause data:", data)
-        setCause(data)
-        setError(null)
+        const data = await response.json();
+        setCause(data);
+        setError(null);
       } catch (error) {
-        console.error("Error fetching cause:", error)
-        setError("This cause is not available or has been removed.")
+        console.error("Error fetching cause:", error);
+        setError("This cause is not available or has been removed.");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
     if (shareUrl) {
-      fetchCause()
+      fetchCause();
     }
-  }, [shareUrl])
-
-  const handleCopyLink = () => {
-    const url = window.location.href
-    navigator.clipboard
-      .writeText(url)
-      .then(() => {
-        setCopied(true)
-        toast.success("Link copied to clipboard!")
-        setTimeout(() => setCopied(false), 2000)
-      })
-      .catch((err) => {
-        console.error("Failed to copy:", err)
-        toast.error("Failed to copy link")
-      })
-  }
-
-  const handleShare = (platform) => {
-    const url = window.location.href
-    const text = `Check out this cause: ${cause?.title}`
-
-    let shareUrl
-
-    switch (platform) {
-      case "facebook":
-        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`
-        break
-      case "twitter":
-        shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`
-        break
-      case "linkedin":
-        shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`
-        break
-      default:
-        return
-    }
-
-    window.open(shareUrl, "_blank", "width=600,height=400")
-  }
-
-  // Function to properly format image URL
-  const getImageUrl = (imagePath) => {
-    if (!imagePath) return null
-
-    // If it's already a full URL with http:// or https://
-    if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
-      return imagePath
-    }
-
-    // Check if it's an absolute file system path (starts with / or contains :\)
-    const isAbsolutePath =
-      imagePath.startsWith("/") ||
-      imagePath.includes(":\\") ||
-      imagePath.includes("/Users/") ||
-      imagePath.includes("/home/")
-
-    if (isAbsolutePath) {
-      // Extract just the filename from the path
-      const filename = imagePath.split("/").pop().split("\\").pop()
-      console.log("Extracted filename:", filename)
-
-      // Use the filename with the uploads endpoint
-      return `${API_BASE_URL}/uploads/${filename}`
-    }
-
-    // For relative paths, just append to the base URL
-    return `${API_BASE_URL}/${imagePath.replace(/^\/+/, "")}`
-  }
-
-  // Handle image loading error
-  const handleImageError = (e) => {
-    console.error("Image failed to load:", e.target.src)
-    setImageError(true)
-    // Use a placeholder image
-    e.target.src = "https://placehold.co/600x400/3b82f6/ffffff?text=Image+Not+Available"
-  }
-
-  const openDonationModal = () => {
-    setIsDonationModalOpen(true)
-  }
-
-  const closeDonationModal = () => {
-    setIsDonationModalOpen(false)
-  }
+  }, [shareUrl]);
 
   if (loading) {
     return (
       <div className="min-h-screen bg-fixed bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 text-white">
         <NavbarComponent />
-        <div className="pt-24 px-4 flex justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-300"></div>
+        <div className="pt-24 px-4 max-w-4xl mx-auto">
+          <div className="bg-white/10 backdrop-blur-sm p-8 rounded-lg border border-blue-500/20">
+            <p>Loading...</p>
+          </div>
         </div>
       </div>
-    )
+    );
   }
 
   if (error || !cause) {
@@ -175,12 +133,16 @@ const CauseShare = () => {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
-  const progress = Math.min((cause.currentAmount / cause.targetAmount) * 100, 100)
-  const imageUrl = cause.image ? getImageUrl(cause.image) : null
-  console.log("Image URL:", imageUrl)
+  // Calculate progress values after all hooks and conditionals
+  const currentProgress = progressData ? 
+    (progressData.currentAmount / progressData.targetAmount) * 100 : 
+    (cause.currentAmount / cause.targetAmount) * 100;
+
+  const currentAmount = progressData?.currentAmount || cause.currentAmount;
+  const imageUrl = cause.image ? getImageUrl(cause.image) : null;
 
   return (
     <div className="min-h-screen bg-fixed bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 text-white">
@@ -309,18 +271,12 @@ const CauseShare = () => {
               <div className="bg-blue-900/30 p-6 rounded-lg mb-8">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-blue-100">Progress</span>
-                  <span className="text-blue-100">{progress.toFixed(1)}%</span>
+                  <span className="text-blue-100">{currentProgress.toFixed(1)}%</span>
                 </div>
-                <Progress value={progress} className="h-3 bg-blue-900/50 mb-4" />
-                <div className="flex justify-between items-center">
-                  <div>
-                    <p className="text-sm text-blue-200">Raised</p>
-                    <p className="text-2xl font-bold text-white">${cause.currentAmount.toLocaleString()}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm text-blue-200">Goal</p>
-                    <p className="text-2xl font-bold text-white">${cause.targetAmount.toLocaleString()}</p>
-                  </div>
+                <Progress value={currentProgress} className="h-3 bg-blue-900/50 mb-4" />
+                <div className="flex justify-between text-sm text-blue-200">
+                  <span>${currentAmount.toLocaleString()} raised</span>
+                  <span>Goal: ${cause.targetAmount.toLocaleString()}</span>
                 </div>
               </div>
 

@@ -21,6 +21,8 @@ const causeSchema = new mongoose.Schema(
     currentAmount: {
       type: Number,
       default: 0,
+      min: 0,
+      set: v => Number(v)  // Ensure it's always stored as a number
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
@@ -47,7 +49,9 @@ const causeSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  },
+    toJSON: { getters: true },  // Apply getters when converting to JSON
+    toObject: { getters: true }
+  }
 )
 
 // Generate a unique share URL when saving a new cause
@@ -65,6 +69,14 @@ causeSchema.pre("save", function (next) {
   }
   next()
 })
+
+// Add a pre-save middleware to ensure currentAmount is a number
+causeSchema.pre('save', function(next) {
+  if (this.currentAmount) {
+    this.currentAmount = Number(this.currentAmount);
+  }
+  next();
+});
 
 const Cause = mongoose.model("Cause", causeSchema)
 export default Cause

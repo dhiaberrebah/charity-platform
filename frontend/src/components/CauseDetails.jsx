@@ -5,6 +5,7 @@ import { X, Edit, Check, AlertCircle, Calendar, User, Target, DollarSign } from 
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { motion } from "framer-motion"
+import { useCauseProgress } from '@/hooks/useCauseProgress';
 
 const CauseDetails = ({ cause, onClose, isAdmin, onEdit }) => {
   const [isEditing, setIsEditing] = useState(false)
@@ -58,6 +59,14 @@ const CauseDetails = ({ cause, onClose, isAdmin, onEdit }) => {
   const getStatusText = (status) => {
     return status.charAt(0).toUpperCase() + status.slice(1)
   }
+
+  const { data: progressData } = useCauseProgress(cause._id);
+  
+  const currentProgress = progressData ? 
+    (progressData.currentAmount / progressData.targetAmount) * 100 : 
+    (cause.currentAmount / cause.targetAmount) * 100;
+
+  const currentAmount = progressData?.currentAmount || cause.currentAmount;
 
   return (
     <motion.div
@@ -203,12 +212,15 @@ const CauseDetails = ({ cause, onClose, isAdmin, onEdit }) => {
 
                   <div className="relative pt-2">
                     <Progress
-                      value={(cause.currentAmount / cause.targetAmount) * 100 || 0}
+                      value={currentProgress || 0}
                       className="h-2 bg-blue-950/50"
                     />
                     <span className="absolute right-0 -top-1 text-xs text-blue-300">
-                      {((cause.currentAmount / cause.targetAmount) * 100 || 0).toFixed(1)}%
+                      {(currentProgress || 0).toFixed(1)}%
                     </span>
+                    <div className="mt-2 text-blue-200">
+                      ${currentAmount.toLocaleString()} raised of ${cause.targetAmount.toLocaleString()}
+                    </div>
                   </div>
                 </div>
 

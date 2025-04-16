@@ -1,12 +1,10 @@
-import mongoose from "mongoose"
-import Donation from "../models/Donation.js"
-import { createNotification } from "./notification.controller.js"
-import Cause from "../models/cause.model.js" // Import Cause model to get cause details
+import mongoose from 'mongoose';
+import Donation from "../models/Donation.js";
+import Cause from "../models/cause.model.js";
 
 // Create a new donation
 export const createDonation = async (req, res) => {
   try {
-    // Log the entire request for debugging
     console.log("=== Donation creation started ===")
     console.log("Request body:", JSON.stringify(req.body, null, 2))
 
@@ -37,122 +35,79 @@ export const createDonation = async (req, res) => {
       return res.status(400).json({ message: "Missing amount" })
     }
 
-    if (!firstName || !lastName || !email) {
-      console.log("Missing donor information")
-      return res.status(400).json({ message: "Missing donor information" })
-    }
+    // Start a session for transaction
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-    // Check MongoDB connection
-    if (mongoose.connection.readyState !== 1) {
-      console.error("MongoDB not connected! Connection state:", mongoose.connection.readyState)
-      return res.status(500).json({
-        message: "Database connection error",
-        details: "MongoDB is not connected. Please check your database connection.",
-      })
-    }
-
-    // Get cause details for the notification
-    let causeTitle = "Unknown Cause"
     try {
-      const cause = await Cause.findById(causeId)
-      if (cause) {
-        causeTitle = cause.title
+      // Create and save donation
+      const donation = new Donation({
+        cause: causeId,
+        amount: Number(amount),
+        donor: {
+          firstName,
+          lastName,
+          email,
+          phone: phone || undefined,
+          address: address || undefined,
+          city: city || undefined,
+          country: country || undefined,
+        },
+        paymentMethod: paymentMethod || "card",
+        isAnonymous: isAnonymous || false,
+        message: message || undefined,
+        status: "completed",
+        paymentDetails: {
+          last4: paymentDetails?.last4 || "1234",
+          cardName: paymentDetails?.cardName || firstName + " " + lastName,
+        },
+        transactionId: "txn_" + Date.now() + Math.random().toString(36).substring(2, 15),
+      });
+
+      await donation.save({ session });
+
+      // Find and update the cause
+      const cause = await Cause.findById(causeId).session(session);
+      if (!cause) {
+        throw new Error("Cause not found");
       }
-    } catch (causeError) {
-      console.error("Error fetching cause details:", causeError)
+
+      // Update the cause's current amount
+      cause.currentAmount = Number(cause.currentAmount || 0) + Number(amount);
+      await cause.save({ session });
+
+      // Commit the transaction
+      await session.commitTransaction();
+
+      console.log("Donation created successfully:", {
+        donationId: donation._id,
+        amount: amount,
+        causeId: causeId,
+        newTotal: cause.currentAmount
+      });
+
+      res.status(201).json({ 
+        success: true, 
+        donation,
+        updatedCauseAmount: cause.currentAmount
+      });
+
+    } catch (error) {
+      // If anything fails, abort the transaction
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      // End the session
+      session.endSession();
     }
 
-    // Create donation object
-    console.log("Creating donation document...")
-    const donation = new Donation({
-      cause: causeId,
-      amount: Number.parseFloat(amount),
-      donor: {
-        firstName,
-        lastName,
-        email,
-        phone: phone || undefined,
-        address: address || undefined,
-        city: city || undefined,
-        country: country || undefined,
-      },
-      paymentMethod: paymentMethod || "card",
-      isAnonymous: isAnonymous || false,
-      message: message || undefined,
-      status: "completed", // In a real app, this would be 'pending' until payment confirmation
-      paymentDetails: {
-        last4: paymentDetails?.last4 || "1234",
-        cardName: paymentDetails?.cardName || firstName + " " + lastName,
-      },
-      transactionId: "txn_" + Date.now() + Math.random().toString(36).substring(2, 15),
-    })
-
-    console.log("Donation object created:", JSON.stringify(donation, null, 2))
-
-    // Save donation to database
-    console.log("Attempting to save donation to database...")
-    const savedDonation = await donation.save()
-    console.log("✅ Donation saved successfully to database!")
-    console.log("Donation ID:", savedDonation._id)
-
-    // Create notification for new donation with more detailed information
-    const donorName = isAnonymous ? "Anonymous" : `${firstName} ${lastName}`
-    const notificationMessage = `New donation of $${amount} received for "${causeTitle}" from ${donorName}`
-
-    console.log("Creating donation notification with message:", notificationMessage)
-
-    try {
-      const notification = await createNotification("donation", notificationMessage, {
-        donationId: savedDonation._id,
-        causeId: savedDonation.cause,
-        causeTitle: causeTitle,
-        amount: savedDonation.amount,
-        donorName: donorName,
-        isAnonymous: isAnonymous,
-        date: new Date(),
-      })
-
-      console.log("✅ Donation notification created successfully:", notification)
-    } catch (notificationError) {
-      console.error("❌ Error creating donation notification:", notificationError)
-    }
-
-    // Return success response
-    return res.status(201).json({
-      message: "Donation successful",
-      donation: {
-        id: savedDonation._id,
-        amount: savedDonation.amount,
-        date: savedDonation.createdAt,
-        transactionId: savedDonation.transactionId,
-      },
-    })
   } catch (error) {
-    console.error("❌ Error creating donation:", error)
-
-    // Handle specific errors
-    if (error.name === "ValidationError") {
-      console.error("Validation error details:", error.errors)
-      return res.status(400).json({
-        message: "Validation error",
-        errors: error.errors,
-      })
-    }
-
-    if (error.code === 11000) {
-      console.error("Duplicate key error:", error.keyValue)
-      return res.status(400).json({
-        message: "Duplicate key error",
-        duplicateKey: error.keyValue,
-      })
-    }
-
-    // Generic error response
-    return res.status(500).json({
-      message: "Server error",
-      error: error.message,
-      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
-    })
+    console.error("Error creating donation:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Failed to create donation",
+      error: error.message 
+    });
   }
 }
 

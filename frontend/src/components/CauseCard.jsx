@@ -6,13 +6,14 @@ import { Progress } from "@/components/ui/progress"
 import { motion } from "framer-motion"
 import { Share2, Target, DollarSign, Copy } from "lucide-react"
 import { toast } from "sonner"
+import { useCauseProgress } from '@/hooks/useCauseProgress';
 
 const CauseCard = ({ 
   image, 
   title, 
   category, 
   description, 
-  progress, 
+  progress: initialProgress, 
   raised, 
   goal, 
   shareUrl, 
@@ -22,6 +23,19 @@ const CauseCard = ({
 }) => {
   const [imageSrc, setImageSrc] = useState("")
   const navigate = useNavigate()
+  const { data: progressData, isError } = useCauseProgress(id)
+  
+  // Log progress data for debugging
+  useEffect(() => {
+    console.log('Progress Data:', progressData);
+  }, [progressData]);
+
+  // Calculate progress percentage
+  const currentProgress = (!isError && progressData) ? 
+    (progressData.currentAmount / progressData.targetAmount) * 100 : 
+    initialProgress;
+
+  const currentRaised = (!isError && progressData?.currentAmount) || raised;
 
   const getShareUrl = () => {
     if (shareUrl) return shareUrl;
@@ -90,7 +104,7 @@ const CauseCard = ({
           <div className="flex justify-between items-center text-sm text-blue-200">
             <div className="flex items-center gap-2">
               <DollarSign className="w-4 h-4 text-blue-400" />
-              <span>Raised: ${(raised || 0).toLocaleString()}</span>
+              <span>Raised: ${(currentRaised || 0).toLocaleString()}</span>
             </div>
             <div className="flex items-center gap-2">
               <Target className="w-4 h-4 text-blue-400" />
@@ -101,11 +115,11 @@ const CauseCard = ({
           {/* Progress Bar */}
           <div className="relative pt-2">
             <Progress 
-              value={progress || 0} 
+              value={currentProgress || 0} 
               className="h-2 bg-blue-950/50" 
             />
             <span className="absolute right-0 -top-1 text-xs text-blue-300">
-              {(progress || 0).toFixed(1)}%
+              {(currentProgress || 0).toFixed(1)}%
             </span>
           </div>
         </div>

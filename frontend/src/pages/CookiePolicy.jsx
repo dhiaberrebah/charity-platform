@@ -122,9 +122,7 @@ const CookiePolicy = () => {
                 .
               </p>
 
-              <h2 className="text-xl font-semibold mt-8 mb-4 text-white">
-                6. How Often Will We Update This Cookie Policy?
-              </h2>
+              <h2 className="text-xl font-semibold mt-8 mb-4 text-white">6. How Often Will We Update This Cookie Policy?</h2>
               <p className="mb-4">
                 We may update this Cookie Policy from time to time in order to reflect, for example, changes to the
                 cookies we use or for other operational, legal or regulatory reasons. Please therefore re-visit this
@@ -143,6 +141,32 @@ const CookiePolicy = () => {
                 <br />
                 Address: 123 Charity Street, City, Country
               </p>
+
+              <h2 className="text-xl font-semibold mt-8 mb-4 text-white">Browser Cookie Settings and Third-Party Cookies</h2>
+              <p className="mb-4">
+                Web browsers are increasingly moving towards enhanced privacy features, including the phasing out of third-party cookies. 
+                Google Chrome, in particular, is transitioning to a new experience that allows users to browse without third-party cookies. 
+                This change may affect some features of our website, particularly:
+              </p>
+              <ul className="list-disc pl-6 mb-4 space-y-2">
+                <li>Third-party authentication services</li>
+                <li>Social media integration features</li>
+                <li>Cross-site tracking and analytics</li>
+              </ul>
+              <p className="mb-4">
+                We are actively updating our systems to ensure optimal functionality while respecting your privacy choices. Our essential 
+                features will continue to work through first-party cookies, which are not affected by these changes.
+              </p>
+
+              <h3 className="text-lg font-semibold mt-6 mb-3 text-blue-200">First-Party Cookies We Use</h3>
+              <p className="mb-4">
+                These cookies are set directly by our website and are essential for core functionality:
+              </p>
+              <ul className="list-disc pl-6 mb-4 space-y-2">
+                <li>Authentication cookies to keep you logged in</li>
+                <li>Session cookies for security</li>
+                <li>Preference cookies to remember your settings</li>
+              </ul>
             </div>
           </motion.div>
         </div>
