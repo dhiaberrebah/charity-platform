@@ -6,6 +6,7 @@ import { AuthProvider } from "./context/AuthContext"
 import { ProtectedRoute, AdminRoute, PublicOnlyRoute } from "./components/ProtectedRoute"
 import Layout from "./components/Layout"
 import VerificationManager from "./components/admin/VerificationManager"
+import AIChatAssistant from "./components/AIChatAssistant"
 
 // Public pages
 import Index from "./pages/Index"
@@ -103,6 +104,7 @@ const App = () => (
               {/* Catch-all route */}
               <Route path="*" element={<NotFound />} />
             </Routes>
+            <AIChatAssistant />
           </Layout>
         </AuthProvider>
       </BrowserRouter>
