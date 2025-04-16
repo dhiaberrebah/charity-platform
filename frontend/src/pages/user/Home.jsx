@@ -25,17 +25,7 @@ const Home = () => {
           animate={{ scale: [1, 1.3, 1], opacity: [0.2, 0.4, 0.2] }}
           transition={{ duration: 15, repeat: Number.POSITIVE_INFINITY, repeatType: "mirror", delay: 2 }}
         />
-
-        {/* Additional decorative elements */}
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage: `url('/src/assets/img/world-map-dots.png')`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            opacity: 0.1,
-          }}
-        />
+        {/* Remove the world map background div */}
       </div>
 
       {/* Content */}

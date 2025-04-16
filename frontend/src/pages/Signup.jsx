@@ -66,6 +66,7 @@ const FormField = memo(({ label, id, type, placeholder, value, onChange, require
     <div className={type === "password" ? "relative" : undefined}>
       <Input
         id={id}
+        name={id}
         type={type === "password" ? (showPassword ? "text" : "password") : type}
         placeholder={placeholder}
         value={value}
@@ -76,6 +77,7 @@ const FormField = memo(({ label, id, type, placeholder, value, onChange, require
       {type === "password" && (
         <button
           type="button"
+          id={`toggle-${id}`}
           onClick={togglePassword}
           className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-200 hover:text-white"
         >
@@ -237,15 +239,7 @@ const SignUp = () => {
           >
             {/* Background with world map pattern */}
             <div className="absolute inset-0 bg-indigo-900 opacity-50">
-              <div
-                className="absolute inset-0"
-                style={{
-                  backgroundImage: `url('/src/assets/img/world-map-dots.png')`,
-                  backgroundSize: "cover",
-                  backgroundPosition: "center",
-                  opacity: 0.2,
-                }}
-              ></div>
+              {/* Content here */}
             </div>
 
             {/* Animated impact visualization - optimized with memoization */}

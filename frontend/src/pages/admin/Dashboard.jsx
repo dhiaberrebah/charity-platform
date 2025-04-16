@@ -284,8 +284,7 @@ const Dashboard = () => {
           animate={{ scale: [1, 1.3, 1], opacity: [0.2, 0.4, 0.2] }}
           transition={{ duration: 15, repeat: Number.POSITIVE_INFINITY, repeatType: "mirror", delay: 2 }}
         />
-
-        {/* Remove or update the world map background div */}
+        {/* Remove the world map background div */}
       </div>
 
       <AdminNavbar />

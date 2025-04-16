@@ -113,15 +113,14 @@ const Login = () => {
           >
             {/* Background with world map pattern */}
             <div className="absolute inset-0 bg-indigo-900 opacity-50">
-              <div
+              {/* Remove this div with the background image */}
+              {/* <div
                 className="absolute inset-0"
                 style={{
                   backgroundImage: `url('/src/assets/img/world-map-dots.png')`,
                   backgroundSize: "cover",
-                  backgroundPosition: "center",
-                  opacity: 0.2,
                 }}
-              ></div>
+              /> */}
             </div>
 
             {/* Animated impact visualization - optimized with memoization */}

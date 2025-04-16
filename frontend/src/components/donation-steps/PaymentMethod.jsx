@@ -160,15 +160,49 @@ const PaymentMethod = ({ formData, handleInputChange, nextStep, prevStep }) => {
             {errors.cardName && <p className="mt-1 text-sm text-red-500">{errors.cardName}</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="cardNumber" className="block text-sm font-medium text-gray-700 mb-1">
+                Card Number
+              </label>
+              <input
+                id="cardNumber"
+                name="cardNumber"
+                type="text"
+                value={formData.cardNumber || ""}
+                onChange={handleChange}
+                placeholder="1234 5678 9012 3456"
+                className={`w-full p-3 border ${
+                  errors.cardNumber ? "border-red-500" : "border-gray-300"
+                } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="cardName" className="block text-sm font-medium text-gray-700 mb-1">
+                Name on Card
+              </label>
+              <input
+                id="cardName"
+                name="cardName"
+                type="text"
+                value={formData.cardName || ""}
+                onChange={handleChange}
+                placeholder="John Doe"
+                className={`w-full p-3 border ${
+                  errors.cardName ? "border-red-500" : "border-gray-300"
+                } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              />
+            </div>
+
             <div>
               <label htmlFor="expiryDate" className="block text-sm font-medium text-gray-700 mb-1">
                 Expiry Date
               </label>
               <input
                 id="expiryDate"
-                type="text"
                 name="expiryDate"
+                type="text"
                 value={formData.expiryDate || ""}
                 onChange={handleChange}
                 placeholder="MM/YY"
@@ -176,7 +210,6 @@ const PaymentMethod = ({ formData, handleInputChange, nextStep, prevStep }) => {
                   errors.expiryDate ? "border-red-500" : "border-gray-300"
                 } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500`}
               />
-              {errors.expiryDate && <p className="mt-1 text-sm text-red-500">{errors.expiryDate}</p>}
             </div>
 
             <div>
@@ -185,8 +218,8 @@ const PaymentMethod = ({ formData, handleInputChange, nextStep, prevStep }) => {
               </label>
               <input
                 id="cvv"
-                type="text"
                 name="cvv"
+                type="text"
                 value={formData.cvv || ""}
                 onChange={handleChange}
                 placeholder="123"
@@ -194,7 +227,6 @@ const PaymentMethod = ({ formData, handleInputChange, nextStep, prevStep }) => {
                   errors.cvv ? "border-red-500" : "border-gray-300"
                 } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500`}
               />
-              {errors.cvv && <p className="mt-1 text-sm text-red-500">{errors.cvv}</p>}
             </div>
           </div>
         </div>
