@@ -15,11 +15,7 @@ const AIChatAssistant = () => {
     e.preventDefault();
     if (!inputMessage.trim()) return;
 
-    const userMessage = {
-      role: "user",
-      content: inputMessage,
-    };
-
+    const userMessage = { role: "user", content: inputMessage };
     setMessages((prev) => [...prev, userMessage]);
     setInputMessage("");
     setIsLoading(true);
@@ -27,80 +23,55 @@ const AIChatAssistant = () => {
     try {
       const response = await fetch(`${API_URL}/api/ai/chat`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          message: inputMessage,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: inputMessage }),
         credentials: "include",
       });
 
       const data = await response.json();
+      if (!response.ok) throw new Error(data.message || data.error || "Failed to get AI response");
 
-      if (!response.ok) {
-        throw new Error(data.message || data.error || "Failed to get AI response");
-      }
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: data.message,
-        },
-      ]);
+      setMessages((prev) => [...prev, { role: "assistant", content: data.message }]);
     } catch (error) {
-      console.error("Chat error details:", error);
-      
-      let errorMessage = "Unable to get a response at this time.";
-      
-      if (error.message.includes('quota exceeded') || error.message.includes('429')) {
-        errorMessage = "AI service is temporarily unavailable. Please try again later.";
-      } else if (error.message.includes('401')) {
-        errorMessage = "AI service authentication failed.";
-      }
+      console.error("Chat error:", error);
+      const errorMessage = error.message.includes('quota exceeded') || error.message.includes('429')
+        ? "AI service is temporarily unavailable. Please try again later."
+        : error.message.includes('401')
+          ? "AI service authentication failed."
+          : "Unable to get a response at this time.";
       
       toast.error(errorMessage);
-      
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "system",
-          content: errorMessage,
-        },
-      ]);
+      setMessages((prev) => [...prev, { role: "system", content: errorMessage }]);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <>
-      {/* Chat Button */}
+    <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 9999 }}>
       <motion.button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-4 right-4 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700"
+        className="fixed bottom-4 right-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 rounded-full shadow-lg hover:from-blue-700 hover:to-indigo-700 transition-all pointer-events-auto"
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
       >
         <MessageSquare className="w-6 h-6" />
       </motion.button>
 
-      {/* Chat Window */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
-            className="fixed bottom-20 right-4 w-96 h-[600px] bg-gray-900 rounded-lg shadow-xl flex flex-col"
+            className="fixed bottom-20 right-4 w-96 h-[600px] bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 rounded-lg shadow-xl flex flex-col border border-blue-500/20 backdrop-blur-sm pointer-events-auto"
           >
             {/* Header */}
-            <div className="p-4 border-b border-gray-700 flex justify-between items-center">
-              <h3 className="text-lg font-semibold text-white">AI Assistant</h3>
+            <div className="p-4 border-b border-blue-500/20 flex justify-between items-center bg-blue-900/50">
+              <h3 className="text-lg font-semibold text-blue-100">AI Assistant</h3>
               <button
                 onClick={() => setIsOpen(false)}
-                className="text-gray-400 hover:text-white"
+                className="text-blue-300 hover:text-white transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -108,18 +79,21 @@ const AIChatAssistant = () => {
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {messages.length === 0 && (
+                <div className="text-blue-200/70 text-center py-4">
+                  How can I help you today?
+                </div>
+              )}
               {messages.map((message, index) => (
                 <div
                   key={index}
-                  className={`flex ${
-                    message.role === "user" ? "justify-end" : "justify-start"
-                  }`}
+                  className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
                 >
                   <div
                     className={`max-w-[80%] p-3 rounded-lg ${
                       message.role === "user"
                         ? "bg-blue-600 text-white"
-                        : "bg-gray-700 text-gray-100"
+                        : "bg-blue-800/50 text-blue-100 border border-blue-500/20"
                     }`}
                   >
                     {message.content}
@@ -128,7 +102,7 @@ const AIChatAssistant = () => {
               ))}
               {isLoading && (
                 <div className="flex justify-start">
-                  <div className="bg-gray-700 text-gray-100 p-3 rounded-lg">
+                  <div className="bg-blue-800/50 text-blue-100 p-3 rounded-lg border border-blue-500/20">
                     Thinking...
                   </div>
                 </div>
@@ -136,19 +110,19 @@ const AIChatAssistant = () => {
             </div>
 
             {/* Input */}
-            <form onSubmit={sendMessage} className="p-4 border-t border-gray-700">
+            <form onSubmit={sendMessage} className="p-4 border-t border-blue-500/20 bg-blue-900/50">
               <div className="flex gap-2">
                 <input
                   type="text"
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   placeholder="Type your message..."
-                  className="flex-1 bg-gray-700 text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 bg-blue-800/30 text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-blue-500/20 placeholder-blue-300"
                 />
                 <button
                   type="submit"
                   disabled={isLoading || !inputMessage.trim()}
-                  className="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-2 rounded-lg hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 transition-all"
                 >
                   <Send className="w-5 h-5" />
                 </button>
@@ -157,7 +131,7 @@ const AIChatAssistant = () => {
           </motion.div>
         )}
       </AnimatePresence>
-    </>
+    </div>
   );
 };
 
