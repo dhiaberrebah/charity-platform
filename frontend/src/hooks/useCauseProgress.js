@@ -73,7 +73,6 @@ export const useCauseProgress = (causeId) => {
           toast.error("Failed to process request");
         }
 
-        // Return safe default values with error info
         return {
           currentAmount: 0,
           targetAmount: 0,
@@ -84,18 +83,19 @@ export const useCauseProgress = (causeId) => {
       }
     },
     enabled: !!causeId,
-    // Increase refetch frequency
-    refetchInterval: 5000, // Refetch every 5 seconds
-    // Enable automatic background refetching
-    refetchOnWindowFocus: true,
-    // Reduce stale time to ensure fresh data
-    staleTime: 1000,
+    // Change refetch interval to 30 minutes (in milliseconds)
+    refetchInterval: 30 * 60 * 1000,
+    // Disable automatic background refetching on window focus
+    refetchOnWindowFocus: false,
+    // Increase stale time to 30 minutes
+    staleTime: 30 * 60 * 1000,
     // Keep previous data while fetching
     keepPreviousData: true,
-    // Retry configuration
+    // Modify retry configuration
     retry: (failureCount, error) => {
-      return failureCount < 3 && (error.code === 'ECONNABORTED' || error.response?.status === 500);
+      // Only retry once for network errors
+      return failureCount < 1 && (error.code === 'ECONNABORTED' || error.response?.status === 500);
     },
-    retryDelay: (attemptIndex) => Math.min(1000 * (2 ** attemptIndex), 10000),
+    retryDelay: 5000, // Wait 5 seconds before retrying
   });
 };

@@ -486,7 +486,6 @@ const ManageCauses = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
   const [exportAttempts, setExportAttempts] = useState(0)
-  const [pollingInterval, setPollingInterval] = useState(null)
 
   const handleExportWithRetry = async (exportFunction, maxAttempts = 3) => {
     setIsExporting(true)
@@ -583,44 +582,7 @@ const ManageCauses = () => {
     })
   }
 
-  // Separate function to fetch a single cause's current amount
-  const fetchCauseAmount = useCallback(async (causeId) => {
-    try {
-      const response = await fetch(`http://localhost:5001/api/causes/${causeId}/progress`, {
-        credentials: "include",
-      })
-      if (!response.ok) throw new Error("Failed to fetch cause progress")
-      const data = await response.json()
-      return data.currentAmount
-    } catch (error) {
-      console.error("Error fetching cause amount:", error)
-      return null
-    }
-  }, [])
-
-  // Function to update all causes' current amounts
-  const updateCausesAmounts = useCallback(async () => {
-    const updatedCauses = await Promise.all(
-      causes.map(async (cause) => {
-        const currentAmount = await fetchCauseAmount(cause._id)
-        return currentAmount !== null
-          ? { ...cause, currentAmount }
-          : cause
-      })
-    )
-
-    // Only update state if there are actual changes
-    const hasChanges = updatedCauses.some(
-      (updatedCause, index) => updatedCause.currentAmount !== causes[index].currentAmount
-    )
-
-    if (hasChanges) {
-      setCauses(updatedCauses)
-    }
-  }, [causes, fetchCauseAmount])
-
   useEffect(() => {
-    // Initial fetch
     const fetchCauses = async () => {
       setIsLoading(true)
       try {
@@ -641,32 +603,7 @@ const ManageCauses = () => {
     }
 
     fetchCauses()
-
-    // Set up polling for real-time updates
-    const interval = setInterval(updateCausesAmounts, 5000) // Poll every 5 seconds
-    setPollingInterval(interval)
-
-    return () => {
-      if (pollingInterval) {
-        clearInterval(pollingInterval)
-      }
-    }
   }, [])
-
-  // Update polling when causes change
-  useEffect(() => {
-    if (pollingInterval) {
-      clearInterval(pollingInterval)
-    }
-    const interval = setInterval(updateCausesAmounts, 5000)
-    setPollingInterval(interval)
-
-    return () => {
-      if (pollingInterval) {
-        clearInterval(pollingInterval)
-      }
-    }
-  }, [causes, updateCausesAmounts])
 
   const handleDeleteCause = async (causeId) => {
     if (window.confirm("Are you sure you want to delete this cause?")) {
