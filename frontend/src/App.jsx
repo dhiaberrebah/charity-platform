@@ -38,6 +38,8 @@ import NotificationsPage from "./pages/user/UserNotificationsPage"
 
 // Cause Share Route
 import CauseShare from "./pages/CauseShare"
+// Add Comments page import
+import CauseComments from "./pages/CauseComments"
 
 const queryClient = new QueryClient()
 
@@ -53,6 +55,8 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/causes" element={<Causes />} />
               <Route path="/causes/:id" element={<Causes />} />
+              {/* Add the comments route */}
+              <Route path="/causes/:id/comments" element={<CauseComments />} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/faq" element={<FAQ />} />

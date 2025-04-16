@@ -10,6 +10,7 @@ import path from "path"
 import { fileURLToPath } from "url"
 import fs from "fs"
 import multer from "multer"
+import commentRoutes from "./routes/comment.route.js"
 // Import the donations route using ES modules syntax
 import donationsRoutes from "./routes/donations.js"
 // Add this import at the top with your other route imports
@@ -79,6 +80,7 @@ app.use("/api/dashboard", dashboardRoutes)
 app.use("/api/notifications", notificationRoutes)
 app.use('/api/verification', verificationRoutes);
 app.use('/api/documents', documentsRoutes);
+app.use("/api/comments", commentRoutes)
 
 // Make sure your multer configuration is saving files to this directory
 const storage = multer.diskStorage({

@@ -14,6 +14,7 @@ import { toast } from "sonner"
 import DonationModal from "@/components/DonationModal"
 import DonationList from "@/components/DonationList"
 import { useCauseProgress } from '@/hooks/useCauseProgress';
+import Comments from "@/components/Comments"
 
 // Define the API base URL
 const API_BASE_URL = "http://localhost:5001"
@@ -288,6 +289,16 @@ const CauseShare = () => {
                   </>
                 )}
               </div>
+
+              {/* Add Comments section here */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="bg-white/10 backdrop-blur-sm rounded-lg p-6 mb-8"
+              >
+                {cause._id && <Comments causeId={cause._id} />}
+              </motion.div>
 
               <motion.button
                 className="w-full py-4 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors font-medium text-lg"

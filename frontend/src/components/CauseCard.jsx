@@ -7,6 +7,7 @@ import { motion } from "framer-motion"
 import { Share2, Target, DollarSign, Copy } from "lucide-react"
 import { toast } from "sonner"
 import { useCauseProgress } from '@/hooks/useCauseProgress';
+import Comments from "./Comments"
 
 const CauseCard = ({ 
   image, 
